@@ -65,7 +65,8 @@ public class SkipUseAPIService {
 		this.API_URL = skipUseApiUrl;
 	}
 
-	// If the SkipUserAPI server is up, it should respond back to this call.
+	// Checks if the SkipUserAPI server is up. It should respond back with a
+	// message to this call.
 	//
 	public boolean checkServerConnection() throws SkipUseException {
 		try {
@@ -81,8 +82,7 @@ public class SkipUseAPIService {
 		return false;
 	}
 
-	// Calling this will initiates a proxy and or log in to the service, if
-	// needed.
+	// Calling this will initiates a proxy and or log in to the service.
 	//
 	public void login(String email, String password) throws SkipUseException {
 		if (proxyID.isEmpty())
@@ -110,7 +110,8 @@ public class SkipUseAPIService {
 		}
 	}
 
-	// Considered logged-in when there is a ProxyID and a member ID.
+	// Considered to be logged-in when there is a ProxyID and an owner member ID
+	// is present.
 	//
 	public boolean isLoggedIn() {
 		if (serverResponseData.getMemberID() < 0) {
@@ -122,14 +123,16 @@ public class SkipUseAPIService {
 	}
 
 	// Returns the logged in user/owner's member ID.
-	// NOTE: this ID is not changeable and is recommended that you create new
-	// member IDs to use if you plan on using IDs publicly.
+	// NOTE: the owner ID is not changeable and is recommended that you create
+	// member ID for the owner as well, because IDs can be used publicly. Get
+	// all
+	// member IDs with the getMemberMap() method.
 	//
 	public int getMyMemberID() {
 		return serverResponseData.getMemberID();
 	}
 
-	// Sets the Pick IDs used for all Members and normal operations.
+	// Set the collection of Pick IDs used by all members.
 	//
 	public ServerPickIDCollection setPickIDCollection(PickIDCollection pickIDCollection)
 			throws SkipUseException {
@@ -137,6 +140,8 @@ public class SkipUseAPIService {
 				ServerPickIDCollection.NAME);
 	}
 
+	// A long value of remaining Nibbles for the logged in account.
+	//
 	public long getRemainingDataNibbles() {
 		try {
 			return Long.valueOf(serverResponseData.getRemainingNibbles());
@@ -153,15 +158,17 @@ public class SkipUseAPIService {
 		return (ServerPickIDCollection) getAndProcess("/collection", ServerPickIDCollection.NAME);
 	}
 
-	// Sets the query for getting Picks from your Pick ID Collection.
+	// Sets the query for getting Picks from the Pick ID collection.
 	// See the PickQuery class for required and optional settings.
 	//
 	public ServerPickList setPickQuery(PickQuery pickQuery) throws SkipUseException {
 		return (ServerPickList) postAndProcess("/pick", pickQuery, ServerPickList.NAME);
 	}
 
-	// Gets a Pick List from the server. A 'Pick' is a 'Pick ID' that contains
+	// Get a Pick list from the server. A 'Pick' is a 'Pick ID' that contains
 	// more information on that ID.
+	// NOTE: a PickQuery must be set first or else it will return a default
+	// search.
 	//
 	public ServerPickList getServerPickList() throws SkipUseException {
 		return (ServerPickList) getAndProcess("/pick", ServerPickList.NAME);
@@ -170,17 +177,17 @@ public class SkipUseAPIService {
 	// Get all Picks for a member.
 	//
 	public ServerPickList getAllServerPickListByMemberID(int memberID) throws SkipUseException {
-		// Get the maximum number of Picks...
+		// get the maximum number of Picks...
 		PickQuery pickQuery = new PickQuery(5000);
-		// Include all recently offered Picks...
+		// include all recently offered Picks...
 		pickQuery.setExcludeRecentPicks(false);
-		// Include Picks marked as Stop Using...
+		// include Picks marked as Stop Using...
 		pickQuery.setIncludeStopUsing(true);
-		// Return back Picks that may have not been used yet...
+		// return back Picks that may have not been used yet...
 		pickQuery.setGetMorePicksIfShort(true);
-		// For this member...
+		// for this member...
 		pickQuery.addToMemberIDList(memberID);
-		// Un-comment below to add the category data too. This query could take
+		// un-comment below to add the category data too. This query could take
 		// longer and might cost more to use.
 		// pickQuery.setIncludeCategories(true);
 		return setPickQuery(pickQuery);
@@ -191,9 +198,9 @@ public class SkipUseAPIService {
 	public ServerPickList _getPickByMemberIDAndPickID(int memberID, String pickID)
 			throws SkipUseException {
 		PickQuery pickQuery = new PickQuery();
-		// For this member...
+		// for this member...
 		pickQuery.addToMemberIDList(memberID);
-		// For this pick ID...
+		// for this pick ID...
 		// NOTE: see this setter function for how the query will be altered.
 		pickQuery.setPickID(pickID);
 		// NOTE: Comment out below to not add the category data. This query
@@ -203,8 +210,8 @@ public class SkipUseAPIService {
 		return setPickQuery(pickQuery);
 	}
 
-	// Change
-	// TODO test
+	// Update a member Pick.
+	// NOTE: updating a list of Picks for a member could be performed too.
 	//
 	public void updatePickByMemberID(int memberID, Pick pick) throws SkipUseException {
 		MemberPickList memberPickList = new MemberPickList();
@@ -221,7 +228,7 @@ public class SkipUseAPIService {
 		return serverResponseData;
 	}
 
-	// Skip, Use or Pass Pick IDs by Members.
+	// Skip, Use or Pass Pick IDs by members.
 	// See the API documentation for what each version does to a Pick ID.
 	//
 	public void skipUsePassPick(SkipUsePass skipUsePass, MemberPickIDList memberPickIDList)
@@ -230,11 +237,13 @@ public class SkipUseAPIService {
 				ServerResponse.NAME);
 	}
 
+	// Add members to an account.
+	//
 	public ServerMemberMap addMemberList(MemberList memberList) throws SkipUseException {
 		return (ServerMemberMap) postAndProcess("/member", memberList, ServerMemberMap.NAME);
 	}
 
-	// Get Names and ID of the current Members.
+	// Get names and ID of the current members.
 	//
 	public ServerMemberMap getMemberMap() throws SkipUseException {
 		return (ServerMemberMap) getAndProcess("/member", ServerMemberMap.NAME);
@@ -265,7 +274,7 @@ public class SkipUseAPIService {
 		return createCategoryByMemberID(memberCategoryList);
 	}
 
-	// Create member categories by List.
+	// Create member categories by list.
 	//
 	public ServerMemberCategoryList createCategoryByMemberID(MemberCategoryList categoryNameList)
 			throws SkipUseException {
@@ -289,7 +298,7 @@ public class SkipUseAPIService {
 		return memberCategoryList;
 	}
 
-	// Updates a category Name for a member.
+	// Updates a category name for a member.
 	//
 	public ServerMemberCategoryList updateCategoryNameByMemberID(int memberID,
 			String oldCategoryName, String newCategoryName) throws SkipUseException {
@@ -471,7 +480,7 @@ public class SkipUseAPIService {
 			if (expectedObject.equals(ServerResponse.NAME))
 				return returnJSON;
 
-			// Return the expected server object if present
+			// return the expected server object if present
 			return convertJSONToServerObject(returnJSON, expectedObject);
 
 		} catch (HttpClientErrorException e) {
@@ -517,7 +526,7 @@ public class SkipUseAPIService {
 			if (expectedObject.equals(ServerResponse.NAME))
 				return returnJSON;
 
-			// Return the expected server object if present
+			// return the expected server object if present
 			return convertJSONToServerObject(returnJSON, expectedObject);
 
 		} catch (HttpClientErrorException e) {
@@ -616,33 +625,32 @@ public class SkipUseAPIService {
 	//
 	private void processResponse(ServerResponse skipUseResponse) throws SkipUseException {
 		if (skipUseResponse != null) {
-			// The logged in user's member ID
+			// the logged in user's member ID
 			serverResponseData.setMemberID(skipUseResponse.getMemberID());
 
-			// The sever's proxyID reference
+			// the sever's proxyID reference
 			if (skipUseResponse.getProxyID() != null)
 				proxyID = skipUseResponse.getProxyID();
 
-			// The logged in user's display name
+			// the logged in user's display name
 			if (skipUseResponse.getMemberName() != null)
 				serverResponseData.setMemberName(skipUseResponse.getMemberName());
 
-			// The sever's additional message from response
+			// the sever's additional message from response
 			if (skipUseResponse.getMessage() != null) {
 				serverResponseData.setMessage(skipUseResponse.getMessage());
 				System.out.println(serverResponseData.getMessage());
 			}
 
-			// The user's remaining data nibbles
+			// the user's remaining data nibbles
 			if (skipUseResponse.getRemainingNibbles() != null)
-				serverResponseData
-						.setRemainingNibbles(skipUseResponse.getRemainingNibbles());
+				serverResponseData.setRemainingNibbles(skipUseResponse.getRemainingNibbles());
 
-			// The status of the response
+			// the status of the response
 			if (skipUseResponse.getStatus() != null)
 				serverResponseData.setStatus(skipUseResponse.getStatus());
 
-			// Process the SkipUseToken
+			// process the SkipUseToken
 			if (skipUseResponse.getSkipUseToken() != null) {
 				if (!skipUseResponse.getSkipUseToken().isEmpty()) {
 					serverResponseData.setSkipUseToken(skipUseResponse.getSkipUseToken());
@@ -657,7 +665,7 @@ public class SkipUseAPIService {
 				throw new SkipUseException("The SkipUseToken was null. This should not happen.");
 			}
 
-			// Throw error if error message is found
+			// throw error if error message is found
 			if (skipUseResponse.getErrorMessage() != null
 					&& !skipUseResponse.getErrorMessage().isEmpty()) {
 				serverResponseData.setErrorMessage(skipUseResponse.getErrorMessage());

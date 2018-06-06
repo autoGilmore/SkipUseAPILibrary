@@ -26,10 +26,10 @@ import com.autogilmore.throwback.skipUsePackage.enums.SkipUsePass;
 import com.autogilmore.throwback.skipUsePackage.exception.SkipUseException;
 
 public class SkipUseAPIServiceTest {
-	// Set the SkipUseAPI URL here. See API documentation for more information.
+	// NOTE: Set the SkipUseAPI URL here. See API documentation for more information.
 	private static final String SKIP_USE_API_URL = "http://www.skipuseapi.com/v1";
 
-	// Set these to use your own test credentials as the demo account is
+	// NOTE: Set these to use your own test credentials as the demo account is
 	// unstable from other people's usage.
 	private static final String EMAIL = "basic-demo@skipuse.com";
 	private static final String PASSWORD = "password";
@@ -317,7 +317,7 @@ public class SkipUseAPIServiceTest {
 	}
 
 	@Test
-	public void test_createMember() throws SkipUseException {
+	public void test_addMemberList() throws SkipUseException {
 		// Set up
 		service.login(EMAIL, PASSWORD);
 		assertTrue(service.isLoggedIn());

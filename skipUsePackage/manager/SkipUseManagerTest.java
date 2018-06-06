@@ -27,23 +27,23 @@ import com.autogilmore.throwback.skipUsePackage.exception.SkipUseException;
  * NOTE: this is ONLY example code for how you could access the SkipUse API. This code may or may not work if the API changes.
 */
 public class SkipUseManagerTest {
-	// Set these values to use your test credentials as these demo ones will be
+	// NOTE: Set these values to use your test credentials as these demo ones will be
 	// unstable from other people using them and causing failed tests.
 	private static final String EMAIL = "basic-demo@skipuse.com";
 	private static final String PASSWORD = "password";
 
-	// These tests create a temporary member so that the owner and other members
+	// NOTE: These tests create a temporary member so that the owner and other members
 	// won't get test Picks in their history. Change this name if it conflicts
 	// with a current member name.
 	private static final String TEST_MEMBER = "test member";
 
-	// Class under test
+	// Manager class under test
 	private SkipUseManager manager = SkipUseManager.getInstance();
 
+	// After each test, remove the test member.
 	@After
 	public void after() {
 		try {
-			// NOTE: remove the test member
 			int testMemberID = manager.getMemberIDByName(TEST_MEMBER);
 			if (testMemberID != -1)
 				manager.deleteMemberByID(testMemberID);
@@ -99,7 +99,7 @@ public class SkipUseManagerTest {
 		assertNotNull(categoryList);
 	}
 
-	// The service should still work after an error occurs.
+	// The manager should still work after an error occurs.
 	@Test
 	public void test_afterAnError() throws SkipUseException {
 		// Set up
@@ -156,7 +156,7 @@ public class SkipUseManagerTest {
 		assertTrue(bubMemberID != manager.getOwnerMemberID());
 	}
 
-	// Each member has their own ID and the account owner has a permanent ID.
+	// Each member has their own ID and the account owner has a permanent member ID.
 	@Test
 	public void test_getMemberIDByName() throws SkipUseException {
 		// Set up
@@ -224,7 +224,7 @@ public class SkipUseManagerTest {
 	}
 
 	// A collection is a Pick ID list that is shared among all members. Set it
-	// with the addPickIDCollection method. The collection can be
+	// using the addPickIDCollection method. The collection can be
 	// comma-delimited and will be separated into separate entries when the last
 	// parameter of addPickIDCollection is set to 'true'.
 	@Test
@@ -278,9 +278,10 @@ public class SkipUseManagerTest {
 		assertTrue(foundCollectionList.stream().anyMatch(t -> t.equals("A,B,C, D")));
 	}
 
-	// Each member has their own history of 'Skip' and 'Used' Picks from a
-	// collection.
-	// Get all Pick data for a member by calling the getAllPickListByMemberID
+	// Each member has their own history of a Pick ID from the Pick ID
+	// collection called a 'Pick'. A Pick has additional data such as it's
+	// popularity, stats and optional JSON value.
+	// Get all Picks for a member by calling the getAllPickListByMemberID
 	// method.
 	@Test
 	public void test_getAllPickListByMemberID() throws SkipUseException {
@@ -297,8 +298,7 @@ public class SkipUseManagerTest {
 				collectionList, true);
 		assertTrue(createPickIDCollection.getPickIDList().size() == 4);
 
-		// create a "Skipped" Pick which will now not be considered a 'new'
-		// Pick.
+		// create a "Skipped" Pick which will now not be considered 'new'
 		manager.skipUsePass(SkipUsePass.SKIP, testMemberID, "C");
 
 		// Test
@@ -335,9 +335,9 @@ public class SkipUseManagerTest {
 		assertTrue(isDFound);
 	}
 
-	// A PickQuery is way to get back Picks for member/s. The query has many
-	// combinations to find Picks. One example is looking for Pick that have
-	// been marked as not to be used.
+	// A Pick Query is way to get back Picks for member/s. The query has many
+	// combinations to find Picks. One example is looking for Picks that have
+	// been marked as not to be used indicated by the Pick 'isStopUsing' flag.
 	@Test
 	public void test_getMemberPickListByPickQuery() throws SkipUseException {
 		// Set up
@@ -406,7 +406,7 @@ public class SkipUseManagerTest {
 		assertTrue(isPickFound);
 	}
 
-	// You can also just get a Pick back for a member by the Pick ID.
+	// You can also just get a Pick for a member by the Pick ID.
 	@Test
 	public void test_getPickByMemberIDAndPickID() throws SkipUseException {
 		// Set up
@@ -493,7 +493,7 @@ public class SkipUseManagerTest {
 		assertTrue(memberCategoryList.getMemberID() == testMemberID);
 	}
 
-	// A member's Pick can be update to mark as 'stop using' or add additional
+	// A member's Pick can be updated to mark the 'stop using' or add additional
 	// JSON data.
 	@Test
 	public void test_updatePickByMemberID_createAPickIfNewPickID() throws SkipUseException {
@@ -528,7 +528,7 @@ public class SkipUseManagerTest {
 		assertNotNull(testPick);
 		assertTrue(testPick.isNewPick());
 
-		// Pick attributes to update:
+		// pick attributes to update:
 		Pick updateThisPick = new Pick();
 		updateThisPick.setMyPickID(testPick.getMyPickID());
 		// additional JSON you can set for your app
@@ -573,7 +573,7 @@ public class SkipUseManagerTest {
 		assertFalse(updatedPick.getUsed() == updateThisPick.getUsed());
 	}
 
-	// A member can update one of their category's name.
+	// A member can update a category's name.
 	@Test
 	public void test_updateCategoryNameForMember() throws SkipUseException {
 		// Set up
@@ -635,7 +635,7 @@ public class SkipUseManagerTest {
 		assertTrue(categoryNameList.size() == 0);
 	}
 
-	// To mark and unmark a Pick with a category, using the
+	// To mark and un-mark a Pick with a category, use the
 	// markPickIDListWithCategoryTrueFalse method.
 	@Test
 	public void test_markPickIDListWithCategoryTrueFalse() throws SkipUseException {
@@ -678,7 +678,7 @@ public class SkipUseManagerTest {
 		assertNotNull(markedPick);
 		assertTrue(markedPick.getCategoryList().contains(categoryName));
 
-		// Now, unmark it.
+		// now, unmark it.
 		// Test
 		manager.markPickIDListWithCategoryTrueFalse(testMemberID, pickID, categoryName, false);
 
@@ -739,8 +739,7 @@ public class SkipUseManagerTest {
 	// The more a member's Pick is 'Skipped', it will be presented less-often in
 	// normal queries. And when a Pick is 'used', it will show up more often.
 	// The Pick skip and used count is changed when this occurs. Pick's also
-	// have an Auto-rate and a trending-rate percentage to show the picks
-	// popularity.
+	// have an auto-rate and a trending-rate percentage to show the popularity.
 	@Test
 	public void test_skipUsePass() throws SkipUseException {
 		// Set up
@@ -772,7 +771,7 @@ public class SkipUseManagerTest {
 		assertTrue("The trending percentage will not change until the next update",
 				foundPick.getTrendingRatePercentage() == startingTrendingRatePercentage);
 
-		// Try a 'Used'
+		// try a 'Used'
 		// Test
 		manager.skipUsePass(SkipUsePass.USE, testMemberID, pickID);
 		updatedPickList = manager.getAllPickListByMemberID(testMemberID);

@@ -20,7 +20,7 @@ import com.autogilmore.throwback.skipUsePackage.exception.SkipUseException;
 import com.autogilmore.throwback.skipUsePackage.service.SkipUseAPIService;
 
 /* 
- * This is a Singleton manager for common usage of the SkipUse API. 
+ * This is a Singleton and a manager for common usage of the SkipUse API microservice. 
  * This manager uses and abstracts the SkipUseAPIService.
  * Use THIS manager and NOT the SkipUseAPIService as it will keep the service SkipUseToken in sync with the server.
 */
@@ -44,15 +44,11 @@ public class SkipUseManager {
 
 	private static SkipUseManager instance;
 
-	/**
-	 * A private Constructor prevents any other class from instantiating.
-	 */
+	/** A private Constructor prevents any other class from instantiating. */
 	private SkipUseManager() {
 	}
 
-	/**
-	 * The static initializer that constructs the instance of the class.
-	 */
+	/** The static initializer that constructs the instance of the class. */
 	static {
 		instance = new SkipUseManager();
 	}
@@ -68,8 +64,8 @@ public class SkipUseManager {
 		return service.checkServerConnection();
 	}
 
-	// Establishes a proxy ID and SkipUse token for communication and then logs
-	// in the user.
+	// Establishes a proxy ID and SkipUseToken with the server and then logs-in
+	// the user.
 	// Throws an error if unsuccessful.
 	//
 	public void login(String email, String password) throws SkipUseException {
@@ -80,13 +76,13 @@ public class SkipUseManager {
 		}
 	}
 
-	// Returns 'true' if logged in or 'false' otherwise.
+	// Return 'true' if is logged in or 'false' if not.
 	//
 	public boolean isLoggedIn() {
 		return service.isLoggedIn();
 	}
 
-	// Logs out of the mircoservice.
+	// Log out of the mircoservice.
 	//
 	public void logout() throws SkipUseException {
 		service.logout();
@@ -94,7 +90,7 @@ public class SkipUseManager {
 		resetStoredServerData();
 	}
 
-	// Add Member by name for the Account.
+	// Add member by name for the account.
 	// Duplicate names are ignored.
 	//
 	public void addMemberName(String memberName) throws SkipUseException {
@@ -105,7 +101,7 @@ public class SkipUseManager {
 		}
 	}
 
-	// Returns the logged in user's member ID or -1 otherwise.
+	// Return the logged in user's member ID or -1 otherwise.
 	//
 	public int getOwnerMemberID() throws SkipUseException {
 		if (myMemberID == -1) {
@@ -115,10 +111,11 @@ public class SkipUseManager {
 		return myMemberID;
 	}
 
-	// Get a Member's ID by their name.
+	// Get a member's ID by their name.
 	// Returns -1 if not found.
 	// Case-sensitive names required. The account owner's member name will NOT
-	// be in the Member Map (The owner is not a Member of their account.)
+	// be in the Member Map (the owner is not a Member of their account) use
+	// getOwnerMemberID instead.
 	//
 	public int getMemberIDByName(String name) throws SkipUseException {
 		if (name != null && !name.isEmpty()) {
@@ -132,6 +129,8 @@ public class SkipUseManager {
 		return -1;
 	}
 
+	// Update a member's name.
+	//
 	public void updateMemberNameByID(int memberID, String beforeName, String afterName)
 			throws SkipUseException {
 		if (serverMemberMap.getMemberIDMap().containsKey(beforeName)
@@ -143,9 +142,10 @@ public class SkipUseManager {
 		}
 	}
 
-	// Delete a Member by their ID.
-	// This will also delete their Picks and Categories.
-	// You can recreate Member, but you cannot restore their data after being
+	// Delete a member by their ID.
+	// This will also deletes the member's Picks and categories.
+	// NOTE: You can recreate member, but you cannot restore their data after
+	// being
 	// deleted.
 	//
 	public void deleteMemberByID(int memberID) throws SkipUseException {
@@ -156,7 +156,7 @@ public class SkipUseManager {
 		}
 	}
 
-	// Stores a Pick ID collection.
+	// Store a Pick ID collection using the PickIDCollection.
 	//
 	public PickIDCollection addPickIDCollection(PickIDCollection pickIDCollection)
 			throws SkipUseException {
@@ -164,9 +164,10 @@ public class SkipUseManager {
 				pickIDCollection.getPickIDList(), pickIDCollection.isSplitCSV());
 	}
 
-	// Stores a Pick ID collection.
-	// Pass in a name for the collection and a list of Strings PickIDs.
-	// Set the 'isSplitByComma' to 'true' if the list is comma-delimited.
+	// Store a Pick ID collection.
+	// Pass in a name for the collection and a list of Pick IDs.
+	// Set the 'isSplitByComma' to 'true' if the list should comma-delimited and
+	// split into separate values.
 	//
 	public PickIDCollection addPickIDCollection(String collectionName, List<String> collectionList,
 			boolean isSplitByComma) throws SkipUseException {
@@ -190,8 +191,9 @@ public class SkipUseManager {
 	}
 
 	// Get all a member's Pick IDs from the set Pick ID collection.
-	// If you want category information, un-comment out the query parameter in
-	// the service function.
+	// NOTE: If you want category information, un-comment out the query
+	// parameter in
+	// the getAllServerPickListByMemberID service function.
 	//
 	public List<Pick> getAllPickListByMemberID(int memberID) throws SkipUseException {
 		ServerPickList serverPickList = service.getAllServerPickListByMemberID(memberID);
@@ -214,8 +216,8 @@ public class SkipUseManager {
 		return serverPickList.getPickList();
 	}
 
-	// Get a Pick by Member ID and the Pick ID.
-	// Return null if error from not found
+	// Get a Pick by member ID and the Pick ID.
+	// Return null not found
 	//
 	public Pick _getPickByMemberIDAndPickID(int memberID, String pickID) throws SkipUseException {
 		automaticLogin();
@@ -225,14 +227,14 @@ public class SkipUseManager {
 			if (serverPickList.getPickList().size() == 1)
 				_pick = serverPickList.getPickList().get(0);
 		} catch (SkipUseException e) {
-			// No pick stored error
+			// no pick stored error
 		}
 		return _pick;
 	}
 
 	// Create a category for a member.
-	// Pass in the member's ID and the String name for the category.
-	// Category names may not contain the comma ',' character.
+	// Pass in the member's ID and the name for the category.
+	// NOTE: Category names may not contain the comma ',' character.
 	//
 	public MemberCategoryList createCategoryForMember(int memberID, String categoryName)
 			throws SkipUseException {
@@ -247,7 +249,7 @@ public class SkipUseManager {
 		return serverMemberCategoryList.getMemberCategoryList();
 	}
 
-	// Returns a String List of the member's Categories.
+	// Return a list of the member's categories.
 	//
 	public MemberCategoryList getCategoryListForMember(int memberID) throws SkipUseException {
 		automaticLogin();
@@ -255,7 +257,8 @@ public class SkipUseManager {
 		return serverMemberCategoryList.getMemberCategoryList();
 	}
 
-	// Returns a String List of the member's Categories.
+	// Update a category name for a member.
+	// Return a list of the member's categories.
 	//
 	public MemberCategoryList updateCategoryNameForMember(int memberID, PatchName patchName)
 			throws SkipUseException {
@@ -265,7 +268,8 @@ public class SkipUseManager {
 		return serverMemberCategoryList.getMemberCategoryList();
 	}
 
-	// Delete Categories by passing in the member ID and a list of Categories.
+	// Delete member categories by passing in the member ID with a list of
+	// categories.
 	//
 	public void deleteCategoryListForMember(MemberCategoryList memberCategoryList)
 			throws SkipUseException {
@@ -274,9 +278,9 @@ public class SkipUseManager {
 		serverMemberCategoryList = new ServerMemberCategoryList();
 	}
 
-	// Mark or Unmark a Pick with an existing category. Pass in the member ID,
-	// pickID and category name. Set isMarkWithCategory to 'true' to mark the
-	// Pick.
+	// Mark or un-mark a Pick with an existing category. Pass in the member ID,
+	// pickID and category name. Set 'isMarkWithCategory' to 'true' to mark the
+	// Pick with the category.
 	//
 	public void markPickIDListWithCategoryTrueFalse(int memberID, String pickID,
 			String categoryName, boolean isMarkWithCategory) throws SkipUseException {
@@ -287,7 +291,7 @@ public class SkipUseManager {
 				isMarkWithCategory);
 	}
 
-	// Mark or Unmark a list of Picks with an existing category.
+	// Mark or un-mark a collection of Picks with an existing category.
 	//
 	public void markPickIDListWithCategoryTrueFalse(int memberID, PickIDCollection pickIDCollection,
 			String categoryName, boolean isMarkWithCategory) throws SkipUseException {
@@ -305,7 +309,9 @@ public class SkipUseManager {
 		}
 	}
 
-	// Update a Member's Pick ID 'isStopUsing' flag.
+	// Update a member's Pick ID 'isStopUsing' flag.
+	// NOTE: the 'isStopUsing = true' flag removes the Pick from normal Pick
+	// Queries.
 	//
 	public void setStopUsingByMemberIDPickIDTrueFalse(int memberID, String pickID,
 			boolean isStopUsing) throws SkipUseException {
@@ -322,7 +328,7 @@ public class SkipUseManager {
 		}
 	}
 
-	// Update JSON and StopUsing Options for a Member's Pick
+	// Update JSON and StopUsing Options for a member's Pick
 	//
 	public void updatePickByMemberID(int memberID, Pick pick) throws SkipUseException {
 		Pick newPick = new Pick();
@@ -332,7 +338,7 @@ public class SkipUseManager {
 		service.updatePickByMemberID(memberID, pick);
 	}
 
-	// Skip, Use or Pass a Pick ID List for a member.
+	// Skip, Use or Pass a Pick ID for a member.
 	//
 	public void skipUsePass(SkipUsePass skipUsePass, int memberID, String pickID)
 			throws SkipUseException {
@@ -370,7 +376,7 @@ public class SkipUseManager {
 			throw new SkipUseException("This account is out of data nibbles.");
 	}
 
-	// Reset stored server data
+	// Reset stored server data.
 	//
 	private void resetStoredServerData() {
 		myMemberID = -1;
