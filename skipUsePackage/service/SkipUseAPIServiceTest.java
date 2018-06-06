@@ -10,6 +10,7 @@ import java.util.List;
 
 import org.junit.After;
 import org.junit.Test;
+import org.springframework.http.HttpStatus;
 
 import com.autogilmore.throwback.skipUsePackage.dataObjects.CategoryPickIDCollection;
 import com.autogilmore.throwback.skipUsePackage.dataObjects.MemberCategoryList;
@@ -22,11 +23,13 @@ import com.autogilmore.throwback.skipUsePackage.dataObjects.incomingServer.Serve
 import com.autogilmore.throwback.skipUsePackage.dataObjects.incomingServer.ServerMemberMap;
 import com.autogilmore.throwback.skipUsePackage.dataObjects.incomingServer.ServerPickIDCollection;
 import com.autogilmore.throwback.skipUsePackage.dataObjects.incomingServer.ServerPickList;
+import com.autogilmore.throwback.skipUsePackage.dataObjects.incomingServer.ServerResponse;
 import com.autogilmore.throwback.skipUsePackage.enums.SkipUsePass;
 import com.autogilmore.throwback.skipUsePackage.exception.SkipUseException;
 
 public class SkipUseAPIServiceTest {
-	// NOTE: Set the SkipUseAPI URL here. See API documentation for more information.
+	// NOTE: Set the SkipUseAPI URL here. See API documentation for more
+	// information.
 	private static final String SKIP_USE_API_URL = "http://www.skipuseapi.com/v1";
 
 	// NOTE: Set these to use your own test credentials as the demo account is
@@ -709,6 +712,39 @@ public class SkipUseAPIServiceTest {
 		assertNotNull(serverPickList);
 		assertTrue(serverPickList.getPickList().size() == 0);
 
+	}
+
+	// If an error is given by the server, you can see the message in the
+	// server's response. You should still be able to communicate with the
+	// server if the error was not severe.
+	//
+	@Test
+	public void test_errorTest() throws SkipUseException {
+		service.login(EMAIL, PASSWORD);
+		assertTrue(service.isLoggedIn());
+
+		// Test
+		service.errorTest();
+
+		// Verify
+		ServerResponse serverResponse = service.getLastServerResponseData();
+		assertNotNull(serverResponse);
+		assertTrue(serverResponse.getStatus() == HttpStatus.BAD_REQUEST);
+		assertFalse("There should be an error message", serverResponse.getErrorMessage().isEmpty());
+		assertFalse("There should be a message with help", serverResponse.getMessage().isEmpty());
+
+		// should still have all the other communication parts
+		assertTrue(serverResponse.getMemberID() > -1);
+		assertFalse(serverResponse.getMemberName().isEmpty());
+		assertFalse(serverResponse.getProxyID().isEmpty());
+		assertFalse(serverResponse.getSkipUseToken().isEmpty());
+
+		// Verify can still use the service
+		ServerPickIDCollection foundServerCollection = service.getServerPickIDCollection();
+		assertNotNull(foundServerCollection);
+		List<String> foundCollectionList = foundServerCollection.getPickIDCollection()
+				.getPickIDList();
+		assertNotNull(foundCollectionList);
 	}
 
 	private void deleteTestCategory(int memberID, String categoryName) throws SkipUseException {

@@ -51,8 +51,6 @@ public class SkipUseAPIService {
 
 	// Store response from server
 	private ServerResponse serverResponseData = new ServerResponse();
-	// The server proxy ID code for our connection
-	private String proxyID = "";
 
 	private ObjectMapper mapper = new ObjectMapper();
 	{
@@ -85,7 +83,7 @@ public class SkipUseAPIService {
 	// Calling this will initiates a proxy and or log in to the service.
 	//
 	public void login(String email, String password) throws SkipUseException {
-		if (proxyID.isEmpty())
+		if (getLastServerResponseData().getProxyID().isEmpty())
 			initiateProxy();
 
 		if (isLoggedIn() == false) {
@@ -116,7 +114,7 @@ public class SkipUseAPIService {
 	public boolean isLoggedIn() {
 		if (serverResponseData.getMemberID() < 0) {
 			return false;
-		} else if (!proxyID.isEmpty()) {
+		} else if (!getLastServerResponseData().getProxyID().isEmpty()) {
 			return true;
 		}
 		return false;
@@ -324,11 +322,22 @@ public class SkipUseAPIService {
 		postAndProcess("/mark", categoryPickIDCollection, ServerResponse.NAME);
 	}
 
-	// Unmark Pick IDs with categories by a member.
+	// Un-mark Pick IDs with categories by a member.
 	//
 	public void unmarkCategoryPickIDCollection(CategoryPickIDCollection categoryPickIDCollection)
 			throws SkipUseException {
 		postAndProcess("/unmark", categoryPickIDCollection, ServerResponse.NAME);
+	}
+
+	// Request a test error message from the server.
+	//
+	public void errorTest() {
+		try {
+			postAndProcess("/errortest", null, ServerPickIDCollection.NAME);
+		} catch (SkipUseException e) {
+			// ignore
+			e.printStackTrace();
+		}
 	}
 
 	// A proxyID is the server's reference ID for tracking user requests.
@@ -360,11 +369,12 @@ public class SkipUseAPIService {
 	private String buildURL(String postFixUrl, String expectedObject) throws SkipUseException {
 		String url = API_URL;
 
-		if (proxyID.isEmpty() && !expectedObject.isEmpty())
-			throw new SkipUseException("Attempting a API with no proxyID set. Maybe log-in first?");
+		if (getLastServerResponseData().getProxyID().isEmpty() && !expectedObject.isEmpty())
+			throw new SkipUseException(
+					"Attempting an API call with no proxyID set. Maybe log-in first?");
 
-		if (!proxyID.isEmpty())
-			url += "/proxyid/" + proxyID;
+		if (!getLastServerResponseData().getProxyID().isEmpty())
+			url += "/proxyid/" + getLastServerResponseData().getProxyID();
 
 		url += "/skipusetoken/" + tokenHelper.getSkipUseToken().toString() + postFixUrl;
 
@@ -630,7 +640,7 @@ public class SkipUseAPIService {
 
 			// the sever's proxyID reference
 			if (skipUseResponse.getProxyID() != null)
-				proxyID = skipUseResponse.getProxyID();
+				serverResponseData.setProxyID(skipUseResponse.getProxyID());
 
 			// the logged in user's display name
 			if (skipUseResponse.getMemberName() != null)
