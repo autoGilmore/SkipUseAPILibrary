@@ -27,14 +27,14 @@ import com.autogilmore.throwback.skipUsePackage.exception.SkipUseException;
  * NOTE: this is ONLY example code for how you could access the SkipUse API. This code may or may not work if the API changes.
 */
 public class SkipUseManagerTest {
-	// NOTE: Set these values to use your test credentials as these demo ones will be
-	// unstable from other people using them and causing failed tests.
+	// NOTE: Set these values to use your test credentials as these demo ones
+	// will be unstable from other people using them and causing failed tests.
 	private static final String EMAIL = "basic-demo@skipuse.com";
 	private static final String PASSWORD = "password";
 
-	// NOTE: These tests create a temporary member so that the owner and other members
-	// won't get test Picks in their history. Change this name if it conflicts
-	// with a current member name.
+	// NOTE: These tests create a temporary member so that the owner and other
+	// members won't get test Picks in their history. Change this name if it
+	// conflicts with a current member name.
 	private static final String TEST_MEMBER = "test member";
 
 	// Manager class under test
@@ -156,7 +156,8 @@ public class SkipUseManagerTest {
 		assertTrue(bubMemberID != manager.getOwnerMemberID());
 	}
 
-	// Each member has their own ID and the account owner has a permanent member ID.
+	// Each member has their own ID and the account owner has a permanent member
+	// ID.
 	@Test
 	public void test_getMemberIDByName() throws SkipUseException {
 		// Set up
@@ -486,11 +487,22 @@ public class SkipUseManagerTest {
 		MemberCategoryList memberCategoryList = manager.getCategoryListForMember(testMemberID);
 
 		// Verify
-		List<String> myCategoryNameList = memberCategoryList.getCategoryList();
-		assertNotNull(myCategoryNameList);
-		assertTrue(myCategoryNameList.size() == 1);
-		assertTrue(myCategoryNameList.get(0).equals("Bingo"));
+		List<String> memberCategoryNameList = memberCategoryList.getCategoryList();
+		assertNotNull(memberCategoryNameList);
+		assertTrue(memberCategoryNameList.size() == 1);
+		assertTrue(memberCategoryNameList.get(0).equals("Bingo"));
 		assertTrue(memberCategoryList.getMemberID() == testMemberID);
+
+		// Test: owner's categories
+		assertTrue(testMemberID != manager.getOwnerMemberID());
+		MemberCategoryList ownerCategoryList = manager
+				.getCategoryListForMember(manager.getOwnerMemberID());
+
+		// Verify: different than the member's categories
+		assertTrue(ownerCategoryList.getMemberID() == manager.getOwnerMemberID());
+		List<String> ownerCategoryNameList = ownerCategoryList.getCategoryList();
+		assertTrue("Owner should not have this category.",
+				ownerCategoryNameList.contains("Bingo") == false);
 	}
 
 	// A member's Pick can be updated to mark the 'stop using' or add additional
@@ -660,7 +672,7 @@ public class SkipUseManagerTest {
 		pickQuery.addCategory(categoryName);
 		pickQuery.makeExactQuery();
 
-		// check we don't have it yet
+		// check we don't have any marked Picks yet
 		List<Pick> pickList = manager.getMemberPickListByPickQuery(pickQuery);
 		Pick _havePick = pickList.stream().filter(p -> p.getMyPickID().equals(pickID)).findFirst()
 				.orElse(null);

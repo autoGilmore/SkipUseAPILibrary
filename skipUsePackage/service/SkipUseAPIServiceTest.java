@@ -265,6 +265,7 @@ public class SkipUseAPIServiceTest {
 		assertNotNull(pick);
 		assertTrue(!pick.getMyPickID().isEmpty());
 		int startingPickSkipCount = pick.getSkipped();
+		int startingPickUseCount = pick.getUsed();
 
 		MemberPickIDList memberPickIDList = new MemberPickIDList();
 		int memberID = service.getMyMemberID();
@@ -272,7 +273,7 @@ public class SkipUseAPIServiceTest {
 		memberPickIDList.addMemberID(memberID);
 		memberPickIDList.addPickID(pick.getMyPickID());
 
-		// Test
+		// Test: Skip
 		service.skipUsePassPick(SkipUsePass.SKIP, memberPickIDList);
 
 		// Verify
@@ -280,14 +281,52 @@ public class SkipUseAPIServiceTest {
 		List<Pick> updatePickList = updatedServerPickList.getPickList();
 		assertTrue("was: " + pickList.size(), pickList.size() > 0);
 		Pick updatedPick = null;
-		for (Pick element : updatePickList) {
-			if (element.getMyPickID().equals(pick.getMyPickID())) {
-				updatedPick = element;
+		for (Pick updatePick : updatePickList) {
+			if (updatePick.getMyPickID().equals(pick.getMyPickID())) {
+				updatedPick = updatePick;
 				break;
 			}
 		}
 		assertNotNull("Should have found the updated pick", updatedPick);
 		assertTrue(updatedPick.getSkipped() == startingPickSkipCount + 1);
+		assertTrue(updatedPick.getUsed() == startingPickUseCount);
+
+		// Test: Use
+		service.skipUsePassPick(SkipUsePass.USE, memberPickIDList);
+
+		// Verify
+		updatedServerPickList = service.getServerPickList();
+		updatePickList = updatedServerPickList.getPickList();
+		assertTrue("was: " + pickList.size(), pickList.size() > 0);
+		updatedPick = null;
+		for (Pick updatePick : updatePickList) {
+			if (updatePick.getMyPickID().equals(pick.getMyPickID())) {
+				updatedPick = updatePick;
+				break;
+			}
+		}
+		assertNotNull("Should have found the updated pick", updatedPick);
+		assertTrue(updatedPick.getSkipped() == startingPickSkipCount + 1);
+		assertTrue(updatedPick.getUsed() == startingPickUseCount + 1);
+
+		// Test: Pass
+		service.skipUsePassPick(SkipUsePass.PASS, memberPickIDList);
+
+		// Verify
+		updatedServerPickList = service.getServerPickList();
+		updatePickList = updatedServerPickList.getPickList();
+		assertTrue("was: " + pickList.size(), pickList.size() > 0);
+		updatedPick = null;
+		for (Pick updatePick : updatePickList) {
+			if (updatePick.getMyPickID().equals(pick.getMyPickID())) {
+				updatedPick = updatePick;
+				break;
+			}
+		}
+		assertNotNull("Should have found the updated pick", updatedPick);
+		assertTrue(updatedPick.getSkipped() == startingPickSkipCount + 1);
+		assertTrue(updatedPick.getUsed() == startingPickUseCount + 1);
+
 	}
 
 	@Test

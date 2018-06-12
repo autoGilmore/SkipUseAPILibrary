@@ -1,7 +1,9 @@
 package com.autogilmore.throwback.skipUsePackage.manager;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import com.autogilmore.throwback.skipUsePackage.dataObjects.CategoryPickIDCollection;
 import com.autogilmore.throwback.skipUsePackage.dataObjects.MemberCategoryList;
@@ -40,7 +42,7 @@ public class SkipUseManager {
 	private int myMemberID = -1;
 	private ServerPickIDCollection serverPickIDCollection = new ServerPickIDCollection();
 	private ServerMemberMap serverMemberMap = new ServerMemberMap();
-	private ServerMemberCategoryList serverMemberCategoryList = new ServerMemberCategoryList();
+	private Map<Integer, ServerMemberCategoryList> memberIDCategoryListMap = new HashMap<Integer, ServerMemberCategoryList>();
 
 	private static SkipUseManager instance;
 
@@ -239,22 +241,24 @@ public class SkipUseManager {
 	public MemberCategoryList createCategoryForMember(int memberID, String categoryName)
 			throws SkipUseException {
 		automaticLogin();
-		// load the category list if we don't have it yet
-		if (serverMemberCategoryList.getMemberCategoryList().getCategoryList().isEmpty())
-			getCategoryListForMember(memberID);
+
+		// do we have the category yet?
+		MemberCategoryList memberCategoryList = getMemberCategoryList(memberID);
+
 		// do we need to add it?
-		if (!serverMemberCategoryList.getMemberCategoryList().getCategoryList()
-				.contains(categoryName))
-			serverMemberCategoryList = service.createCategoryByMemberID(memberID, categoryName);
-		return serverMemberCategoryList.getMemberCategoryList();
+		if (!memberCategoryList.getCategoryList().contains(categoryName)) {
+			ServerMemberCategoryList serverMemberCategoryList = service.createCategoryByMemberID(memberID, categoryName);
+			memberIDCategoryListMap.put(memberID, serverMemberCategoryList);
+		}
+
+		return getMemberCategoryList(memberID);
 	}
 
 	// Return a list of the member's categories.
 	//
 	public MemberCategoryList getCategoryListForMember(int memberID) throws SkipUseException {
 		automaticLogin();
-		serverMemberCategoryList = service.getCategoryListByMemberID(memberID);
-		return serverMemberCategoryList.getMemberCategoryList();
+		return getMemberCategoryList(memberID);
 	}
 
 	// Update a category name for a member.
@@ -263,9 +267,10 @@ public class SkipUseManager {
 	public MemberCategoryList updateCategoryNameForMember(int memberID, PatchName patchName)
 			throws SkipUseException {
 		automaticLogin();
-		serverMemberCategoryList = service.updateCategoryNameByMemberID(memberID,
-				patchName.getBeforeName(), patchName.getAfterName());
-		return serverMemberCategoryList.getMemberCategoryList();
+		ServerMemberCategoryList serverMemberCategoryList = service.updateCategoryNameByMemberID(
+				memberID, patchName.getBeforeName(), patchName.getAfterName());
+		memberIDCategoryListMap.put(memberID, serverMemberCategoryList);
+		return getMemberCategoryList(memberID);
 	}
 
 	// Delete member categories by passing in the member ID with a list of
@@ -275,7 +280,8 @@ public class SkipUseManager {
 			throws SkipUseException {
 		automaticLogin();
 		service.deleteCategoryListByMemberCategoryList(memberCategoryList);
-		serverMemberCategoryList = new ServerMemberCategoryList();
+		memberIDCategoryListMap.remove(memberCategoryList.getMemberID());
+		getMemberCategoryList(memberCategoryList.getMemberID());
 	}
 
 	// Mark or un-mark a Pick with an existing category. Pass in the member ID,
@@ -376,12 +382,24 @@ public class SkipUseManager {
 			throw new SkipUseException("This account is out of data nibbles.");
 	}
 
+	// Return the cached member category list. If empty, get and store it.
+	//
+	private MemberCategoryList getMemberCategoryList(int memberID) throws SkipUseException {
+		if (!memberIDCategoryListMap.containsKey(memberID)
+				|| memberIDCategoryListMap.get(memberID).getMemberCategoryList().getCategoryList().isEmpty()) {
+			ServerMemberCategoryList serverMemberCategoryList = service
+					.getCategoryListByMemberID(memberID);
+			memberIDCategoryListMap.put(memberID, serverMemberCategoryList);
+		}
+		return memberIDCategoryListMap.get(memberID).getMemberCategoryList();
+	}
+
 	// Reset stored server data.
 	//
 	private void resetStoredServerData() {
 		myMemberID = -1;
 		serverPickIDCollection = new ServerPickIDCollection();
 		serverMemberMap = new ServerMemberMap();
-		serverMemberCategoryList = new ServerMemberCategoryList();
+		memberIDCategoryListMap.clear();
 	}
 }
