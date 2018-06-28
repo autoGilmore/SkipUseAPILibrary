@@ -1,11 +1,11 @@
 package com.autogilmore.throwback.skipUsePackage.dataObjects;
 
 /*
- * This is a Member's list of Categories for a Collection of Pick IDs.
+ * This is a member's list of categories for a collection of Pick IDs.
 */
 public class CategoryPickIDCollection {
 
-	// For this member's Categories...
+	// For this member's categories...
 	private MemberCategoryList memberCategoryList = new MemberCategoryList();
 
 	// Use these Pick IDs...

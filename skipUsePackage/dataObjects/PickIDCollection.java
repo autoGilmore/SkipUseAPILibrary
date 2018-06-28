@@ -18,7 +18,7 @@ public class PickIDCollection {
 	private List<String> pickIDList = new ArrayList<String>();
 
 	// Flag that Pick IDs a comma-delimited.
-	private boolean isSplitCSV = false;
+	private boolean splitCSV = false;
 
 	public PickIDCollection() {
 	}
@@ -73,11 +73,11 @@ public class PickIDCollection {
 	}
 
 	public boolean isSplitCSV() {
-		return this.isSplitCSV;
+		return this.splitCSV;
 	}
 
 	public void setSplitCSV(boolean splitCSV) {
-		this.isSplitCSV = splitCSV;
+		this.splitCSV = splitCSV;
 	}
 
 }

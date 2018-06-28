@@ -4,5 +4,5 @@ package com.autogilmore.throwback.skipUsePackage.enums;
  * Enumerations for the PickQuery return ordering of Picks.
 */
 public enum RampMode {
-	NONE, DOWN, UP
+	NONE, RATE_DOWN, RATE_UP, OLDEST, NEWEST
 }

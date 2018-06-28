@@ -6,6 +6,7 @@ import java.util.List;
 
 import com.autogilmore.throwback.skipUsePackage.enums.RampMode;
 import com.autogilmore.throwback.skipUsePackage.enums.SearchMode;
+import com.autogilmore.throwback.skipUsePackage.service.SkipUseParameters;
 
 /* 
  * A Pick Query is used to customize the return of desired Pick IDs.
@@ -28,7 +29,7 @@ public class PickQuery {
 
 	// Return back this many Pick IDs...
 	// (Not required but, it's a good idea to set this.)
-	private int howMany = 6;
+	private int howMany = SkipUseParameters.MAX_PICK_ID_LIST_SIZE;
 
 	// Try to send back this percentage (0-100) of new Picks. (isNewPick = true)
 	// (A good idea to set this as it mixes-in new Picks to choose from)
@@ -45,7 +46,7 @@ public class PickQuery {
 	// or newMixInPercentage of 0 or 100 settings.
 	// Set to 'true' means you always get back the howMany result setting if
 	// available.
-	private boolean isGetMorePicksIfShort = true;
+	private boolean getMorePicksIfShort = true;
 
 	// **** Optional *********
 
@@ -66,12 +67,12 @@ public class PickQuery {
 	// Option to not return recently updated Picks in the next query.
 	// (Not required, but set to 'false' if you want to see popular Picks
 	// every query even if the Pick was just presented.)
-	private boolean excludeRecentPicks = true;
+	private boolean excludeRecentPicks = false;
 
 	// Option to return Picks that have been flagged to not be included in
 	// normal queries.
 	// (Not required.)
-	private boolean isIncludeStopUsing = false;
+	private boolean includeStopUsing = false;
 
 	// Option to get the Categories that have been marked for return Picks.
 	// (Not required. Slower response time and might cost more because of more
@@ -88,9 +89,17 @@ public class PickQuery {
 
 	// Set this Pick ID string ONLY if you are searching for ONE Pick with this
 	// Pick ID.
-	// Setting this to any thing but empty will change the following parameters.
-	// This will return the Pick for ONE MEMBER only.
-	// If a Pick is not stored yet, an empty Pick List will be returned.
+	// NOTE: This will return the Pick for ONE MEMBER only.
+	// NOTE: Setting this will change/ignore the the other query parameters to
+	// the following:
+	// this.addThisManyNewValues = 0;
+	// this.excludeStopUsing = false;
+	// this.ramp = RampMode.NONE;
+	// this.searchMode = SearchMode.NORMAL;
+	// this.categoryMode = CategoryMode.ANY;
+	// this.getMorePicksIfShort = false;
+	// If a Pick is not stored yet, an empty Pick List will be returned with a
+	// the Pick's member ID set to -1.
 	private String pickID = "";
 
 	public PickQuery() {
@@ -126,6 +135,21 @@ public class PickQuery {
 
 	public String getPickID() {
 		return this.pickID;
+	}
+
+	public void setPickID(String pickID) {
+		if (pickID != null && !pickID.isEmpty()) {
+			this.pickID = pickID;
+			// NOTE: these setting are not needed, but show what the query will
+			// look like for the server.
+			// setHowMany(1);
+			// setExcludeRecentPicks(false);
+			// setGetMorePicksIfShort(false);
+			// setSearchMode(SearchMode.NORMAL);
+			// makeExactQuery();
+			// NOTE: you can still choose to add Category info if you want
+			setIncludeCategories(true);
+		}
 	}
 
 	public int getNewMixInPercentage() {
@@ -180,20 +204,20 @@ public class PickQuery {
 		this.excludeRecentPicks = excludeRecentPicks;
 	}
 
+	public boolean isIncludeStopUsing() {
+		return this.includeStopUsing;
+	}
+
 	public void setIncludeStopUsing(boolean isStopUsing) {
-		this.isIncludeStopUsing = isStopUsing;
+		this.includeStopUsing = isStopUsing;
 	}
 
-	public boolean getIsIncludeStopUsing() {
-		return this.isIncludeStopUsing;
-	}
-
-	public boolean getIsGetMorePicksIfShort() {
-		return this.isGetMorePicksIfShort;
+	public boolean isGetMorePicksIfShort() {
+		return this.getMorePicksIfShort;
 	}
 
 	public void setGetMorePicksIfShort(boolean isFillEmptySearchResults) {
-		this.isGetMorePicksIfShort = isFillEmptySearchResults;
+		this.getMorePicksIfShort = isFillEmptySearchResults;
 	}
 
 	public boolean isIncludeCategories() {
@@ -212,21 +236,6 @@ public class PickQuery {
 		this.collectionID = collectionID;
 	}
 
-	public void setPickID(String pickID) {
-		if (pickID != null && !pickID.isEmpty()) {
-			this.pickID = pickID;
-			// NOTE: these setting are not needed, but show what the query will
-			// look like for the server.
-			setHowMany(1);
-			setExcludeRecentPicks(false);
-			setGetMorePicksIfShort(false);
-			setSearchMode(SearchMode.NORMAL);
-			makeExactQuery();
-			// NOTE: you can still choose to add Category info if you want
-			setIncludeCategories(true);
-		}
-	}
-
 	public PickQuery clone(PickQuery original) {
 		PickQuery copy = new PickQuery();
 		copy.setHowMany(original.getHowMany());
@@ -235,9 +244,9 @@ public class PickQuery {
 		copy.setCategories(new ArrayList<>(original.getCategories()));
 		copy.setRamp(original.getRamp());
 		copy.setExcludeRecentPicks(original.getExcludeRecentPicks());
-		copy.setIncludeStopUsing(original.getIsIncludeStopUsing());
+		copy.setIncludeStopUsing(original.isIncludeStopUsing());
 		copy.setMemberIDList(new ArrayList<>(original.getMemberIDList()));
-		copy.setGetMorePicksIfShort(original.getIsGetMorePicksIfShort());
+		copy.setGetMorePicksIfShort(original.isGetMorePicksIfShort());
 		copy.setCollectionID(original.getCollectionID());
 		return copy;
 	}

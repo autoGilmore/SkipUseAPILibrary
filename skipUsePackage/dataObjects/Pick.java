@@ -1,14 +1,19 @@
 package com.autogilmore.throwback.skipUsePackage.dataObjects;
 
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 
 /* 
- * A 'Pick' is the data that is stored with a Pick ID for a Member.
+ * A 'Pick' is the stored data for a member's usage of a Pick ID.
 */
 public class Pick {
 
-	private String myPickID = "";
+	// Your Pick ID.
+	private String pickID = "";
+
+	// The member ID the Pick belongs to.
+	private int memberID = -1;
 
 	// Number of times Skipped.
 	private int skipped = 0;
@@ -17,10 +22,10 @@ public class Pick {
 	private int used = 0;
 
 	// My additional JSON.
-	private String myJSON = "";
+	private String json = "";
 
 	// Ignore flag for use during typical Pick queries.
-	private boolean isStopUsing = false;
+	private boolean stopUsing = false;
 
 	// Percentage 0-100, where 0 is most Skipped and 100 is most Used.
 	private int autoRatePercentage = 50;
@@ -29,21 +34,33 @@ public class Pick {
 	private int trendingRatePercentage = 50;
 
 	// Flag to indicate no Pick information has been stored yet.
-	private boolean isNewPick = true;
+	private boolean newPick = true;
 
-	// List of a Member's Categories that are marked for this Pick.
+	// List of a member's categories that are marked for this Pick.
 	// Will be empty if includeCategories is not set in PickQuery.
 	private List<String> categoryList = new ArrayList<>();
+
+	// Timestamp when Pick was last updated. Rounding by minutes.
+	private Timestamp _lastUpdated;
 
 	public Pick() {
 	}
 
-	public String getMyPickID() {
-		return myPickID;
+	public String getPickID() {
+		return pickID;
 	}
 
-	public void setMyPickID(String value) {
-		this.myPickID = value;
+	public void setPickID(String value) {
+		if (value != null)
+			this.pickID = value;
+	}
+
+	public int getMemberID() {
+		return this.memberID;
+	}
+
+	public void setMemberID(int memberID) {
+		this.memberID = memberID;
 	}
 
 	public int getUsed() {
@@ -63,11 +80,11 @@ public class Pick {
 	}
 
 	public boolean isStopUsing() {
-		return isStopUsing;
+		return stopUsing;
 	}
 
-	public void setStopUsing(boolean isStopUsing) {
-		this.isStopUsing = isStopUsing;
+	public void setStopUsing(boolean stopUsing) {
+		this.stopUsing = stopUsing;
 	}
 
 	public int getAutoRatePercentage() {
@@ -78,12 +95,13 @@ public class Pick {
 		this.autoRatePercentage = autoRatePercentage;
 	}
 
-	public String getMyJSON() {
-		return myJSON;
+	public String getJSON() {
+		return json;
 	}
 
-	public void setMyJSON(String myJSON) {
-		this.myJSON = myJSON;
+	public void setJSON(String json) {
+		if (json != null)
+			this.json = json;
 	}
 
 	public int getTrendingRatePercentage() {
@@ -99,15 +117,24 @@ public class Pick {
 	}
 
 	public void setCategoryList(List<String> categoryList) {
-		this.categoryList = categoryList;
+		if (categoryList != null)
+			this.categoryList = categoryList;
 	}
 
-	public void setNewPick(boolean isNewPick) {
-		this.isNewPick = isNewPick;
+	public void setNewPick(boolean newPick) {
+		this.newPick = newPick;
 	}
 
 	public boolean isNewPick() {
-		return isNewPick;
+		return newPick;
 	}
 
+	public Timestamp _getLastUpdated() {
+		return _lastUpdated;
+	}
+
+	public void setLastUpdated(Timestamp lastUpdated) {
+		if (lastUpdated != null)
+			this._lastUpdated = lastUpdated;
+	}
 }

@@ -30,9 +30,20 @@ skipuseapi@gmail.com
 
 ## Changelog:
 
-060618: Copy updates to the README.md, Manager, Service and test classes. 
+062818:
+* Updated standards for boolean variables and renamed.
+* Added a last updated timestamp field to Pick.
+* Added SkipUseParameters file for API constants.
+* Ramp mode added 'newest' and 'oldest' for PickQuery usage.
+* Moved the server API calls from the SkipUseAPIService to a new SkipUseAPI file.
+* FIXED: a problem when getting one pick for a member and it was a new pick. A new Pick is returned with member ID of -1. Now adding the member ID when getting a new Pick and then updating it using the Manager.
 
-060518: README Markdown conversion 
+060618: 
+* Copy updates to the README.md, Manager, Service and test classes. 
+
+060518: 
+* README Markdown conversion 
  
-060418: Initial demo files prepared 
+060418: 
+* Initial demo files prepared 
 

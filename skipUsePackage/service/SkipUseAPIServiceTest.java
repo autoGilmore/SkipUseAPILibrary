@@ -30,7 +30,7 @@ import com.autogilmore.throwback.skipUsePackage.exception.SkipUseException;
 public class SkipUseAPIServiceTest {
 	// NOTE: Set the SkipUseAPI URL here. See API documentation for more
 	// information.
-	private static final String SKIP_USE_API_URL = "http://www.skipuseapi.com/v1";
+	private final String SKIP_USE_API_URL = SkipUseParameters.SKIP_USE_API_URL;
 
 	// NOTE: Set these to use your own test credentials as the demo account is
 	// unstable from other people's usage.
@@ -235,7 +235,7 @@ public class SkipUseAPIServiceTest {
 	}
 
 	@Test
-	public void getServerPickListByMemberID() throws SkipUseException {
+	public void test_getAllServerPickListByMemberID() throws SkipUseException {
 		// Set up
 		service.login(EMAIL, PASSWORD);
 		assertTrue(service.isLoggedIn());
@@ -246,6 +246,89 @@ public class SkipUseAPIServiceTest {
 
 		// Verify
 		assertNotNull(serverPickList);
+	}
+
+	@Test
+	public void test__getPickByMemberIDAndPickID() throws SkipUseException {
+		// Set up
+		service.login(EMAIL, PASSWORD);
+		assertTrue(service.isLoggedIn());
+		int memberID = service.getMyMemberID();
+
+		// test Pick ID
+		String pickID = "<a href=\"http://www.skipuse.com\" target=\"_blank\" title=\"SkipUse Home Page\">SkipUse</a>";
+
+		// set collection
+		PickIDCollection pickIDCollection = new PickIDCollection("test collection");
+		pickIDCollection.addPickID(pickID);
+		service.setPickIDCollection(pickIDCollection);
+
+		// Test: pick not stored yet
+		Pick _foundPick = service._getPickByMemberIDAndPickID(memberID, pickID);
+
+		// Verify
+		assertTrue(_foundPick == null);
+
+		// store the pick
+		service.skipUsePassPickID(SkipUsePass.PASS, memberID, pickID);
+
+		// Test: pick is now found
+		_foundPick = service._getPickByMemberIDAndPickID(memberID, pickID);
+		assertNotNull(_foundPick);
+		assertTrue(_foundPick.getPickID().equals(pickID));
+	}
+
+	@Test
+	public void test_getServerPickListByMemberIDAndPickList() throws SkipUseException {
+		// Set up
+		service.login(EMAIL, PASSWORD);
+		assertTrue(service.isLoggedIn());
+		int memberID = service.getMyMemberID();
+
+		String collectionName = "My collection";
+		List<String> collectionList = new ArrayList<>();
+		collectionList.add("A");
+		collectionList.add("B");
+		collectionList.add("C");
+		collectionList.add("D");
+
+		PickIDCollection pickCollection = new PickIDCollection();
+		pickCollection.setCollectionName(collectionName);
+		pickCollection.setPickIDList(collectionList);
+		pickCollection.setSplitCSV(true);
+		service.setPickIDCollection(pickCollection);
+		assertTrue(
+				"was: " + service.getServerPickIDCollection().getPickIDCollection().getPickIDList()
+						.size(),
+				service.getServerPickIDCollection().getPickIDCollection().getPickIDList()
+						.size() == 4);
+
+		// Test: empty
+		ServerPickList memberPickList = service.getServerPickListByMemberIDAndPickList(memberID,
+				collectionList);
+
+		// Verify
+		assertNotNull(memberPickList);
+		List<Pick> pickList = memberPickList.getPickList();
+		assertTrue("Should not have any store Picks yet. was: " + pickList.size(),
+				pickList.size() == 0);
+
+		// add picks
+		List<Integer> memberIDList = new ArrayList<>();
+		memberIDList.add(memberID);
+		MemberPickIDList memberPickIDList = new MemberPickIDList(pickCollection, memberIDList);
+		memberPickIDList.setSplitCSV(true);
+		service.skipUsePassMemberPickIDList(SkipUsePass.SKIP, memberPickIDList);
+
+		// Test: w/Picks
+		memberPickList = service.getServerPickListByMemberIDAndPickList(memberID, collectionList);
+
+		// Verify
+		assertNotNull(memberPickList);
+		pickList = memberPickList.getPickList();
+		assertTrue("Should have all the store Picks. was: " + pickList.size(),
+				pickList.size() == collectionList.size());
+
 	}
 
 	@Test
@@ -263,7 +346,7 @@ public class SkipUseAPIServiceTest {
 
 		Pick pick = pickList.get(0);
 		assertNotNull(pick);
-		assertTrue(!pick.getMyPickID().isEmpty());
+		assertTrue(!pick.getPickID().isEmpty());
 		int startingPickSkipCount = pick.getSkipped();
 		int startingPickUseCount = pick.getUsed();
 
@@ -271,10 +354,10 @@ public class SkipUseAPIServiceTest {
 		int memberID = service.getMyMemberID();
 		assertTrue(memberID > 0);
 		memberPickIDList.addMemberID(memberID);
-		memberPickIDList.addPickID(pick.getMyPickID());
+		memberPickIDList.addPickID(pick.getPickID());
 
 		// Test: Skip
-		service.skipUsePassPick(SkipUsePass.SKIP, memberPickIDList);
+		service.skipUsePassMemberPickIDList(SkipUsePass.SKIP, memberPickIDList);
 
 		// Verify
 		ServerPickList updatedServerPickList = service.getServerPickList();
@@ -282,7 +365,7 @@ public class SkipUseAPIServiceTest {
 		assertTrue("was: " + pickList.size(), pickList.size() > 0);
 		Pick updatedPick = null;
 		for (Pick updatePick : updatePickList) {
-			if (updatePick.getMyPickID().equals(pick.getMyPickID())) {
+			if (updatePick.getPickID().equals(pick.getPickID())) {
 				updatedPick = updatePick;
 				break;
 			}
@@ -292,7 +375,7 @@ public class SkipUseAPIServiceTest {
 		assertTrue(updatedPick.getUsed() == startingPickUseCount);
 
 		// Test: Use
-		service.skipUsePassPick(SkipUsePass.USE, memberPickIDList);
+		service.skipUsePassMemberPickIDList(SkipUsePass.USE, memberPickIDList);
 
 		// Verify
 		updatedServerPickList = service.getServerPickList();
@@ -300,7 +383,7 @@ public class SkipUseAPIServiceTest {
 		assertTrue("was: " + pickList.size(), pickList.size() > 0);
 		updatedPick = null;
 		for (Pick updatePick : updatePickList) {
-			if (updatePick.getMyPickID().equals(pick.getMyPickID())) {
+			if (updatePick.getPickID().equals(pick.getPickID())) {
 				updatedPick = updatePick;
 				break;
 			}
@@ -310,7 +393,7 @@ public class SkipUseAPIServiceTest {
 		assertTrue(updatedPick.getUsed() == startingPickUseCount + 1);
 
 		// Test: Pass
-		service.skipUsePassPick(SkipUsePass.PASS, memberPickIDList);
+		service.skipUsePassMemberPickIDList(SkipUsePass.PASS, memberPickIDList);
 
 		// Verify
 		updatedServerPickList = service.getServerPickList();
@@ -318,7 +401,7 @@ public class SkipUseAPIServiceTest {
 		assertTrue("was: " + pickList.size(), pickList.size() > 0);
 		updatedPick = null;
 		for (Pick updatePick : updatePickList) {
-			if (updatePick.getMyPickID().equals(pick.getMyPickID())) {
+			if (updatePick.getPickID().equals(pick.getPickID())) {
 				updatedPick = updatePick;
 				break;
 			}
@@ -330,7 +413,7 @@ public class SkipUseAPIServiceTest {
 	}
 
 	@Test
-	public void updatePickByMemberID_changeIsStopUsing() throws SkipUseException {
+	public void test_updateMemberPick_changeIsStopUsing() throws SkipUseException {
 		// Set up
 		service.login(EMAIL, PASSWORD);
 		assertTrue(service.isLoggedIn());
@@ -346,14 +429,14 @@ public class SkipUseAPIServiceTest {
 		pick.setStopUsing(!beforeIsStopUsing);
 
 		// Test
-		service.updatePickByMemberID(memberID, pick);
+		service.updateMemberPick(pick);
 
 		// Verify
 		ServerPickList updatedServerPickList = service.getAllServerPickListByMemberID(memberID);
 		assertNotNull(updatedServerPickList);
 		assertTrue(serverPickList.getPickList().size() > 0);
 		assertTrue("same pickID?",
-				serverPickList.getPickList().get(0).getMyPickID().equals(pick.getMyPickID()));
+				serverPickList.getPickList().get(0).getPickID().equals(pick.getPickID()));
 		assertTrue("Should now be changed",
 				serverPickList.getPickList().get(0).isStopUsing() != beforeIsStopUsing);
 	}
@@ -673,7 +756,7 @@ public class SkipUseAPIServiceTest {
 		ServerPickList serverPickList = service.setPickQuery(pickQuery);
 		assertNotNull(serverPickList);
 		assertTrue(serverPickList.getPickList().size() == 1);
-		assertTrue(serverPickList.getPickList().get(0).getMyPickID().equals("B"));
+		assertTrue(serverPickList.getPickList().get(0).getPickID().equals("B"));
 		assertTrue(serverPickList.getPickList().get(0).getCategoryList().size() == 1);
 		assertTrue(serverPickList.getPickList().get(0).getCategoryList().get(0)
 				.equals(testCategoryName));
@@ -738,7 +821,7 @@ public class SkipUseAPIServiceTest {
 		ServerPickList serverPickList = service.setPickQuery(pickQuery);
 		assertNotNull(serverPickList);
 		assertTrue(serverPickList.getPickList().size() == 1);
-		assertTrue(serverPickList.getPickList().get(0).getMyPickID().equals("B"));
+		assertTrue(serverPickList.getPickList().get(0).getPickID().equals("B"));
 		assertTrue(serverPickList.getPickList().get(0).getCategoryList().size() == 1);
 		assertTrue(serverPickList.getPickList().get(0).getCategoryList().get(0)
 				.equals(testCategoryName));

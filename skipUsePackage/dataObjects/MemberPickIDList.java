@@ -16,7 +16,7 @@ public class MemberPickIDList {
 	private List<String> pickIDList = new ArrayList<String>();
 
 	// Split the Pick IDs by comma separator.
-	private boolean isSplitCSV = false;
+	private boolean splitCSV = false;
 
 	public MemberPickIDList() {
 	}
@@ -68,11 +68,11 @@ public class MemberPickIDList {
 	}
 
 	public boolean isSplitCSV() {
-		return this.isSplitCSV;
+		return this.splitCSV;
 	}
 
 	public void setSplitCSV(boolean splitCSV) {
-		this.isSplitCSV = splitCSV;
+		this.splitCSV = splitCSV;
 	}
 
 }

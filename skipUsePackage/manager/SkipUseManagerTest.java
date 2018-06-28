@@ -13,6 +13,7 @@ import org.junit.After;
 import org.junit.Test;
 
 import com.autogilmore.throwback.skipUsePackage.dataObjects.MemberCategoryList;
+import com.autogilmore.throwback.skipUsePackage.dataObjects.MemberPickIDList;
 import com.autogilmore.throwback.skipUsePackage.dataObjects.PatchName;
 import com.autogilmore.throwback.skipUsePackage.dataObjects.Pick;
 import com.autogilmore.throwback.skipUsePackage.dataObjects.PickIDCollection;
@@ -313,19 +314,19 @@ public class SkipUseManagerTest {
 		boolean isCFound = false;
 		boolean isDFound = false;
 		for (Pick pick : allPickMemberPickList) {
-			if (pick.getMyPickID().equals("A")) {
+			if (pick.getPickID().equals("A")) {
 				isAFound = true;
 				assertTrue("Pick should be new", pick.isNewPick());
 			}
-			if (pick.getMyPickID().equals("B")) {
+			if (pick.getPickID().equals("B")) {
 				isBFound = true;
 				assertTrue("Pick should be new", pick.isNewPick());
 			}
-			if (pick.getMyPickID().equals("C")) {
+			if (pick.getPickID().equals("C")) {
 				isCFound = true;
 				assertFalse("Pick should NOT be new", pick.isNewPick());
 			}
-			if (pick.getMyPickID().equals("D")) {
+			if (pick.getPickID().equals("D")) {
 				isDFound = true;
 				assertTrue("Pick should be new", pick.isNewPick());
 			}
@@ -336,78 +337,7 @@ public class SkipUseManagerTest {
 		assertTrue(isDFound);
 	}
 
-	// A Pick Query is way to get back Picks for member/s. The query has many
-	// combinations to find Picks. One example is looking for Picks that have
-	// been marked as not to be used indicated by the Pick 'isStopUsing' flag.
-	@Test
-	public void test_getMemberPickListByPickQuery() throws SkipUseException {
-		// Set up
-		manager.login(EMAIL, PASSWORD);
-		assertTrue(manager.isLoggedIn());
-		manager.addMemberName(TEST_MEMBER);
-		int testMemberID = manager.getMemberIDByName(TEST_MEMBER);
-		String pickID = "E";
-
-		// underscores are used here indicate that a variable or method could be
-		// or possibly return null.
-		Pick _currentPick = null;
-		List<Pick> currentPickList = manager.getAllPickListByMemberID(testMemberID);
-		for (Pick foundPick : currentPickList) {
-			if (foundPick.getMyPickID().equals(pickID))
-				_currentPick = foundPick;
-		}
-
-		// don't have a Pick yet so create it.
-		if (_currentPick == null) {
-			PickIDCollection pickIDCollection = manager.getPickIDCollection();
-			pickIDCollection.addPickID(pickID);
-			manager.addPickIDCollection(pickIDCollection);
-		}
-
-		// mark the pick 'stop using' to find by the query
-		manager.setStopUsingByMemberIDPickIDTrueFalse(testMemberID, pickID, true);
-
-		// the PickQuery:
-		PickQuery pickQuery = new PickQuery();
-		// looking for this member
-		pickQuery.addToMemberIDList(testMemberID);
-		// for Picks marked as 'StopUsing'
-		pickQuery.setSearchMode(SearchMode.STOPUSING);
-		// don't send back more if none are found
-		pickQuery.setGetMorePicksIfShort(false);
-
-		// Test
-		List<Pick> pickList = manager.getMemberPickListByPickQuery(pickQuery);
-
-		// Verify
-		assertTrue(pickList.size() > 0);
-		boolean isPickFound = false;
-		for (Pick pick : pickList) {
-			if (pick.getMyPickID().equals(pickID)) {
-				isPickFound = true;
-				assertTrue("Pick should be marked 'stop using'", pick.isStopUsing());
-			}
-		}
-		assertTrue(isPickFound);
-
-		// NOTE: once the PickQuery has been set, the regular GET method
-		// getMemberPickListByPickQuery should return the
-		// same query result.
-
-		// Test
-		pickList = manager.getMemberPickListByPickQuery();
-
-		// Verify
-		isPickFound = false;
-		for (Pick pick : pickList) {
-			if (pick.getMyPickID().equals(pickID)) {
-				isPickFound = true;
-			}
-		}
-		assertTrue(isPickFound);
-	}
-
-	// You can also just get a Pick for a member by the Pick ID.
+	// You can just get a single Pick for a member by the Pick ID.
 	@Test
 	public void test_getPickByMemberIDAndPickID() throws SkipUseException {
 		// Set up
@@ -437,8 +367,190 @@ public class SkipUseManagerTest {
 		// Test with a Pick
 		_pick = manager._getPickByMemberIDAndPickID(testMemberID, pickID);
 		assertNotNull(_pick);
-		assertTrue(_pick.getMyPickID().equals(pickID));
+		assertTrue(_pick.getPickID().equals(pickID));
 		assertTrue(_pick.getSkipped() > 0);
+	}
+
+	// A Pick Query is way to get back Picks for member/s. The Pick Query has
+	// many
+	// combinations to find Picks. One example is looking for Picks that have
+	// been marked as not to be used indicated by the Pick 'isStopUsing' flag.
+	@Test
+	public void test_setPickQuery() throws SkipUseException {
+		// Set up
+		manager.login(EMAIL, PASSWORD);
+		assertTrue(manager.isLoggedIn());
+		manager.addMemberName(TEST_MEMBER);
+		int testMemberID = manager.getMemberIDByName(TEST_MEMBER);
+		String pickID = "E";
+
+		// underscores are used here indicate that a variable or method could be
+		// or possibly return null.
+		Pick _currentPick = null;
+		List<Pick> currentPickList = manager.getAllPickListByMemberID(testMemberID);
+		for (Pick foundPick : currentPickList) {
+			if (foundPick.getPickID().equals(pickID))
+				_currentPick = foundPick;
+		}
+
+		// if we don't have a Pick yet so create it by first adding it to the
+		// collection.
+		if (_currentPick == null) {
+			PickIDCollection pickIDCollection = manager.getPickIDCollection();
+			pickIDCollection.addPickID(pickID);
+			manager.addPickIDCollection(pickIDCollection);
+		}
+
+		// mark the pick 'stop using' so that we can find it with a pick query
+		manager.setStopUsingByMemberIDPickIDTrueFalse(testMemberID, pickID, true);
+		// we should now have a Pick to test with
+		Pick _pick = manager._getPickByMemberIDAndPickID(testMemberID, pickID);
+		assertNotNull(_pick);
+		assertTrue(_pick.getPickID().equals(pickID));
+		assertTrue(_pick.isStopUsing());
+
+		// let's find the Pick with a PickQuery:
+		PickQuery pickQuery = new PickQuery();
+		// looking for this member
+		pickQuery.addToMemberIDList(testMemberID);
+		// for Picks marked as 'StopUsing'
+		pickQuery.setSearchMode(SearchMode.STOPUSING);
+		// don't send back more if none are found
+		pickQuery.setGetMorePicksIfShort(false);
+
+		// Test
+		// set PickQuery
+		List<Pick> pickList = manager.setPickQuery(pickQuery);
+
+		// Verify
+		int firstQueryPickSize = pickList.size();
+		assertTrue("there should be at least 2 Picks for this test", firstQueryPickSize > 1);
+		boolean isPickFound = false;
+		for (Pick pick : pickList) {
+			if (pick.getPickID().equals(pickID)) {
+				isPickFound = true;
+				assertTrue("Pick should be marked 'stop using'", pick.isStopUsing());
+			}
+		}
+		assertTrue(isPickFound);
+
+		// NOTE: once the PickQuery has been 'set', we can use the regular GET
+		// method getMemberPickListByPickQuery to get same query result.
+
+		// Test
+		pickList = manager.getPickQuery();
+
+		// Verify
+		isPickFound = false;
+		for (Pick pick : pickList) {
+			if (pick.getPickID().equals(pickID)) {
+				isPickFound = true;
+			}
+		}
+		assertTrue(isPickFound);
+		assertTrue("Same number of picks found", pickList.size() == firstQueryPickSize);
+
+		// using other get pick methods should not change the 'set' PickQuery.
+		// Let's find our Pick again and then make sure the 'set' PickQuery
+		// still works.
+		_pick = manager._getPickByMemberIDAndPickID(testMemberID, pickID);
+		assertNotNull("should still find the Pick", _pick);
+
+		// try the GET query again
+		pickList = manager.getPickQuery();
+
+		// Verify
+		isPickFound = false;
+		for (Pick pick : pickList) {
+			if (pick.getPickID().equals(pickID)) {
+				isPickFound = true;
+			}
+		}
+		assertTrue(isPickFound);
+		assertTrue("there should be no Pick Query change", pickList.size() == firstQueryPickSize);
+
+	}
+
+	// The 'SearchMode.FAVORITES' PickQuery option searches for Picks for
+	// multiple members for the highest auto-rating and times used count.
+	//
+	@Test
+	public void test_setPickQuery_favoritesForMembers() throws SkipUseException {
+		// Set up
+		manager.login(EMAIL, PASSWORD);
+		assertTrue(manager.isLoggedIn());
+		manager.addMemberName(TEST_MEMBER);
+		int testMemberID = manager.getMemberIDByName(TEST_MEMBER);
+
+		// setting the collection
+		PickIDCollection pickIDCollection = new PickIDCollection("Colorful Collection");
+		pickIDCollection.addPickID("Blue, Green, Red, Orange, Purple, Yellow");
+		pickIDCollection.setSplitCSV(true);
+		manager.addPickIDCollection(pickIDCollection);
+
+		// choose favorite colors for the account owner
+		// Skip and Use a couple of times to change the pick auto-ratings
+		MemberPickIDList ownerPickIDList = new MemberPickIDList();
+		ownerPickIDList.addMemberID(manager.getOwnerMemberID());
+		ownerPickIDList.addPickID("Red, Green, Yellow");
+		ownerPickIDList.setSplitCSV(true);
+		manager.skipUsePassMemberPickIDList(SkipUsePass.USE, ownerPickIDList);
+		manager.skipUsePassMemberPickIDList(SkipUsePass.USE, ownerPickIDList);
+		ownerPickIDList.clearPickIDList();
+		ownerPickIDList.addPickID("Purple, Orange, Blue,");
+		manager.skipUsePassMemberPickIDList(SkipUsePass.SKIP, ownerPickIDList);
+		manager.skipUsePassMemberPickIDList(SkipUsePass.SKIP, ownerPickIDList);
+
+		// choose favorite colors for the test member
+		MemberPickIDList memberPickIDList = new MemberPickIDList();
+		memberPickIDList.addMemberID(testMemberID);
+		memberPickIDList.addPickID("Orange, Red, Yellow");
+		memberPickIDList.setSplitCSV(true);
+		manager.skipUsePassMemberPickIDList(SkipUsePass.USE, memberPickIDList);
+		manager.skipUsePassMemberPickIDList(SkipUsePass.USE, memberPickIDList);
+		memberPickIDList.clearPickIDList();
+		memberPickIDList.addPickID("Blue, Green, Purple");
+		manager.skipUsePassMemberPickIDList(SkipUsePass.SKIP, memberPickIDList);
+		manager.skipUsePassMemberPickIDList(SkipUsePass.SKIP, memberPickIDList);
+
+		// let's find their common favorites with a PickQuery:
+		PickQuery pickQuery = new PickQuery();
+		// look for these members
+		pickQuery.addToMemberIDList(manager.getOwnerMemberID());
+		pickQuery.addToMemberIDList(testMemberID);
+		// look for favorites
+		pickQuery.setSearchMode(SearchMode.FAVORITES);
+		// get the top four colors
+		pickQuery.setHowMany(4);
+		// don't include new Picks or send back more if none are found
+		pickQuery.makeExactQuery();
+
+		// Test
+		List<Pick> pickList = manager.setPickQuery(pickQuery);
+
+		// Verify
+		assertTrue("4 Picks should be found", pickList.size() == 4);
+		boolean isRedFound = false;
+		boolean isYellowFound = false;
+		boolean isOwnerIDFound = false;
+		boolean isMemberIDFound = false;
+		for (Pick pick : pickList) {
+			if (pick.getPickID().equals("Red")) {
+				isRedFound = true;
+			} else if (pick.getPickID().equals("Yellow")) {
+				isYellowFound = true;
+			}
+			if (pick.getMemberID() == manager.getOwnerMemberID()) {
+				isOwnerIDFound = true;
+			} else if (pick.getMemberID() == testMemberID) {
+				isMemberIDFound = true;
+			}
+
+		}
+		assertTrue("Red should be a favorite", isRedFound);
+		assertTrue("Yellow should be a favorite", isYellowFound);
+		assertTrue(isOwnerIDFound);
+		assertTrue(isMemberIDFound);
 	}
 
 	// Member's can add categories for their Picks.
@@ -508,7 +620,7 @@ public class SkipUseManagerTest {
 	// A member's Pick can be updated to mark the 'stop using' or add additional
 	// JSON data.
 	@Test
-	public void test_updatePickByMemberID_createAPickIfNewPickID() throws SkipUseException {
+	public void test_updateMemberPick_createAPickIfNewPickID() throws SkipUseException {
 		// Set up
 		manager.login(EMAIL, PASSWORD);
 		assertTrue(manager.isLoggedIn());
@@ -534,17 +646,19 @@ public class SkipUseManagerTest {
 		pickQuery.makeExactQuery();
 
 		// make the query
-		List<Pick> pickList = manager.getMemberPickListByPickQuery(pickQuery);
-		Pick testPick = pickList.stream().filter(t -> t.getMyPickID().equals(date.toString()))
+		List<Pick> pickList = manager.setPickQuery(pickQuery);
+		Pick _testPick = pickList.stream().filter(t -> t.getPickID().equals(date.toString()))
 				.findFirst().orElse(null);
-		assertNotNull(testPick);
-		assertTrue(testPick.isNewPick());
+		assertNotNull(_testPick);
+		assertTrue(_testPick.isNewPick());
+		assertTrue("Should not have a timestamp", _testPick._getLastUpdated() == null);
 
 		// pick attributes to update:
 		Pick updateThisPick = new Pick();
-		updateThisPick.setMyPickID(testPick.getMyPickID());
+		updateThisPick.setMemberID(testMemberID);
+		updateThisPick.setPickID(_testPick.getPickID());
 		// additional JSON you can set for your app
-		updateThisPick.setMyJSON("{\"hello\": \"world\"}");
+		updateThisPick.setJSON("{\"hello\": \"world\"}");
 		// flag a pick to 'stop using' in normal queries
 		updateThisPick.setStopUsing(true);
 
@@ -559,30 +673,34 @@ public class SkipUseManagerTest {
 		categoryList.add("create category for member method instead");
 		updateThisPick.setCategoryList(categoryList);
 		updateThisPick.setNewPick(true);
+		updateThisPick.setLastUpdated(new java.sql.Timestamp(new java.util.Date().getTime()));
 
 		// Test
-		manager.updatePickByMemberID(testMemberID, updateThisPick);
+		manager.updateMemberPick(updateThisPick);
 
 		// Verify
 		List<Pick> updatedPickList = manager.getAllPickListByMemberID(testMemberID);
-		Pick updatedPick = updatedPickList.stream().filter(t -> t.getMyPickID().equals(pickID))
+		Pick _updatedPick = updatedPickList.stream().filter(t -> t.getPickID().equals(pickID))
 				.findFirst().orElse(null);
-		assertNotNull("Should find the Pick", updatedPick);
-		assertTrue(updatedPick.getMyPickID().equals(updateThisPick.getMyPickID()));
+		assertNotNull("Should find the Pick", _updatedPick);
+		assertTrue(_updatedPick.getPickID().equals(updateThisPick.getPickID()));
 
 		// attributes we changed
-		assertTrue("was: " + updatedPick.getMyJSON(),
-				updatedPick.getMyJSON().equals("{\"hello\":\"world\"}"));
-		assertTrue(updatedPick.isStopUsing() == updateThisPick.isStopUsing());
+		assertTrue("was: " + _updatedPick.getJSON(),
+				_updatedPick.getJSON().equals("{\"hello\":\"world\"}"));
+		assertTrue(_updatedPick.isStopUsing() == updateThisPick.isStopUsing());
 
 		// can't change these
-		assertTrue(updatedPick.getAutoRatePercentage() != updateThisPick.getAutoRatePercentage());
-		assertTrue(updatedPick.getTrendingRatePercentage() != updateThisPick
+		assertTrue(_updatedPick.getAutoRatePercentage() != updateThisPick.getAutoRatePercentage());
+		assertTrue(_updatedPick.getTrendingRatePercentage() != updateThisPick
 				.getTrendingRatePercentage());
-		assertFalse(updatedPick.isNewPick());
-		assertFalse(updatedPick.getCategoryList().contains("Add categories"));
-		assertFalse(updatedPick.getSkipped() == updateThisPick.getSkipped());
-		assertFalse(updatedPick.getUsed() == updateThisPick.getUsed());
+		assertFalse(_updatedPick.isNewPick());
+		assertFalse(_updatedPick.getCategoryList().contains("Add categories"));
+		assertFalse(_updatedPick.getSkipped() == updateThisPick.getSkipped());
+		assertFalse(_updatedPick.getUsed() == updateThisPick.getUsed());
+		assertTrue(_updatedPick._getLastUpdated().getTime() != updateThisPick._getLastUpdated()
+				.getTime());
+		assertNotNull("Should now have a timestamp", _updatedPick._getLastUpdated().getTime());
 	}
 
 	// A member can update a category's name.
@@ -673,39 +791,41 @@ public class SkipUseManagerTest {
 		pickQuery.makeExactQuery();
 
 		// check we don't have any marked Picks yet
-		List<Pick> pickList = manager.getMemberPickListByPickQuery(pickQuery);
-		Pick _havePick = pickList.stream().filter(p -> p.getMyPickID().equals(pickID)).findFirst()
+		List<Pick> pickList = manager.setPickQuery(pickQuery);
+		Pick _havePick = pickList.stream().filter(p -> p.getPickID().equals(pickID)).findFirst()
 				.orElse(null);
 		assertTrue(_havePick == null);
 
 		// Test
-		manager.markPickIDListWithCategoryTrueFalse(testMemberID, pickID, categoryName, true);
+		manager.markPickIDListWithCategoryTrueFalse(testMemberID, pickIDCollection, categoryName,
+				true);
 
 		// Verify
 		pickQuery.setIncludeCategories(true);
-		pickList = manager.getMemberPickListByPickQuery(pickQuery);
+		pickList = manager.setPickQuery(pickQuery);
 
-		Pick markedPick = pickList.stream().filter(p -> p.getMyPickID().equals(pickID)).findFirst()
+		Pick _markedPick = pickList.stream().filter(p -> p.getPickID().equals(pickID)).findFirst()
 				.orElse(null);
-		assertNotNull(markedPick);
-		assertTrue(markedPick.getCategoryList().contains(categoryName));
+		assertNotNull(_markedPick);
+		assertTrue(_markedPick.getCategoryList().contains(categoryName));
 
-		// now, unmark it.
+		// now, unmark it. You can also use the markPickWithCategoryTrueFalse()
+		// method when you already have a Pick.
 		// Test
-		manager.markPickIDListWithCategoryTrueFalse(testMemberID, pickID, categoryName, false);
+		manager.markPickWithCategoryTrueFalse(_markedPick, categoryName, false);
 
 		// Verify
-		pickList = manager.getMemberPickListByPickQuery(pickQuery);
+		pickList = manager.setPickQuery(pickQuery);
 
-		Pick unmarkedPick = pickList.stream().filter(p -> p.getMyPickID().equals(pickID))
-				.findFirst().orElse(null);
-		assertTrue(unmarkedPick == null);
+		Pick _unmarkedPick = pickList.stream().filter(p -> p.getPickID().equals(pickID)).findFirst()
+				.orElse(null);
+		assertTrue(_unmarkedPick == null);
 	}
 
 	// Another way to simply stop using a Pick is to use the
 	// setStopUsingByMemberIDPickIDTrueFalse method. Setting this is a simple
 	// way to remove a Pick if a member no longer wants to get it in normal
-	// usage.
+	// Pick queries.
 	@Test
 	public void test_setStopUsingByMemberIDPickIDTrueFalse() throws SkipUseException {
 		// Set up
@@ -714,13 +834,22 @@ public class SkipUseManagerTest {
 		manager.addMemberName(TEST_MEMBER);
 		int testMemberID = manager.getMemberIDByName(TEST_MEMBER);
 
-		// add collection
+		// add test Picks to collection
 		String pickID = "Normal Pick";
 		String stopUsingPickID = "Stop Using Pick";
 		PickIDCollection pickIDCollection = new PickIDCollection("test collection");
 		pickIDCollection.addPickID(pickID);
 		pickIDCollection.addPickID(stopUsingPickID);
 		manager.addPickIDCollection(pickIDCollection);
+		List<Pick> pickList = manager.getAllPickListByMemberID(testMemberID);
+		Pick _reqularPick = pickList.stream().filter(t -> t.getPickID().equals(pickID)).findFirst()
+				.orElse(null);
+		assertNotNull(_reqularPick);
+		assertTrue(_reqularPick.isStopUsing() == false);
+		Pick _stopUsingPick = pickList.stream().filter(t -> t.getPickID().equals(stopUsingPickID))
+				.findFirst().orElse(null);
+		assertNotNull(_stopUsingPick);
+		assertTrue(_stopUsingPick.isStopUsing() == false);
 
 		boolean isStopUsing = true;
 
@@ -728,23 +857,24 @@ public class SkipUseManagerTest {
 		manager.setStopUsingByMemberIDPickIDTrueFalse(testMemberID, stopUsingPickID, isStopUsing);
 
 		// Verify
-		List<Pick> pickList = manager.getAllPickListByMemberID(testMemberID);
-		Pick reqularPick = pickList.stream().filter(t -> t.getMyPickID().equals(pickID)).findFirst()
+		pickList = manager.getAllPickListByMemberID(testMemberID);
+		_reqularPick = pickList.stream().filter(t -> t.getPickID().equals(pickID)).findFirst()
 				.orElse(null);
-		assertNotNull(reqularPick);
-		assertTrue(reqularPick.isStopUsing() == false);
+		assertNotNull(_reqularPick);
+		assertTrue(_reqularPick.isStopUsing() == false);
 
-		Pick stopUsingPick = pickList.stream().filter(t -> t.getMyPickID().equals(stopUsingPickID))
+		_stopUsingPick = pickList.stream().filter(t -> t.getPickID().equals(stopUsingPickID))
 				.findFirst().orElse(null);
-		assertTrue(stopUsingPick.isStopUsing());
+		assertNotNull(_stopUsingPick);
+		assertTrue(_stopUsingPick.isStopUsing());
 
 		// and verify stop using is not included in a normal pick query
 		PickQuery pickQuery = new PickQuery();
 		pickQuery.addToMemberIDList(testMemberID);
-		List<Pick> foundPickList = manager.getMemberPickListByPickQuery(pickQuery);
-		stopUsingPick = foundPickList.stream().filter(t -> t.getMyPickID().equals(stopUsingPickID))
+		List<Pick> foundPickList = manager.setPickQuery(pickQuery);
+		_stopUsingPick = foundPickList.stream().filter(t -> t.getPickID().equals(stopUsingPickID))
 				.findFirst().orElse(null);
-		assertTrue("Should not be included in normal queries", stopUsingPick == null);
+		assertTrue("Should not be included in normal queries", _stopUsingPick == null);
 	}
 
 	// The skipUsePass method is how Picks are changed for future PickQueries.
@@ -764,35 +894,81 @@ public class SkipUseManagerTest {
 		String pickID = pickIDCollection.getPickIDList().get(0);
 		assertTrue(pickID.length() > 0);
 		List<Pick> pickList = manager.getAllPickListByMemberID(testMemberID);
-		Pick testPick = pickList.stream().filter(t -> t.getMyPickID().equals(pickID)).findFirst()
+		Pick _testPick = pickList.stream().filter(t -> t.getPickID().equals(pickID)).findFirst()
 				.orElse(null);
-		assertNotNull(testPick);
-		int startingSkipCount = testPick.getSkipped();
-		int startingTrendingRatePercentage = testPick.getTrendingRatePercentage();
+		assertNotNull(_testPick);
+		int startingSkipCount = _testPick.getSkipped();
+		int startingTrendingRatePercentage = _testPick.getTrendingRatePercentage();
 
 		// Test
 		manager.skipUsePass(SkipUsePass.SKIP, testMemberID, pickID);
 
 		// Verify
 		List<Pick> updatedPickList = manager.getAllPickListByMemberID(testMemberID);
-		Pick foundPick = updatedPickList.stream().filter(t -> t.getMyPickID().equals(pickID))
+		Pick _foundPick = updatedPickList.stream().filter(t -> t.getPickID().equals(pickID))
 				.findFirst().orElse(null);
-		assertNotNull(foundPick);
-		int endSkipCount = foundPick.getSkipped();
+		assertNotNull(_foundPick);
+		int endSkipCount = _foundPick.getSkipped();
 		assertTrue(endSkipCount == startingSkipCount + 1);
 		assertTrue("The trending percentage will not change until the next update",
-				foundPick.getTrendingRatePercentage() == startingTrendingRatePercentage);
+				_foundPick.getTrendingRatePercentage() == startingTrendingRatePercentage);
 
-		// try a 'Used'
-		// Test
+		// Test: try a 'Use'
 		manager.skipUsePass(SkipUsePass.USE, testMemberID, pickID);
 		updatedPickList = manager.getAllPickListByMemberID(testMemberID);
-		foundPick = updatedPickList.stream().filter(t -> t.getMyPickID().equals(pickID)).findFirst()
+		_foundPick = updatedPickList.stream().filter(t -> t.getPickID().equals(pickID)).findFirst()
 				.orElse(null);
-		assertNotNull(foundPick);
-		assertTrue(foundPick.getSkipped() == startingSkipCount + 1);
-		assertTrue(foundPick.getUsed() == 1);
+		assertNotNull(_foundPick);
+		assertTrue(_foundPick.getSkipped() == startingSkipCount + 1);
+		assertTrue(_foundPick.getUsed() == 1);
 		assertTrue("After a 'use' the trending percentage should raise",
-				foundPick.getTrendingRatePercentage() > startingTrendingRatePercentage);
+				_foundPick.getTrendingRatePercentage() > startingTrendingRatePercentage);
+	}
+
+	// Another way to update Picks (Skip, Use, Pass) is by using the
+	// skipUsePassMemberPickIDList method.
+	//
+	@Test
+	public void test_skipUsePassMemberPickIDList() throws SkipUseException {
+		// Set up
+		manager.login(EMAIL, PASSWORD);
+		assertTrue(manager.isLoggedIn());
+		manager.addMemberName(TEST_MEMBER);
+		int testMemberID = manager.getMemberIDByName(TEST_MEMBER);
+
+		// setting the collection
+		PickIDCollection pickIDCollection = new PickIDCollection("Dog Breed Collection");
+		pickIDCollection.addPickID(
+				"Pomeranian,German Shepherd,Golden Retriever,Labrador Retriever,Old English Sheepdog,SaintBernard,Chihuahua,Border Collie,Australian Shepherd");
+		pickIDCollection.setSplitCSV(true);
+		manager.addPickIDCollection(pickIDCollection);
+
+		// 'Skip' some Picks for the test member
+		MemberPickIDList memberPickIDList = new MemberPickIDList();
+		memberPickIDList.addMemberID(testMemberID);
+		memberPickIDList.addPickID("Golden Retriever, Labrador Retriever");
+		memberPickIDList.setSplitCSV(true);
+
+		// Test
+		manager.skipUsePassMemberPickIDList(SkipUsePass.SKIP, memberPickIDList);
+
+		// Verify
+		List<Pick> allPickMemberPickList = manager.getAllPickListByMemberID(testMemberID);
+		assertNotNull(allPickMemberPickList);
+		assertTrue(	allPickMemberPickList.size()> 0);
+		boolean isDog1Found = false;
+		boolean isDog2Found = false;
+		for (Pick pick : allPickMemberPickList) {
+			if (pick.getPickID().equals("Golden Retriever")) {
+				isDog1Found = true;
+				assertTrue("Pick should be skipped", pick.getSkipped() == 1);
+			}
+			if (pick.getPickID().equals("Labrador Retriever")) {
+				isDog2Found = true;
+				assertTrue("Pick should be skipped", pick.getSkipped() == 1);
+			}
+		}
+		assertTrue(isDog1Found);
+		assertTrue(isDog2Found);
 	}
 }
