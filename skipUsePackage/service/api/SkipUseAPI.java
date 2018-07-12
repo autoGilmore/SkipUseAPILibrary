@@ -294,31 +294,19 @@ public class SkipUseAPI {
 		try {
 			if (serverObjectName.equals(ServerPickIDCollection.NAME)
 					&& json.contains(ServerPickIDCollection.NAME)) {
-				ServerPickIDCollection serverCollection;
-				serverCollection = mapper.readValue(json.toString(), ServerPickIDCollection.class);
-				return serverCollection;
+				return mapper.readValue(json.toString(), ServerPickIDCollection.class);
 			} else if (serverObjectName.equals(ServerCategoryPickIDCollectionList.NAME)
 					&& json.contains(ServerCategoryPickIDCollectionList.NAME)) {
-				ServerCategoryPickIDCollectionList serverCategoryPickIDCollectionList;
-				serverCategoryPickIDCollectionList = mapper.readValue(json.toString(),
-						ServerCategoryPickIDCollectionList.class);
-				return serverCategoryPickIDCollectionList;
+				return mapper.readValue(json.toString(), ServerCategoryPickIDCollectionList.class);
 			} else if (serverObjectName.equals(ServerPickList.NAME)
 					&& json.contains(ServerPickList.NAME)) {
-				ServerPickList serverPickList;
-				serverPickList = mapper.readValue(json.toString(), ServerPickList.class);
-				return serverPickList;
+				return mapper.readValue(json.toString(), ServerPickList.class);
 			} else if (serverObjectName.equals(ServerMemberCategoryList.NAME)
 					&& json.contains(ServerMemberCategoryList.NAME)) {
-				ServerMemberCategoryList serverMemberCategoryList;
-				serverMemberCategoryList = mapper.readValue(json.toString(),
-						ServerMemberCategoryList.class);
-				return serverMemberCategoryList;
+				return mapper.readValue(json.toString(), ServerMemberCategoryList.class);
 			} else if (serverObjectName.equals(ServerMemberMap.NAME)
 					&& json.contains(ServerMemberMap.NAME)) {
-				ServerMemberMap serverMemberMap;
-				serverMemberMap = mapper.readValue(json.toString(), ServerMemberMap.class);
-				return serverMemberMap;
+				return mapper.readValue(json.toString(), ServerMemberMap.class);
 			} else {
 				throw new SkipUseException("Could not convert the expected object: "
 						+ serverObjectName + " or the incoming JSON name changed. Was: " + json);

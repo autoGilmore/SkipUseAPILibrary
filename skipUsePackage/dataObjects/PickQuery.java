@@ -6,7 +6,7 @@ import java.util.List;
 
 import com.autogilmore.throwback.skipUsePackage.enums.RampMode;
 import com.autogilmore.throwback.skipUsePackage.enums.SearchMode;
-import com.autogilmore.throwback.skipUsePackage.service.SkipUseParameters;
+import com.autogilmore.throwback.skipUsePackage.manager.SkipUseManager;
 
 /* 
  * A Pick Query is used to customize the return of desired Pick IDs.
@@ -29,7 +29,7 @@ public class PickQuery {
 
 	// Return back this many Pick IDs...
 	// (Not required but, it's a good idea to set this.)
-	private int howMany = SkipUseParameters.MAX_PICK_ID_LIST_SIZE;
+	private int howMany = SkipUseManager.MAX_PICK_ID_LIST_SIZE;
 
 	// Try to send back this percentage (0-100) of new Picks. (isNewPick = true)
 	// (A good idea to set this as it mixes-in new Picks to choose from)
@@ -83,7 +83,7 @@ public class PickQuery {
 	// Option to return Picks that have been marked with these Categories...
 	// (Not required. This might also costs more to use because of server
 	// processing.)
-	private List<String> categoryList = new ArrayList<>();
+	private List<String> categoryList = new ArrayList<String>();
 
 	// **** Only ONE Pick *********
 

@@ -30,12 +30,12 @@ import com.autogilmore.throwback.skipUsePackage.exception.SkipUseException;
 public class SkipUseAPIServiceTest {
 	// NOTE: Set the SkipUseAPI URL here. See API documentation for more
 	// information.
-	private final String SKIP_USE_API_URL = SkipUseParameters.SKIP_USE_API_URL;
+	private final String SKIP_USE_API_URL = SkipUseProperties.SKIP_USE_API_URL;
 
 	// NOTE: Set these to use your own test credentials as the demo account is
 	// unstable from other people's usage.
-	private static final String EMAIL = "basic-demo@skipuse.com";
-	private static final String PASSWORD = "password";
+	private static final String EMAIL = SkipUseProperties.TEST_SKIP_USE_EMAIL;
+	private static final String PASSWORD = SkipUseProperties.TEST_SKIP_USE_PASSWORD;
 
 	private SkipUseAPIService service = new SkipUseAPIService(SKIP_USE_API_URL);
 

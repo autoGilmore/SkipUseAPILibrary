@@ -21,6 +21,7 @@ import com.autogilmore.throwback.skipUsePackage.dataObjects.PickQuery;
 import com.autogilmore.throwback.skipUsePackage.enums.SearchMode;
 import com.autogilmore.throwback.skipUsePackage.enums.SkipUsePass;
 import com.autogilmore.throwback.skipUsePackage.exception.SkipUseException;
+import com.autogilmore.throwback.skipUsePackage.service.SkipUseProperties;
 
 /* 
  * Tests for verifying the SkipUseManager's use of the SkipUseAPIService.class
@@ -30,15 +31,15 @@ import com.autogilmore.throwback.skipUsePackage.exception.SkipUseException;
 public class SkipUseManagerTest {
 	// NOTE: Set these values to use your test credentials as these demo ones
 	// will be unstable from other people using them and causing failed tests.
-	private static final String EMAIL = "basic-demo@skipuse.com";
-	private static final String PASSWORD = "password";
+	private static final String EMAIL = SkipUseProperties.TEST_SKIP_USE_EMAIL;
+	private static final String PASSWORD = SkipUseProperties.TEST_SKIP_USE_PASSWORD;
 
-	// NOTE: These tests create a temporary member so that the owner and other
-	// members won't get test Picks in their history. Change this name if it
-	// conflicts with a current member name.
+	// NOTE: These tests will create a temporary member so that the owner and other
+	// members won't get test Picks added in their history. Change this name if it
+	// conflicts one of your current member's name.
 	private static final String TEST_MEMBER = "test member";
 
-	// Manager class under test
+	// Manager class under test.
 	private SkipUseManager manager = SkipUseManager.getInstance();
 
 	// After each test, remove the test member.
@@ -90,7 +91,7 @@ public class SkipUseManagerTest {
 		manager.logout();
 		assertFalse(manager.isLoggedIn());
 
-		// NOTE: this test will fail if you are using the demo login
+		// NOTE: this test will fail if you are using the demo login to test with.
 		// Test
 		MemberCategoryList memberCategoryList = manager.getCategoryListForMember(testMemberID);
 
@@ -236,7 +237,7 @@ public class SkipUseManagerTest {
 		assertTrue(manager.isLoggedIn());
 
 		String collectionName = "My collection";
-		List<String> collectionList = new ArrayList<>();
+		List<String> collectionList = new ArrayList<String>();
 		collectionList.add("A,B,C,D");
 		collectionList.add("D");
 		collectionList.add("C");
@@ -259,7 +260,7 @@ public class SkipUseManagerTest {
 		manager.login(EMAIL, PASSWORD);
 		assertTrue(manager.isLoggedIn());
 		String collectionName = "My collection";
-		List<String> collectionList = new ArrayList<>();
+		List<String> collectionList = new ArrayList<String>();
 		collectionList.add("A,B,C, D");
 		collectionList.add("D");
 		collectionList.add("C");
@@ -294,7 +295,7 @@ public class SkipUseManagerTest {
 		int testMemberID = manager.getMemberIDByName(TEST_MEMBER);
 		assertTrue(testMemberID > 0);
 		String collectionName = "My collection";
-		List<String> collectionList = new ArrayList<>();
+		List<String> collectionList = new ArrayList<String>();
 		collectionList.add("A,B,C, D");
 		PickIDCollection createPickIDCollection = manager.addPickIDCollection(collectionName,
 				collectionList, true);
@@ -347,7 +348,7 @@ public class SkipUseManagerTest {
 		int testMemberID = manager.getMemberIDByName(TEST_MEMBER);
 		String pickID = "adfg";
 		String collectionName = "My collection";
-		List<String> collectionList = new ArrayList<>();
+		List<String> collectionList = new ArrayList<String>();
 		collectionList.add(pickID);
 		PickIDCollection createPickIDCollection = manager.addPickIDCollection(collectionName,
 				collectionList, false);
@@ -628,9 +629,9 @@ public class SkipUseManagerTest {
 		int testMemberID = manager.getMemberIDByName(TEST_MEMBER);
 
 		// create a shared Pick ID collection
-		List<String> collectionList = new ArrayList<>();
+		List<String> collectionList = new ArrayList<String>();
 		Date date = new Date();
-		String pickID = date.toString();
+		String pickID = "TestPickID=" + date.toString();
 		collectionList.add(pickID);
 		manager.addPickIDCollection("new collection", collectionList, true);
 
@@ -647,7 +648,7 @@ public class SkipUseManagerTest {
 
 		// make the query
 		List<Pick> pickList = manager.setPickQuery(pickQuery);
-		Pick _testPick = pickList.stream().filter(t -> t.getPickID().equals(date.toString()))
+		Pick _testPick = pickList.stream().filter(t -> t.getPickID().equals(pickID))
 				.findFirst().orElse(null);
 		assertNotNull(_testPick);
 		assertTrue(_testPick.isNewPick());
@@ -667,7 +668,7 @@ public class SkipUseManagerTest {
 		updateThisPick.setUsed(30);
 		updateThisPick.setAutoRatePercentage(200);
 		updateThisPick.setTrendingRatePercentage(130);
-		List<String> categoryList = new ArrayList<>();
+		List<String> categoryList = new ArrayList<String>();
 		categoryList.add("Add categories");
 		categoryList.add("using the");
 		categoryList.add("create category for member method instead");
@@ -698,9 +699,9 @@ public class SkipUseManagerTest {
 		assertFalse(_updatedPick.getCategoryList().contains("Add categories"));
 		assertFalse(_updatedPick.getSkipped() == updateThisPick.getSkipped());
 		assertFalse(_updatedPick.getUsed() == updateThisPick.getUsed());
+		assertNotNull("Should now have a timestamp", _updatedPick._getLastUpdated());
 		assertTrue(_updatedPick._getLastUpdated().getTime() != updateThisPick._getLastUpdated()
 				.getTime());
-		assertNotNull("Should now have a timestamp", _updatedPick._getLastUpdated().getTime());
 	}
 
 	// A member can update a category's name.

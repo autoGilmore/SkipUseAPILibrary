@@ -1,9 +1,9 @@
 package com.autogilmore.throwback.skipUsePackage.manager;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.WeakHashMap;
 
 import com.autogilmore.throwback.skipUsePackage.dataObjects.CategoryPickIDCollection;
 import com.autogilmore.throwback.skipUsePackage.dataObjects.MemberCategoryList;
@@ -20,7 +20,7 @@ import com.autogilmore.throwback.skipUsePackage.dataObjects.incomingServer.Serve
 import com.autogilmore.throwback.skipUsePackage.enums.SkipUsePass;
 import com.autogilmore.throwback.skipUsePackage.exception.SkipUseException;
 import com.autogilmore.throwback.skipUsePackage.service.SkipUseAPIService;
-import com.autogilmore.throwback.skipUsePackage.service.SkipUseParameters;
+import com.autogilmore.throwback.skipUsePackage.service.SkipUseProperties;
 
 /* 
  * This is a Singleton and a manager for common usage of the SkipUse API microservice. 
@@ -30,8 +30,9 @@ import com.autogilmore.throwback.skipUsePackage.service.SkipUseParameters;
 public class SkipUseManager {
 	// Set the SkipUseAPI URL here. See the API documentation for more
 	// information.
-	private final String SKIP_USE_API_URL = SkipUseParameters.SKIP_USE_API_URL;
+	private final String SKIP_USE_API_URL = SkipUseProperties.SKIP_USE_API_URL;
 
+	// Using the API service.
 	private SkipUseAPIService service = new SkipUseAPIService(SKIP_USE_API_URL);
 
 	// Automatic log-in option.
@@ -42,8 +43,13 @@ public class SkipUseManager {
 	// Stored server response data.
 	private int myMemberID = -1;
 	private ServerMemberMap serverMemberMap = new ServerMemberMap();
-	private Map<Integer, ServerMemberCategoryList> memberIDCategoryListMap = new HashMap<Integer, ServerMemberCategoryList>();
+	private Map<Integer, ServerMemberCategoryList> memberIDCategoryListMap = new WeakHashMap<Integer, ServerMemberCategoryList>();
 
+	// SkipUse limits.
+	// max Pick ID size.
+	public static final int MAX_PICK_ID_LIST_SIZE = 5000;
+
+	// Manager singleton instance.
 	private static SkipUseManager instance;
 
 	/** A private Constructor prevents any other class from instantiating. */
@@ -305,7 +311,7 @@ public class SkipUseManager {
 	public void markPickIDListWithCategoryTrueFalse(int memberID, PickIDCollection pickIDCollection,
 			String categoryName, boolean isMarkWithCategory) throws SkipUseException {
 		CategoryPickIDCollection categoryPickIDCollection = new CategoryPickIDCollection();
-		List<String> categoryList = new ArrayList<>();
+		List<String> categoryList = new ArrayList<String>();
 		categoryList.add(categoryName);
 		MemberCategoryList memberCategoryList = new MemberCategoryList(memberID, categoryList);
 		categoryPickIDCollection.setMemberCategoryList(memberCategoryList);
@@ -364,7 +370,7 @@ public class SkipUseManager {
 		PickIDCollection collection = new PickIDCollection(
 				getPickIDCollection().getCollectionName());
 		collection.addPickID(pickID);
-		List<Integer> memberIDList = new ArrayList<>();
+		List<Integer> memberIDList = new ArrayList<Integer>();
 		memberIDList.add(memberID);
 		MemberPickIDList memberPickIDList = new MemberPickIDList(collection, memberIDList);
 		skipUsePassMemberPickIDList(skipUsePass, memberPickIDList);

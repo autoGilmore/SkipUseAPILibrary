@@ -12,7 +12,7 @@ public class MemberCategoryList {
 	private int memberID = -1;
 
 	// Use these Categories.
-	private List<String> categoryList = new ArrayList<>();
+	private List<String> categoryList = new ArrayList<String>();
 
 	public MemberCategoryList(int memberID, List<String> categoryList) {
 		this.memberID = memberID;

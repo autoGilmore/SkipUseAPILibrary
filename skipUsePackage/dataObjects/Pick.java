@@ -4,6 +4,8 @@ import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 /* 
  * A 'Pick' is the stored data for a member's usage of a Pick ID.
 */
@@ -38,9 +40,10 @@ public class Pick {
 
 	// List of a member's categories that are marked for this Pick.
 	// Will be empty if includeCategories is not set in PickQuery.
-	private List<String> categoryList = new ArrayList<>();
+	private List<String> categoryList = new ArrayList<String>();
 
 	// Timestamp when Pick was last updated. Rounding by minutes.
+	@JsonProperty("lastUpdated")
 	private Timestamp _lastUpdated;
 
 	public Pick() {

@@ -159,7 +159,7 @@ public class SkipUseAPIService extends SkipUseAPI {
 	// Returns null if not found.
 	//
 	public Pick _getPickByMemberIDAndPickID(int memberID, String pickID) throws SkipUseException {
-		List<String> pickList = new ArrayList<>();
+		List<String> pickList = new ArrayList<String>();
 		pickList.add(pickID);
 		Pick _pick = null;
 		ServerPickList serverPickList = getServerPickListByMemberIDAndPickList(memberID, pickList);
@@ -173,7 +173,7 @@ public class SkipUseAPIService extends SkipUseAPI {
 	public ServerPickList getServerPickListByMemberIDAndPickList(int memberID,
 			List<String> pickIDList) throws SkipUseException {
 		MemberPickIDList memberPickIDList = new MemberPickIDList();
-		List<Integer> memberIDList = new ArrayList<>(memberID);
+		List<Integer> memberIDList = new ArrayList<Integer>();
 		memberIDList.add(memberID);
 		memberPickIDList.setMemberIDList(memberIDList);
 		memberPickIDList.setPickIDList(pickIDList);

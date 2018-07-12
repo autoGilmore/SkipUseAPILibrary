@@ -29,6 +29,11 @@ skipuseapi@gmail.com
 ### Troubleshooting:
 
 ## Changelog:
+071218:   
+* Added properties file for settings
+* Added an example project for a music selection helper
+* Updated test and Manager files to reference property settings
+* Fixed an issue with the timestamp not being serialized because of a leading underscore
 
 062818:
 * Updated standards for boolean variables and renamed.

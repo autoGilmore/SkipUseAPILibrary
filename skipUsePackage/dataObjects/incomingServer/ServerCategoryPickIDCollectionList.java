@@ -10,6 +10,7 @@ import com.autogilmore.throwback.skipUsePackage.dataObjects.CategoryPickIDCollec
 * The API server response containing a List of CategoryPickIDCollection.
 */
 public class ServerCategoryPickIDCollectionList extends ServerResponse {
+
 	// JSON object name
 	public static final String NAME = "clientCategoryCollectionList";
 
