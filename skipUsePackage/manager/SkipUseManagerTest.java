@@ -34,9 +34,9 @@ public class SkipUseManagerTest {
 	private static final String EMAIL = SkipUseProperties.TEST_SKIP_USE_EMAIL;
 	private static final String PASSWORD = SkipUseProperties.TEST_SKIP_USE_PASSWORD;
 
-	// NOTE: These tests will create a temporary member so that the owner and other
-	// members won't get test Picks added in their history. Change this name if it
-	// conflicts one of your current member's name.
+	// NOTE: These tests will create a temporary member so that the owner and
+	// other members won't get test Picks added in their history. Change this
+	// name if it conflicts one of your current member's name.
 	private static final String TEST_MEMBER = "test member";
 
 	// Manager class under test.
@@ -91,7 +91,8 @@ public class SkipUseManagerTest {
 		manager.logout();
 		assertFalse(manager.isLoggedIn());
 
-		// NOTE: this test will fail if you are using the demo login to test with.
+		// NOTE: this test will fail if you are using the demo login to test
+		// with.
 		// Test
 		MemberCategoryList memberCategoryList = manager.getCategoryListForMember(testMemberID);
 
@@ -182,6 +183,10 @@ public class SkipUseManagerTest {
 		// Set up
 		manager.login(EMAIL, PASSWORD);
 		assertTrue(manager.isLoggedIn());
+		// remove Dewey if needed
+		int deweyMemberID = manager.getMemberIDByName("Dewey");
+		if (deweyMemberID != -1)
+			manager.deleteMemberByID(deweyMemberID);
 
 		// Test
 		int testMemberID = manager.getMemberIDByName("Dewey");
@@ -197,15 +202,20 @@ public class SkipUseManagerTest {
 		manager.login(EMAIL, PASSWORD);
 		assertTrue(manager.isLoggedIn());
 		manager.addMemberName("Dewey");
-		int testMemberID = manager.getMemberIDByName("Dewey");
-		assertTrue(testMemberID > 0);
+		int deweyMemberID = manager.getMemberIDByName("Dewey");
+		assertTrue(deweyMemberID > 0);
+
+		// remove Louie if needed
+		int louieMemberID = manager.getMemberIDByName("Louie");
+		if (louieMemberID != -1)
+			manager.deleteMemberByID(louieMemberID);
 
 		// Test
-		manager.updateMemberNameByID(testMemberID, "Dewey", "Louie");
+		manager.updateMemberNameByID(deweyMemberID, "Dewey", "Louie");
 
 		// Verify
 		assertTrue(manager.getMemberIDByName("Dewey") == -1);
-		assertTrue(manager.getMemberIDByName("Louie") == testMemberID);
+		assertTrue(manager.getMemberIDByName("Louie") == deweyMemberID);
 	}
 
 	// Remove all of a member's data by their ID.
@@ -648,8 +658,8 @@ public class SkipUseManagerTest {
 
 		// make the query
 		List<Pick> pickList = manager.setPickQuery(pickQuery);
-		Pick _testPick = pickList.stream().filter(t -> t.getPickID().equals(pickID))
-				.findFirst().orElse(null);
+		Pick _testPick = pickList.stream().filter(t -> t.getPickID().equals(pickID)).findFirst()
+				.orElse(null);
 		assertNotNull(_testPick);
 		assertTrue(_testPick.isNewPick());
 		assertTrue("Should not have a timestamp", _testPick._getLastUpdated() == null);
@@ -956,7 +966,7 @@ public class SkipUseManagerTest {
 		// Verify
 		List<Pick> allPickMemberPickList = manager.getAllPickListByMemberID(testMemberID);
 		assertNotNull(allPickMemberPickList);
-		assertTrue(	allPickMemberPickList.size()> 0);
+		assertTrue(allPickMemberPickList.size() > 0);
 		boolean isDog1Found = false;
 		boolean isDog2Found = false;
 		for (Pick pick : allPickMemberPickList) {

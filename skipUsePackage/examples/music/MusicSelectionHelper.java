@@ -15,6 +15,7 @@ import com.autogilmore.throwback.skipUsePackage.enums.SearchMode;
 import com.autogilmore.throwback.skipUsePackage.enums.SkipUsePass;
 import com.autogilmore.throwback.skipUsePackage.exception.SkipUseException;
 import com.autogilmore.throwback.skipUsePackage.manager.SkipUseManager;
+import com.autogilmore.throwback.skipUsePackage.service.SkipUseProperties;
 
 public class MusicSelectionHelper {
 
@@ -24,7 +25,6 @@ public class MusicSelectionHelper {
 	// Flags to verify service states.
 	private boolean isSkipUseRunning = false;
 	private boolean isSkipUseError = false;
-	private boolean isSkipUseLoggedIn = false;
 
 	// Listening members and song collections.
 	private PickQuery lastPickQuery = new PickQuery();
@@ -250,20 +250,27 @@ public class MusicSelectionHelper {
 	public void toggleSongCategory(String songID, int memberID, Category toggleCategory) {
 		if (isSkipUseRunning()) {
 			String categoryName = toggleCategory.toString();
+
+			List<String> categoryList = getCategoryListForMember(memberID);
+
+			// create Category if needed.
+			if (!categoryList.contains(categoryName))
+				createCategoryForMember(memberID, categoryName);
+
 			Pick _pick = _getPickByMemberIDAndSongID(memberID, songID);
 			if (_pick != null) {
-				if (_pick.getCategoryList().contains(toggleCategory)) {
+				if (_pick.getCategoryList().contains(categoryName)) {
 					// un-mark category.
-					System.out.println("unmark category: " + toggleCategory);
+					System.out.println("unmark category: " + categoryName);
 					markPickWithCategoryTrueFalse(_pick, categoryName, false);
 				} else {
 					// mark it.
-					System.out.println("mark category: " + toggleCategory);
+					System.out.println("mark category: " + categoryName);
 					markPickWithCategoryTrueFalse(_pick, categoryName, true);
 				}
 			} else {
 				// create a Pick and mark it.
-				System.out.println("create new pick and mark category: " + toggleCategory);
+				System.out.println("create new pick and mark category: " + categoryName);
 				markSongIDWithCategoryTrueFalse(memberID,
 						PlayerStatus._getCurrentSongFile().getId() + "", categoryName, true);
 			}
@@ -385,7 +392,7 @@ public class MusicSelectionHelper {
 				if (isSkipUseRunning) {
 					System.out.println("The SkipUse server is running");
 					if (skipUseManager.isLoggedIn() == false) {
-						System.out.println("not logged in... attempting...");
+						System.out.println("not logged in... attempting to log in...");
 						skipUseLogin();
 					}
 				} else {
@@ -402,12 +409,11 @@ public class MusicSelectionHelper {
 	//
 	private void skipUseLogin() {
 		try {
-			isSkipUseLoggedIn = skipUseManager.isLoggedIn();
-			if (isSkipUseRunning() && isSkipUseLoggedIn == false) {
-				System.out.println("atempting to log in");
-				skipUseManager.login("wert@wert.com", "wertwertwert");
+			if (isSkipUseRunning() && skipUseManager.isLoggedIn() == false) {
+				System.out.println("attempting to log in");
+				skipUseManager.login(SkipUseProperties.SKIP_USE_EMAIL,
+						SkipUseProperties.SKIP_USE_PASSWORD);
 			}
-			isSkipUseLoggedIn = skipUseManager.isLoggedIn();
 		} catch (SkipUseException e) {
 			System.err.println(e.getMessage());
 			isSkipUseError = true;

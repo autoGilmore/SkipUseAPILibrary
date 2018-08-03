@@ -47,7 +47,7 @@ public class SkipUseManager {
 
 	// SkipUse limits.
 	// max Pick ID size.
-	public static final int MAX_PICK_ID_LIST_SIZE = 5000;
+	public static final int MAX_PICK_ID_LIST_SIZE = 50000;
 
 	// Manager singleton instance.
 	private static SkipUseManager instance;
@@ -77,6 +77,12 @@ public class SkipUseManager {
 	// Throws an error if unsuccessful.
 	//
 	public void login(String email, String password) throws SkipUseException {
+		try {
+			// try to logout in order to reset session if needed
+			service.logout();
+		} catch (SkipUseException e) {
+			// ignore any errors
+		}
 		service.login(email, password);
 		if (IS_AUTOMATIC_LOGIN) {
 			this.autoLoginEmail = email;
@@ -127,12 +133,8 @@ public class SkipUseManager {
 	//
 	public int getMemberIDByName(String name) throws SkipUseException {
 		if (name != null && !name.isEmpty()) {
-			if (serverMemberMap.getMemberIDMap().size() == 0) {
-				automaticLogin();
-				serverMemberMap = service.getMemberMap();
-			}
-			if (serverMemberMap.getMemberIDMap().containsKey(name))
-				return serverMemberMap.getMemberIDMap().get(name);
+			if (getServerMemberMap().getMemberIDMap().containsKey(name))
+				return getServerMemberMap().getMemberIDMap().get(name);
 		}
 		return -1;
 	}
@@ -141,10 +143,10 @@ public class SkipUseManager {
 	//
 	public void updateMemberNameByID(int memberID, String beforeName, String afterName)
 			throws SkipUseException {
-		if (serverMemberMap.getMemberIDMap().containsKey(beforeName)
-				&& serverMemberMap.getMemberIDMap().get(beforeName) == memberID) {
+		if (getServerMemberMap().getMemberIDMap().containsKey(beforeName)
+				&& getServerMemberMap().getMemberIDMap().get(beforeName) == memberID) {
 			automaticLogin();
-			serverMemberMap = service.updateMemberNameByMemberID(memberID, beforeName, afterName);
+			setServerMemberMap(service.updateMemberNameByMemberID(memberID, beforeName, afterName));
 		} else {
 			throw new SkipUseException("Mismatch of Member name and ID or name not found.");
 		}
@@ -157,10 +159,10 @@ public class SkipUseManager {
 	// deleted.
 	//
 	public void deleteMemberByID(int memberID) throws SkipUseException {
-		if (serverMemberMap.getMemberIDMap().containsValue(memberID)) {
+		if (getServerMemberMap().getMemberIDMap().containsValue(memberID)) {
 			automaticLogin();
 			service.deleteMemberByID(memberID);
-			serverMemberMap = new ServerMemberMap();
+			setServerMemberMap(new ServerMemberMap());
 		}
 	}
 
@@ -424,7 +426,20 @@ public class SkipUseManager {
 	//
 	private void resetStoredServerData() {
 		myMemberID = -1;
-		serverMemberMap = new ServerMemberMap();
+		setServerMemberMap(new ServerMemberMap());
 		memberIDCategoryListMap.clear();
+	}
+
+	private ServerMemberMap getServerMemberMap() throws SkipUseException {
+		if (serverMemberMap.getMemberIDMap().size() == 0) {
+			automaticLogin();
+			setServerMemberMap(service.getMemberMap());
+		}
+		return serverMemberMap;
+	}
+
+	private void setServerMemberMap(ServerMemberMap serverMemberMap) {
+		if (serverMemberMap != null)
+			this.serverMemberMap = serverMemberMap;
 	}
 }

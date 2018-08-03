@@ -29,11 +29,19 @@ skipuseapi@gmail.com
 ### Troubleshooting:
 
 ## Changelog:
+080318:   
+* Maximum collection size increased from 5,000 to 50,000 Pick IDs
+* Manager now logs-out before attempting to log-in
+* Updated tests to verify locally-stored members are properly retrieved 
+* Updated API test to remove test members for testing consistency
+* Sample Music Project: added a category list and reference to the properties file for name and password
+* FIXED: a problem when getting locally-stored members were not found. Now will automatically get the member list from the service when referenced 
+
 071218:   
 * Added properties file for settings
 * Added an example project for a music selection helper
 * Updated test and Manager files to reference property settings
-* Fixed an issue with the timestamp not being serialized because of a leading underscore
+* FIXED: an issue with the timestamp not being serialized because of a leading underscore
 
 062818:
 * Updated standards for boolean variables and renamed.

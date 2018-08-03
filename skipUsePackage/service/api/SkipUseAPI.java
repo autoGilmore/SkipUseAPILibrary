@@ -61,8 +61,7 @@ public class SkipUseAPI {
 				return true;
 			}
 		} catch (Exception e) {
-			throw new SkipUseException(
-					"Failed to get an acknowledgement from the SkipUseApi server.");
+			System.err.println("Failed to get an acknowledgement from the SkipUseApi server.");
 		}
 		return false;
 	}

@@ -19,6 +19,7 @@ import com.autogilmore.throwback.skipUsePackage.dataObjects.incomingServer.Serve
 import com.autogilmore.throwback.skipUsePackage.dataObjects.incomingServer.ServerResponse;
 import com.autogilmore.throwback.skipUsePackage.enums.SkipUsePass;
 import com.autogilmore.throwback.skipUsePackage.exception.SkipUseException;
+import com.autogilmore.throwback.skipUsePackage.manager.SkipUseManager;
 import com.autogilmore.throwback.skipUsePackage.service.api.SkipUseAPI;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -138,7 +139,7 @@ public class SkipUseAPIService extends SkipUseAPI {
 	//
 	public ServerPickList getAllServerPickListByMemberID(int memberID) throws SkipUseException {
 		// get the maximum number of Picks...
-		PickQuery pickQuery = new PickQuery(5000);
+		PickQuery pickQuery = new PickQuery(SkipUseManager.MAX_PICK_ID_LIST_SIZE);
 		// include all recently offered Picks...
 		pickQuery.setExcludeRecentPicks(false);
 		// include Picks marked as Stop Using...

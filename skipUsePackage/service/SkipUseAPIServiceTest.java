@@ -6,6 +6,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import org.junit.After;
@@ -253,7 +254,13 @@ public class SkipUseAPIServiceTest {
 		// Set up
 		service.login(EMAIL, PASSWORD);
 		assertTrue(service.isLoggedIn());
-		int memberID = service.getMyMemberID();
+		String memberBob = "Bob";
+
+		// create a member
+		MemberList memberList = new MemberList();
+		memberList.addMemberName(memberBob);
+		ServerMemberMap serverMemberMap = service.addMemberList(memberList);
+		int bobMemberID = serverMemberMap.getMemberIDMap().get(memberBob);
 
 		// test Pick ID
 		String pickID = "<a href=\"http://www.skipuse.com\" target=\"_blank\" title=\"SkipUse Home Page\">SkipUse</a>";
@@ -264,18 +271,21 @@ public class SkipUseAPIServiceTest {
 		service.setPickIDCollection(pickIDCollection);
 
 		// Test: pick not stored yet
-		Pick _foundPick = service._getPickByMemberIDAndPickID(memberID, pickID);
+		Pick _foundPick = service._getPickByMemberIDAndPickID(bobMemberID, pickID);
 
 		// Verify
 		assertTrue(_foundPick == null);
 
 		// store the pick
-		service.skipUsePassPickID(SkipUsePass.PASS, memberID, pickID);
+		service.skipUsePassPickID(SkipUsePass.PASS, bobMemberID, pickID);
 
 		// Test: pick is now found
-		_foundPick = service._getPickByMemberIDAndPickID(memberID, pickID);
+		_foundPick = service._getPickByMemberIDAndPickID(bobMemberID, pickID);
 		assertNotNull(_foundPick);
 		assertTrue(_foundPick.getPickID().equals(pickID));
+
+		// Clean-up
+		service.deleteMemberByID(bobMemberID);
 	}
 
 	@Test
@@ -287,10 +297,11 @@ public class SkipUseAPIServiceTest {
 
 		String collectionName = "My collection";
 		List<String> collectionList = new ArrayList<>();
-		collectionList.add("A");
-		collectionList.add("B");
-		collectionList.add("C");
-		collectionList.add("D");
+		Date date = new Date();
+		collectionList.add("A" + date.toString());
+		collectionList.add("B" + date.toString());
+		collectionList.add("C" + date.toString());
+		collectionList.add("D" + date.toString());
 
 		PickIDCollection pickCollection = new PickIDCollection();
 		pickCollection.setCollectionName(collectionName);
@@ -351,9 +362,7 @@ public class SkipUseAPIServiceTest {
 		int startingPickUseCount = pick.getUsed();
 
 		MemberPickIDList memberPickIDList = new MemberPickIDList();
-		int memberID = service.getMyMemberID();
-		assertTrue(memberID > 0);
-		memberPickIDList.addMemberID(memberID);
+		memberPickIDList.addMemberID(pick.getMemberID());
 		memberPickIDList.addPickID(pick.getPickID());
 
 		// Test: Skip
@@ -446,29 +455,31 @@ public class SkipUseAPIServiceTest {
 		// Set up
 		service.login(EMAIL, PASSWORD);
 		assertTrue(service.isLoggedIn());
+		String memberBob = "Bob";
+		String memberHank = "Hank";
 
 		// create a member
 		MemberList memberList = new MemberList();
-		memberList.addMemberName("Bob");
+		memberList.addMemberName(memberBob);
 
 		// Test
 		ServerMemberMap serverMemberMap = service.addMemberList(memberList);
 
 		// Verify
 		assertTrue(serverMemberMap.getMemberIDMap().size() > 0);
-		assertTrue(serverMemberMap.getMemberIDMap().get("Bob") > 0);
+		assertTrue(serverMemberMap.getMemberIDMap().get(memberBob) > 0);
 
 		// create another member
 		MemberList newMemberList = new MemberList();
-		newMemberList.addMemberName("Hank");
+		newMemberList.addMemberName(memberHank);
 
 		// Test
 		serverMemberMap = service.addMemberList(newMemberList);
 
 		// Verify
 		assertTrue(serverMemberMap.getMemberIDMap().size() > 0);
-		assertTrue(serverMemberMap.getMemberIDMap().get("Bob") > 0);
-		assertTrue(serverMemberMap.getMemberIDMap().get("Hank") > 0);
+		assertTrue(serverMemberMap.getMemberIDMap().get(memberBob) > 0);
+		assertTrue(serverMemberMap.getMemberIDMap().get(memberHank) > 0);
 	}
 
 	@Test
@@ -476,30 +487,40 @@ public class SkipUseAPIServiceTest {
 		// Set up
 		service.login(EMAIL, PASSWORD);
 		assertTrue(service.isLoggedIn());
+		String memberBob = "Bob";
+		String memberHank = "Hank";
 
 		// create a member
 		MemberList memberList = new MemberList();
-		memberList.addMemberName("Bob");
-		memberList.addMemberName("Hank");
+		memberList.addMemberName(memberBob);
+		memberList.addMemberName(memberHank);
 
 		ServerMemberMap serverMemberMap = service.addMemberList(memberList);
 
 		assertTrue(serverMemberMap.getMemberIDMap().size() > 0);
-		assertTrue(serverMemberMap.getMemberIDMap().get("Bob") > 0);
-		assertTrue(serverMemberMap.getMemberIDMap().get("Hank") > 0);
-		int bobMemberID = serverMemberMap.getMemberIDMap().get("Bob");
-		int hankMemberID = serverMemberMap.getMemberIDMap().get("Hank");
+		assertTrue(serverMemberMap.getMemberIDMap().get(memberBob) > 0);
+		assertTrue(serverMemberMap.getMemberIDMap().get(memberHank) > 0);
+		int bobMemberID = serverMemberMap.getMemberIDMap().get(memberBob);
+		int hankMemberID = serverMemberMap.getMemberIDMap().get(memberHank);
 		assertTrue(bobMemberID != hankMemberID);
 
+		// remove the previous test member name change if needed
+		if (serverMemberMap.getMemberIDMap().get("Bob-ster") > 0)
+			service.deleteMemberByID(serverMemberMap.getMemberIDMap().get("Bob-ster"));
+
 		// Test
-		serverMemberMap = service.updateMemberNameByMemberID(bobMemberID, "Bob", "Bob-ster");
+		serverMemberMap = service.updateMemberNameByMemberID(bobMemberID, memberBob, "Bob-ster");
 
 		// Verify
 		serverMemberMap = service.addMemberList(memberList);
 
 		assertTrue(serverMemberMap.getMemberIDMap().size() > 0);
 		assertTrue(serverMemberMap.getMemberIDMap().get("Bob-ster") == bobMemberID);
-		assertTrue(serverMemberMap.getMemberIDMap().get("Hank") == hankMemberID);
+		assertTrue(serverMemberMap.getMemberIDMap().get(memberHank) == hankMemberID);
+
+		// Clean-up
+		service.deleteMemberByID(bobMemberID);
+		service.deleteMemberByID(hankMemberID);
 	}
 
 	@Test
@@ -507,19 +528,21 @@ public class SkipUseAPIServiceTest {
 		// Set up
 		service.login(EMAIL, PASSWORD);
 		assertTrue(service.isLoggedIn());
+		String memberBob = "Bob";
+		String memberHank = "Hank";
 
 		// create a member
 		MemberList memberList = new MemberList();
-		memberList.addMemberName("Bob");
-		memberList.addMemberName("Hank");
+		memberList.addMemberName(memberBob);
+		memberList.addMemberName(memberHank);
 
 		ServerMemberMap serverMemberMap = service.addMemberList(memberList);
 
 		assertTrue(serverMemberMap.getMemberIDMap().size() > 0);
-		assertTrue(serverMemberMap.getMemberIDMap().get("Bob") > 0);
-		assertTrue(serverMemberMap.getMemberIDMap().get("Hank") > 0);
-		int bobMemberID = serverMemberMap.getMemberIDMap().get("Bob");
-		int hankMemberID = serverMemberMap.getMemberIDMap().get("Hank");
+		assertTrue(serverMemberMap.getMemberIDMap().get(memberBob) > 0);
+		assertTrue(serverMemberMap.getMemberIDMap().get(memberHank) > 0);
+		int bobMemberID = serverMemberMap.getMemberIDMap().get(memberBob);
+		int hankMemberID = serverMemberMap.getMemberIDMap().get(memberHank);
 		assertTrue(bobMemberID != hankMemberID);
 
 		// Test
@@ -528,8 +551,12 @@ public class SkipUseAPIServiceTest {
 		// Verify
 		serverMemberMap = service.getMemberMap();
 		assertTrue(serverMemberMap.getMemberIDMap().size() > 0);
-		assertTrue(serverMemberMap.getMemberIDMap().get("Bob-ster") == null);
-		assertTrue(serverMemberMap.getMemberIDMap().get("Hank") == hankMemberID);
+		assertTrue(serverMemberMap.getMemberIDMap().get(memberBob) == null);
+		assertTrue(serverMemberMap.getMemberIDMap().get(memberHank) == hankMemberID);
+
+		// Clean-up
+		service.deleteMemberByID(bobMemberID);
+		service.deleteMemberByID(hankMemberID);
 	}
 
 	@Test
@@ -555,17 +582,18 @@ public class SkipUseAPIServiceTest {
 		service.login(EMAIL, PASSWORD);
 		assertTrue(service.isLoggedIn());
 		MemberList memberList = new MemberList();
-		memberList.addMemberName("Bob");
+		String memberBob = "Bob";
+		memberList.addMemberName(memberBob);
 		ServerMemberMap serverMemberMap = service.addMemberList(memberList);
 		assertTrue(serverMemberMap.getMemberIDMap().size() > 0);
-		assertTrue(serverMemberMap.getMemberIDMap().get("Bob") > 0);
+		assertTrue(serverMemberMap.getMemberIDMap().get(memberBob) > 0);
 
 		// Test
 		ServerMemberMap FoundServerMemberMap = service.getMemberMap();
 
 		// Verify
 		assertTrue(FoundServerMemberMap.getMemberIDMap().size() > 0);
-		assertTrue(FoundServerMemberMap.getMemberIDMap().get("Bob") > 0);
+		assertTrue(FoundServerMemberMap.getMemberIDMap().get(memberBob) > 0);
 	}
 
 	@Test
