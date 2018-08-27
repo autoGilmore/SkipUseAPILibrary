@@ -15,7 +15,7 @@ public class MemberPickIDList {
 	// Use these Pick IDs...
 	private List<String> pickIDList = new ArrayList<String>();
 
-	// Split the Pick IDs by comma separator.
+	// Split the Pick IDs by comma + space separator.
 	private boolean splitCSV = false;
 
 	public MemberPickIDList() {

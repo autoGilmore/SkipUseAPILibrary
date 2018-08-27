@@ -17,7 +17,7 @@ public class PickIDCollection {
 	// The Pick ID list.
 	private List<String> pickIDList = new ArrayList<String>();
 
-	// Flag that Pick IDs a comma-delimited.
+	// Flag that Pick IDs a comma + space delimited.
 	private boolean splitCSV = false;
 
 	public PickIDCollection() {

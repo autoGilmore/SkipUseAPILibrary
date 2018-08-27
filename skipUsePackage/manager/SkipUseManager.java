@@ -47,7 +47,10 @@ public class SkipUseManager {
 
 	// SkipUse limits.
 	// max Pick ID size.
-	public static final int MAX_PICK_ID_LIST_SIZE = 50000;
+	public static final int MAX_PICK_ID_LIST_SIZE = 10000;
+	
+	// Split Pick IDs in collection by comma + space
+	public static final String  PICKID_CSV_DELIMITER = ", ";
 
 	// Manager singleton instance.
 	private static SkipUseManager instance;
@@ -176,15 +179,15 @@ public class SkipUseManager {
 
 	// Store a Pick ID collection.
 	// Pass in a name for the collection and a list of Pick IDs.
-	// Set the 'isSplitByComma' to 'true' if the list should comma-delimited and
-	// split into separate values.
+	// Set the 'isSplitByCommaPlusSpace' to 'true' if the list should comma +
+	// space delimited and split into separate values.
 	//
 	public PickIDCollection addPickIDCollection(String collectionName, List<String> collectionList,
-			boolean isSplitByComma) throws SkipUseException {
+			boolean isSplitByCommaPlusSpace) throws SkipUseException {
 		ServerPickIDCollection serverPickIDCollection = new ServerPickIDCollection();
 		automaticLogin();
 		PickIDCollection pickIDCollection = new PickIDCollection(collectionName);
-		pickIDCollection.setSplitCSV(isSplitByComma);
+		pickIDCollection.setSplitCSV(isSplitByCommaPlusSpace);
 		pickIDCollection.setPickIDList(collectionList);
 		serverPickIDCollection = service.setPickIDCollection(pickIDCollection);
 		return serverPickIDCollection.getPickIDCollection();

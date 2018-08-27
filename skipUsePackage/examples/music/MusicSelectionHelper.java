@@ -10,6 +10,7 @@ import com.autogilmore.throwback.data.PlayerStatus;
 import com.autogilmore.throwback.data.songcategory.Category;
 import com.autogilmore.throwback.skipUsePackage.dataObjects.MemberCategoryList;
 import com.autogilmore.throwback.skipUsePackage.dataObjects.Pick;
+import com.autogilmore.throwback.skipUsePackage.dataObjects.PickIDCollection;
 import com.autogilmore.throwback.skipUsePackage.dataObjects.PickQuery;
 import com.autogilmore.throwback.skipUsePackage.enums.SearchMode;
 import com.autogilmore.throwback.skipUsePackage.enums.SkipUsePass;
@@ -18,17 +19,16 @@ import com.autogilmore.throwback.skipUsePackage.manager.SkipUseManager;
 import com.autogilmore.throwback.skipUsePackage.service.SkipUseProperties;
 
 public class MusicSelectionHelper {
-
 	// Using the Manager to handle SkipUse requests.
 	private SkipUseManager skipUseManager = SkipUseManager.getInstance();
 
 	// Flags to verify service states.
 	private boolean isSkipUseRunning = false;
-	private boolean isSkipUseError = false;
+	private boolean isSkipUseError = true;
 
 	// Listening members and song collections.
 	private PickQuery lastPickQuery = new PickQuery();
-	private List<String> pickIDCollection = new ArrayList<String>();
+	private PickIDCollection pickIDCollection = new PickIDCollection();
 	private List<Pick> pickList = new ArrayList<Pick>();
 	private Set<Integer> getListeningMemberIDSet = new HashSet<>();
 
@@ -41,33 +41,33 @@ public class MusicSelectionHelper {
 		skipUseLogin();
 	}
 
-	// Add a collection of song IDs to SkipUse.
-	//
-	public void createSongIDCollection(String collectionName, List<String> songIDCollectionList) {
-		if (isSkipUseRunning() && collectionName != null && songIDCollectionList != null) {
-			try {
-				skipUseManager.addPickIDCollection(collectionName, songIDCollectionList, false);
-			} catch (SkipUseException e) {
-				System.err.println(e.getMessage());
-				isSkipUseError = true;
-			}
-		}
-	}
-
 	// Get the stored collection of song IDs from SkipUse.
 	//
 	public List<String> getSongIDCollection() {
-		if (pickIDCollection.isEmpty()) {
+		if (pickIDCollection.getPickIDList().isEmpty()) {
 			if (isSkipUseRunning()) {
 				try {
-					pickIDCollection = skipUseManager.getPickIDCollection().getPickIDList();
+					pickIDCollection = skipUseManager.getPickIDCollection();
 				} catch (SkipUseException e) {
-					System.err.println(e.getMessage());
+					System.out.println(e.getMessage());
 					isSkipUseError = true;
 				}
 			}
 		}
-		return pickIDCollection;
+		return pickIDCollection.getPickIDList();
+	}
+
+	// Add a collection of song IDs to SkipUse.
+	//
+	public void setSongIDCollection(String collectionName, List<String> songIDList,
+			boolean isCommaSpaceDelimted) {
+		try {
+			pickIDCollection = skipUseManager.addPickIDCollection(collectionName, songIDList,
+					isCommaSpaceDelimted);
+		} catch (SkipUseException e) {
+			System.out.println(e.getMessage());
+			isSkipUseError = true;
+		}
 	}
 
 	// Get the next song ID to play.
@@ -105,7 +105,7 @@ public class MusicSelectionHelper {
 					MemberCategoryList memberCategoryList = skipUseManager
 							.getCategoryListForMember(getListeningCategoryMemberID());
 
-					// see if SKipUse has the category for the member.
+					// see if SkipUse has the category for the member.
 					String _foundSkipUseCategory = memberCategoryList.getCategoryList().stream()
 							.filter(c -> c.equals(getSelectedCategory())).findFirst().orElse(null);
 
@@ -126,7 +126,7 @@ public class MusicSelectionHelper {
 				} else {
 					// else, just search as normal, but let's mixing in some new
 					// songs.
-					pickQuery.setNewMixInPercentage(25);
+					pickQuery.setNewMixInPercentage(35);
 				}
 
 				// if this query is the same, no need to set it, just get it.
@@ -145,7 +145,7 @@ public class MusicSelectionHelper {
 					System.out.println("No song ID was returned.");
 				}
 			} catch (SkipUseException e) {
-				System.err.println(e.getMessage());
+				System.out.println(e.getMessage());
 				isSkipUseError = true;
 			}
 		}
@@ -195,7 +195,7 @@ public class MusicSelectionHelper {
 			try {
 				skipUseManager.createCategoryForMember(memberID, category);
 			} catch (SkipUseException e) {
-				System.err.println(e.getMessage());
+				System.out.println(e.getMessage());
 				isSkipUseError = true;
 			}
 		}
@@ -211,7 +211,7 @@ public class MusicSelectionHelper {
 						.getCategoryListForMember(memberID);
 				categoryList = memberCategoryList.getCategoryList();
 			} catch (SkipUseException e) {
-				System.err.println(e.getMessage());
+				System.out.println(e.getMessage());
 				isSkipUseError = true;
 			}
 		}
@@ -223,9 +223,13 @@ public class MusicSelectionHelper {
 	public void markPickWithCategoryTrueFalse(Pick pick, String category, boolean isMark) {
 		if (isSkipUseRunning()) {
 			try {
+				// create category if needed
+				if (isMark && !getCategoryListForMember(pick.getMemberID()).contains(category))
+					createCategoryForMember(pick.getMemberID(), category);
+
 				skipUseManager.markPickWithCategoryTrueFalse(pick, category, isMark);
 			} catch (SkipUseException e) {
-				System.err.println(e.getMessage());
+				System.out.println(e.getMessage());
 				isSkipUseError = true;
 			}
 		}
@@ -237,9 +241,13 @@ public class MusicSelectionHelper {
 			boolean isMark) {
 		if (isSkipUseRunning()) {
 			try {
+				// create category if needed
+				if (isMark && !getCategoryListForMember(memberID).contains(category))
+					createCategoryForMember(memberID, category);
+
 				skipUseManager.markPickIDWithCategoryTrueFalse(memberID, songID, category, true);
 			} catch (SkipUseException e) {
-				System.err.println(e.getMessage());
+				System.out.println(e.getMessage());
 				isSkipUseError = true;
 			}
 		}
@@ -285,7 +293,7 @@ public class MusicSelectionHelper {
 			try {
 				pickList = skipUseManager.getAllPickListByMemberID(memberID);
 			} catch (SkipUseException e) {
-				System.err.println(e.getMessage());
+				System.out.println(e.getMessage());
 				isSkipUseError = true;
 			}
 		}
@@ -299,7 +307,7 @@ public class MusicSelectionHelper {
 			try {
 				skipUseManager.updateMemberPick(pick);
 			} catch (SkipUseException e) {
-				System.err.println(e.getMessage());
+				System.out.println(e.getMessage());
 				isSkipUseError = true;
 			}
 		}
@@ -314,7 +322,7 @@ public class MusicSelectionHelper {
 			try {
 				_currentPick = skipUseManager._getPickByMemberIDAndPickID(memberID, "" + songID);
 			} catch (SkipUseException e) {
-				System.err.println(e.getMessage());
+				System.out.println(e.getMessage());
 				isSkipUseError = true;
 			}
 		}
@@ -328,7 +336,7 @@ public class MusicSelectionHelper {
 			try {
 				skipUseManager.skipUsePass(skipUsePass, memberID, songID);
 			} catch (SkipUseException e) {
-				System.err.println(e.getMessage());
+				System.out.println(e.getMessage());
 				isSkipUseError = true;
 			}
 		}
@@ -341,7 +349,7 @@ public class MusicSelectionHelper {
 			try {
 				skipUseManager.skipUsePassPickList(skipUsePass, pickList);
 			} catch (SkipUseException e) {
-				System.err.println(e.getMessage());
+				System.out.println(e.getMessage());
 				isSkipUseError = true;
 			}
 		}
@@ -382,25 +390,25 @@ public class MusicSelectionHelper {
 	// Check that the SkipUse service is running. Login if needed.
 	//
 	public boolean isSkipUseRunning() {
-		try {
-			isSkipUseRunning = skipUseManager.isAPIServerUp();
+		// If an error occurred, check that SkipUse is still running by reseting
+		// the running flag.
+		if (isSkipUseError) {
+			isSkipUseError = false;
+			System.out.println("There was a SkipUse error, reseting and checking.");
+			isSkipUseRunning = false;
 
-			// Check and clear error, login if needed
-			if (isSkipUseError) {
-				isSkipUseError = false;
-				System.err.println("There was a SkipUse error, reseting and checking");
-				if (isSkipUseRunning) {
-					System.out.println("The SkipUse server is running");
-					if (skipUseManager.isLoggedIn() == false) {
-						System.out.println("not logged in... attempting to log in...");
+			if (isSkipUseRunning == false) {
+				try {
+					if (skipUseManager.isAPIServerUp()) {
+						// Need to log in?
 						skipUseLogin();
+						// Are we logged in now?
+						isSkipUseRunning = skipUseManager.isLoggedIn();
 					}
-				} else {
-					System.err.println("The SkipUse server NOT is running");
+				} catch (SkipUseException e) {
+					System.out.println(e.getMessage());
 				}
 			}
-		} catch (SkipUseException e) {
-			System.err.println(e.getMessage());
 		}
 		return isSkipUseRunning;
 	}
@@ -409,13 +417,13 @@ public class MusicSelectionHelper {
 	//
 	private void skipUseLogin() {
 		try {
-			if (isSkipUseRunning() && skipUseManager.isLoggedIn() == false) {
-				System.out.println("attempting to log in");
+			if (skipUseManager.isLoggedIn() == false) {
+				System.out.println("not logged in... attempting to log in...");
 				skipUseManager.login(SkipUseProperties.SKIP_USE_EMAIL,
 						SkipUseProperties.SKIP_USE_PASSWORD);
 			}
 		} catch (SkipUseException e) {
-			System.err.println(e.getMessage());
+			System.out.println(e.getMessage());
 			isSkipUseError = true;
 		}
 	}

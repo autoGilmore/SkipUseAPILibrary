@@ -238,7 +238,7 @@ public class SkipUseManagerTest {
 
 	// A collection is a Pick ID list that is shared among all members. Set it
 	// using the addPickIDCollection method. The collection can be
-	// comma-delimited and will be separated into separate entries when the last
+	// comma + space delimited and will be separated into separate entries when the last
 	// parameter of addPickIDCollection is set to 'true'.
 	@Test
 	public void test_addPickIDCollection() throws SkipUseException {
@@ -248,9 +248,11 @@ public class SkipUseManagerTest {
 
 		String collectionName = "My collection";
 		List<String> collectionList = new ArrayList<String>();
+		// you can split Picks by a comma and a space
+		// this won't be split
 		collectionList.add("A,B,C,D");
-		collectionList.add("D");
-		collectionList.add("C");
+		// this should split
+		collectionList.add("D, C");
 
 		// Test
 		PickIDCollection pickIDCollection = manager.addPickIDCollection(collectionName,
@@ -259,8 +261,10 @@ public class SkipUseManagerTest {
 		// Verify
 		List<String> foundCollectionList = pickIDCollection.getPickIDList();
 		assertNotNull(foundCollectionList);
-		assertTrue(foundCollectionList.size() == 4);
+		assertTrue(foundCollectionList.size() == 3);
+		assertTrue(foundCollectionList.stream().anyMatch(t -> t.equals("A,B,C,D")));
 		assertTrue(foundCollectionList.stream().anyMatch(t -> t.equals("D")));
+		assertTrue(foundCollectionList.stream().anyMatch(t -> t.equals("C")));
 	}
 
 	// Get the current collection by calling getPickIDCollection method.
@@ -306,7 +310,7 @@ public class SkipUseManagerTest {
 		assertTrue(testMemberID > 0);
 		String collectionName = "My collection";
 		List<String> collectionList = new ArrayList<String>();
-		collectionList.add("A,B,C, D");
+		collectionList.add("A, B, C, D");
 		PickIDCollection createPickIDCollection = manager.addPickIDCollection(collectionName,
 				collectionList, true);
 		assertTrue(createPickIDCollection.getPickIDList().size() == 4);
@@ -950,7 +954,7 @@ public class SkipUseManagerTest {
 		// setting the collection
 		PickIDCollection pickIDCollection = new PickIDCollection("Dog Breed Collection");
 		pickIDCollection.addPickID(
-				"Pomeranian,German Shepherd,Golden Retriever,Labrador Retriever,Old English Sheepdog,SaintBernard,Chihuahua,Border Collie,Australian Shepherd");
+				"Pomeranian, German Shepherd, Golden Retriever, Labrador Retriever, Old English Sheepdog, SaintBernard, Chihuahua, Border Collie, Australian Shepherd");
 		pickIDCollection.setSplitCSV(true);
 		manager.addPickIDCollection(pickIDCollection);
 
@@ -981,5 +985,48 @@ public class SkipUseManagerTest {
 		}
 		assertTrue(isDog1Found);
 		assertTrue(isDog2Found);
+	}
+
+	// Things to know about collections.
+	//
+	@Test
+	public void test_youCannotDoThisWithPickIDCollection() {
+		// Set up
+		try {
+			manager.login(EMAIL, PASSWORD);
+			assertTrue(manager.isLoggedIn());
+			manager.addMemberName(TEST_MEMBER);
+		} catch (SkipUseException e) {
+			fail("This should not error");
+		}
+
+		// a collection must have a name
+		PickIDCollection pickIDCollection = new PickIDCollection();
+		try {
+			manager.addPickIDCollection(pickIDCollection);
+		} catch (SkipUseException e) {
+			assertTrue("was: " + e.getMessage(),
+					e.getMessage().contains("collectionName: property may not be empty"));
+			pickIDCollection.setCollectionName("Add a collection name, maybe");
+		}
+
+		// a collection name may not have a comma in it
+		try {
+			manager.addPickIDCollection(pickIDCollection);
+		} catch (SkipUseException e) {
+			assertTrue("was: " + e.getMessage(),
+					e.getMessage().contains("a collection name must not contain a comma character"));
+			pickIDCollection.setCollectionName("No comma name");
+		}
+
+		// the '@@@' set of characters is not allowed in a Pick ID collection
+		try {
+			pickIDCollection.addPickID("@@@");
+			manager.addPickIDCollection(pickIDCollection);
+		} catch (SkipUseException e) {
+			assertTrue("was: " + e.getMessage(),
+					e.getMessage().contains("A Pick ID may not contain ' @@@ ' characters"));
+		}
+
 	}
 }

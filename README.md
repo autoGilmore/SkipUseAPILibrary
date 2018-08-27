@@ -29,6 +29,13 @@ skipuseapi@gmail.com
 ### Troubleshooting:
 
 ## Changelog:
+082718:
+* Update to show that splitting Pick IDs in a collection is done by comma + space
+* Updated tests to use the CSV comma + space split
+* Now using system out vs. system err for error feedback
+* FIXED: Music selection demo issue when marking a Song ID with a category to create the category if it does not exist
+* Added additional error check in music selection demo to log-in if needed
+
 080318:   
 * Maximum collection size increased from 5,000 to 50,000 Pick IDs
 * Manager now logs-out before attempting to log-in
