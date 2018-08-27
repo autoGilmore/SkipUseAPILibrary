@@ -1,5 +1,5 @@
 # SkipUseAPI Library
-This SkipUseAPI Library provides sample Java code for accessing the SkipUseAPI microservice. About and API documentation will be available at www.SkipUse.com in July 2018.
+This SkipUseAPI Library provides sample Java code for accessing the SkipUseAPI microservice. About and API documentation will be available at www.SkipUse.com in July 2019.
 
 ## Configuration:
 This demo code uses the SkipUseAPI and was pulled out of another Spring Boot project that is still in development. Although the code will not run on its own, you can place this folder structure within your Java project (changing the package imports) and use the SkipUseManager class to test your SkipUse access. Be sure to note the import dependencies in the service class that use Spring for http calls and Jackson for serialization. There are JUnit tests for the SkipUseManager and SkipUseAPIService classes that provide insights into using some of the most common API functionality.
