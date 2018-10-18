@@ -9,7 +9,7 @@ import com.autogilmore.throwback.skipUsePackage.exception.SkipUseException;
  * If a problem is found with this code, check the SkipUse API documentation / repo for updates.
 */
 public class SkipUseTokenHelper {
-	private SkipUseToken skipUseToken;
+	private SkipUseToken skipUseToken = new SkipUseToken();
 
 	private final String INITIATING_CODE = "1111";
 	private final int IDENTIFY_CODE_LENGTH = INITIATING_CODE.length();
@@ -23,16 +23,31 @@ public class SkipUseTokenHelper {
 	private final String TKN_TYP_CD_INVALID = "INVALID";
 
 	public SkipUseTokenHelper() {
-		skipUseToken = getInitiateToken();
 	}
 
 	public SkipUseToken getSkipUseToken() {
 		return skipUseToken;
 	}
 
-	public String processToken(String fromServerToken) throws SkipUseException {
+	public void processToken(String fromServerToken) throws SkipUseException {
 		if (fromServerToken != null && !fromServerToken.isEmpty()) {
-			return _receiveToken(fromServerToken).toString();
+			SkipUseToken _theirToken = _createSkipUseTokenFromTokenString(fromServerToken);
+
+			if (isValidToken(_theirToken)) {
+				String revertPendUSeed = skipUseToken.getPendUSeed();
+				skipUseToken.setPendUSeed(skipUseToken.getPendUSeed() + _theirToken.getSeed());
+				skipUseToken.setToId(_theirToken.getToId());
+				skipUseToken.setFromId(_theirToken.getFromId());
+				skipUseToken.setSeed(_theirToken.getSeed());
+				if (skipUseToken != null && isApproved(skipUseToken)) {
+					approve(skipUseToken);
+					skipUseToken = buildReply(skipUseToken, _theirToken);
+				} else {
+					skipUseToken.setPendUSeed(revertPendUSeed);
+				}
+			} else {
+				throw new SkipUseException("Incomming server token was invalid");
+			}
 		} else {
 			throw new SkipUseException("Incomming server token was empty");
 		}
@@ -48,26 +63,6 @@ public class SkipUseTokenHelper {
 		skipUseToken.setCycleCnt(0);
 		skipUseToken.setTokenType(TKN_TYP_CD_STANDARD);
 		return skipUseToken;
-	}
-
-	private SkipUseToken _receiveToken(String receivedTokenStr) {
-		SkipUseToken theirToken = _createSkipUseTokenFromTokenString(receivedTokenStr);
-
-		if (isValidToken(theirToken)) {
-			String revertPendUSeed = skipUseToken.getPendUSeed();
-			skipUseToken.setPendUSeed(skipUseToken.getPendUSeed() + theirToken.getSeed());
-			skipUseToken.setToId(theirToken.getToId());
-			skipUseToken.setFromId(theirToken.getFromId());
-			skipUseToken.setSeed(theirToken.getSeed());
-			if (skipUseToken != null && isApproved(skipUseToken)) {
-				approve(skipUseToken);
-				skipUseToken = buildReply(skipUseToken, theirToken);
-				return skipUseToken;
-			} else {
-				skipUseToken.setPendUSeed(revertPendUSeed);
-			}
-		}
-		return null;
 	}
 
 	private SkipUseToken buildReply(SkipUseToken clientCommToken, SkipUseToken theirToken) {

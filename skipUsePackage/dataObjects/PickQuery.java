@@ -196,7 +196,7 @@ public class PickQuery {
 		this.ramp = ramp;
 	}
 
-	public Boolean getExcludeRecentPicks() {
+	public Boolean isExcludeRecentPicks() {
 		return excludeRecentPicks;
 	}
 
@@ -243,7 +243,7 @@ public class PickQuery {
 		copy.setNewMixInPercentage(original.getNewMixInPercentage());
 		copy.setCategories(new ArrayList<>(original.getCategories()));
 		copy.setRamp(original.getRamp());
-		copy.setExcludeRecentPicks(original.getExcludeRecentPicks());
+		copy.setExcludeRecentPicks(original.isExcludeRecentPicks());
 		copy.setIncludeStopUsing(original.isIncludeStopUsing());
 		copy.setMemberIDList(new ArrayList<>(original.getMemberIDList()));
 		copy.setGetMorePicksIfShort(original.isGetMorePicksIfShort());
@@ -256,6 +256,19 @@ public class PickQuery {
 		// Ignore 100 settings
 		if (getNewMixInPercentage() != 100)
 			setNewMixInPercentage(0);
+	}
+
+	@Override
+	public String toString() {
+		return "getMemberIDList.size=" + getMemberIDList().toString() + ", getCollectionID="
+				+ getCollectionID() + ", getHowMany=" + getHowMany() + ", getNewMixInPercentage="
+				+ getNewMixInPercentage() + ", isGetMorePicksIfShort="
+				+ (isGetMorePicksIfShort() ? "1" : "0") + ", getSearchMode=" + getSearchMode()
+				+ ", getRamp=" + getRamp() + ", isExcludeRecentPicks="
+				+ (isExcludeRecentPicks() ? "1" : "0") + ", isIncludeStopUsing="
+				+ (isIncludeStopUsing() ? "1" : "0") + ", isIncludeCategories="
+				+ (isIncludeCategories() ? "1" : "0") + ", getCategories.size="
+				+ getCategories().size() + ", getPickID=" + getPickID();
 	}
 
 }

@@ -29,6 +29,18 @@ skipuseapi@gmail.com
 ### Troubleshooting:
 
 ## Changelog:
+101718:   
+* Update: A Pick ID may not contain ' @@@ ' characters
+* New: MemberListPickIDList and PickList data objects
+* Added: Last updated timestamp for Pick ID collection 
+* Added: Undo for the last collection change
+* Added: Get a list of all Picks from a list of members
+* Added: properties now can include test user credentials
+* Improved: test members more defined usages
+* Improved: API more detailed error messages
+* Sample Music Project: improved time-out recovery for automatically logging back in
+* Sample Music Project: added converter for listening user IDs to SkipUse members
+
 082718:
 * Update to show that splitting Pick IDs in a collection is done by comma + space
 * Updated tests to use the CSV comma + space split

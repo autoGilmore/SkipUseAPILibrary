@@ -4,6 +4,7 @@ package com.autogilmore.throwback.skipUsePackage.exception;
  * Custom exception for the messaging of SkipUse processing errors.
 */
 public class SkipUseException extends Exception {
+
 	private static final long serialVersionUID = -336068448358510972L;
 
 	private String errCode;

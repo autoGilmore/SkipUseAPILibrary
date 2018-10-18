@@ -35,7 +35,10 @@ public class SkipUseAPI {
 
 	public ObjectMapper mapper = new ObjectMapper();
 	{
+		// Don't worry about property cases from server
 		mapper.configure(MapperFeature.ACCEPT_CASE_INSENSITIVE_PROPERTIES, true);
+		// Don't fail if a property is not found on an incomming server object
+		mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 	}
 
 	// Constructor.
@@ -81,10 +84,25 @@ public class SkipUseAPI {
 			processStringResponse(responseJson);
 
 		} catch (HttpClientErrorException e) {
-			handleHttpClientError(e, "/initiate");
+			handleHttpClientError(e, "GET /initiate");
 		} catch (Exception e) {
 			throw new SkipUseException(
 					"Failed to initiate a proxy with the SkipUse server. " + e.getMessage());
+		}
+	}
+
+	// Check to see if the currently stored proxyID is still valid.
+	// A proxyID will time-out and no longer be valid. If it is not valid, API
+	// calls will have SkipUse errors. Using the 'clearFollowUp' method (which
+	// is just a simple non-data changing call) we can see if the server still
+	// recognizes our proxy ID.
+	//
+	public boolean isProxyValid() {
+		try {
+			clearFollowUp();
+			return true;
+		} catch (SkipUseException e) {
+			return false;
 		}
 	}
 
@@ -94,7 +112,8 @@ public class SkipUseAPI {
 	// the call.
 	//
 	public Object getAndProcess(String postFixUrl, String expectedObject) throws SkipUseException {
-		System.out.println("GET " + postFixUrl);
+		String attempting = "GET " + postFixUrl;
+		System.out.println(attempting);
 		String url = buildURLAddProxyIDSkipUseToken(postFixUrl, expectedObject);
 		try {
 			String returnJSON = getRestTemplate().getForObject(url, String.class);
@@ -106,7 +125,7 @@ public class SkipUseAPI {
 			return convertJSONToServerObject(returnJSON, expectedObject);
 
 		} catch (HttpClientErrorException e) {
-			handleHttpClientError(e, postFixUrl);
+			handleHttpClientError(e, attempting);
 		}
 
 		throw new SkipUseException("There was a problem calling the API: " + postFixUrl
@@ -121,7 +140,8 @@ public class SkipUseAPI {
 	//
 	public Object postAndProcess(String postFixUrl, Object data, String expectedObject)
 			throws SkipUseException {
-		System.out.println("POST " + postFixUrl);
+		String attempting = "POST " + postFixUrl;
+		System.out.println(attempting);
 		String url = buildURLAddProxyIDSkipUseToken(postFixUrl, expectedObject);
 		String returnJSON = "";
 		try {
@@ -154,12 +174,14 @@ public class SkipUseAPI {
 			return convertJSONToServerObject(returnJSON, expectedObject);
 
 		} catch (HttpClientErrorException e) {
-			handleHttpClientError(e, postFixUrl);
+			handleHttpClientError(e, attempting);
 		}
 
 		throw new SkipUseException("There was a problem calling the API: " + postFixUrl
 				+ " . To get a: " + expectedObject);
 	}
+
+	// TODO: Not a PATCH, should be a PUT.
 
 	// Helper to process PATCH requests to the SkipUseAPI server.
 	// postFixUrl: the / API call. Example edit category: '"/memberid/" +
@@ -170,7 +192,8 @@ public class SkipUseAPI {
 	//
 	public Object patchAndProcess(String postFixUrl, Object data, String expectedObject)
 			throws SkipUseException {
-		System.out.println("PATCH " + postFixUrl);
+		String attempting = "PATCH " + postFixUrl;
+		System.out.println(attempting);
 		String url = buildURLAddProxyIDSkipUseToken(postFixUrl, expectedObject);
 		String returnJSON = "";
 		try {
@@ -205,7 +228,7 @@ public class SkipUseAPI {
 			return convertJSONToServerObject(returnJSON, expectedObject);
 
 		} catch (HttpClientErrorException e) {
-			handleHttpClientError(e, postFixUrl);
+			handleHttpClientError(e, attempting);
 		}
 
 		throw new SkipUseException("There was a problem calling the API: " + postFixUrl
@@ -221,7 +244,8 @@ public class SkipUseAPI {
 	//
 	public Object deleteAndProcess(String postFixUrl, Object data, String expectedObject)
 			throws SkipUseException {
-		System.out.println("DELETE " + postFixUrl);
+		String attempting = "DELETE " + postFixUrl;
+		System.out.println(attempting);
 		String url = buildURLAddProxyIDSkipUseToken(postFixUrl, expectedObject);
 		String returnJSON = "";
 		try {
@@ -254,7 +278,7 @@ public class SkipUseAPI {
 			return convertJSONToServerObject(returnJSON, expectedObject);
 
 		} catch (HttpClientErrorException e) {
-			handleHttpClientError(e, postFixUrl);
+			handleHttpClientError(e, attempting);
 		}
 
 		throw new SkipUseException("There was a problem calling the API: " + postFixUrl
@@ -323,11 +347,24 @@ public class SkipUseAPI {
 		String errorPayload = e.getResponseBodyAsString();
 		if (errorPayload != null) {
 			if (errorPayload.contains("proxyID")) {
+				// a known error response. we need to process the token if
+				// needed and the error should have an error message that we can
+				// use.
 				processStringResponse(errorPayload);
 			} else {
-				if (errorPayload.isEmpty())
-					errorPayload = "An error occurred with no message on API call: " + onAPICall;
-				if (errorPayload.contains("status\":404"))
+				if (errorPayload.isEmpty()) {
+					// this error is most likely a proxy ID which is no longer
+					// valid. We can check the proxy ID to be sure.
+					if (isProxyValid() == false) {
+						errorPayload = "Proxy was no longer valid on API call: " + onAPICall
+								+ " Clearing out stored proxy ID.";
+						serverResponseData.setProxyID("");
+					} else {
+						// some unknown error.
+						errorPayload = "An error occurred with no message on API call: "
+								+ onAPICall;
+					}
+				} else if (errorPayload.contains("status\":404"))
 					errorPayload = "404 not found. Check the API path for API call: " + onAPICall
 							+ " " + errorPayload;
 				throw new SkipUseException(errorPayload);
@@ -387,7 +424,7 @@ public class SkipUseAPI {
 					serverResponseData.setSkipUseToken(skipUseResponse.getSkipUseToken());
 					tokenHelper.processToken(skipUseResponse.getSkipUseToken());
 					if (skipUseResponse.isConfirmRequired()) {
-						getAndProcess("/clearFollowUp", ServerResponse.NAME);
+						clearFollowUp();
 					}
 				} else {
 					serverResponseData.setSkipUseToken("");
@@ -405,6 +442,10 @@ public class SkipUseAPI {
 				throw new SkipUseException(serverResponseData.getErrorMessage());
 			}
 		}
+	}
+
+	private void clearFollowUp() throws SkipUseException {
+		getAndProcess("/clearFollowUp", ServerResponse.NAME);
 	}
 
 	private RestTemplate getRestTemplate() {

@@ -1,7 +1,11 @@
 package com.autogilmore.throwback.skipUsePackage.dataObjects;
 
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
+
+import com.autogilmore.throwback.skipUsePackage.service.SkipUseProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 /* 
  * A 'PickIDCollection' is a list of Pick IDs.
@@ -20,11 +24,13 @@ public class PickIDCollection {
 	// Flag that Pick IDs a comma + space delimited.
 	private boolean splitCSV = false;
 
-	public PickIDCollection() {
-	}
+	// Timestamp when Pick was last updated. Rounding by minutes.
+	@JsonProperty("lastUpdated")
+	private Timestamp _lastUpdated;
 
-	public PickIDCollection(String collectionName) {
-		setCollectionName(collectionName);
+	public PickIDCollection() {
+		// NOTE: currently only one collection is allowed. Using a default name.
+		setCollectionName(SkipUseProperties.PICK_ID_COLLECTION_NAME);
 	}
 
 	public int getCollectionID() {
@@ -40,7 +46,8 @@ public class PickIDCollection {
 	}
 
 	public void setCollectionName(String collectionName) {
-		this.collectionName = collectionName;
+		if (collectionName != null)
+			this.collectionName = collectionName;
 	}
 
 	public List<String> getPickIDList() {
@@ -78,6 +85,15 @@ public class PickIDCollection {
 
 	public void setSplitCSV(boolean splitCSV) {
 		this.splitCSV = splitCSV;
+	}
+
+	public Timestamp _getLastUpdated() {
+		return _lastUpdated;
+	}
+
+	public void setLastUpdated(Timestamp lastUpdated) {
+		if (lastUpdated != null)
+			this._lastUpdated = lastUpdated;
 	}
 
 }

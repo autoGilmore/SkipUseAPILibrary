@@ -6,8 +6,8 @@ import java.util.List;
 import com.autogilmore.throwback.skipUsePackage.dataObjects.CategoryPickIDCollection;
 import com.autogilmore.throwback.skipUsePackage.dataObjects.MemberCategoryList;
 import com.autogilmore.throwback.skipUsePackage.dataObjects.MemberList;
-import com.autogilmore.throwback.skipUsePackage.dataObjects.MemberPickIDList;
-import com.autogilmore.throwback.skipUsePackage.dataObjects.MemberPickList;
+import com.autogilmore.throwback.skipUsePackage.dataObjects.MemberListPickIDList;
+import com.autogilmore.throwback.skipUsePackage.dataObjects.PickList;
 import com.autogilmore.throwback.skipUsePackage.dataObjects.PatchName;
 import com.autogilmore.throwback.skipUsePackage.dataObjects.Pick;
 import com.autogilmore.throwback.skipUsePackage.dataObjects.PickIDCollection;
@@ -40,8 +40,8 @@ public class SkipUseAPIService extends SkipUseAPI {
 	// Calling this will initiates a proxy and or log in to the service.
 	//
 	public void login(String email, String password) throws SkipUseException {
-		if (getLastServerResponseData().getProxyID().isEmpty())
-			initiateProxy();
+		// start communication with the API server.
+		initiateProxy();
 
 		if (isLoggedIn() == false) {
 			JsonNode rootNode = mapper.createObjectNode();
@@ -72,10 +72,10 @@ public class SkipUseAPIService extends SkipUseAPI {
 	public boolean isLoggedIn() {
 		if (serverResponseData.getMemberID() < 0) {
 			return false;
-		} else if (!getLastServerResponseData().getProxyID().isEmpty()) {
-			return true;
+		} else if (getLastServerResponseData().getProxyID().isEmpty()) {
+			return false;
 		}
-		return false;
+		return true;
 	}
 
 	// Return the logged in user/owner's member ID.
@@ -86,14 +86,6 @@ public class SkipUseAPIService extends SkipUseAPI {
 	//
 	public int getMyMemberID() {
 		return serverResponseData.getMemberID();
-	}
-
-	// Set the collection of Pick IDs to be used by all members.
-	//
-	public ServerPickIDCollection setPickIDCollection(PickIDCollection pickIDCollection)
-			throws SkipUseException {
-		return (ServerPickIDCollection) postAndProcess("/collection", pickIDCollection,
-				ServerPickIDCollection.NAME);
 	}
 
 	// A value of remaining Nibbles (representation of remaining data that can
@@ -108,12 +100,27 @@ public class SkipUseAPIService extends SkipUseAPI {
 		}
 	}
 
+	// Set the collection of Pick IDs to be used by all members.
+	//
+	public ServerPickIDCollection setPickIDCollection(PickIDCollection pickIDCollection)
+			throws SkipUseException {
+		return (ServerPickIDCollection) postAndProcess("/collection", pickIDCollection,
+				ServerPickIDCollection.NAME);
+	}
+
 	// Get a Pick ID Collection.
 	// NOTE: depending on your subscription level or current version, this may
 	// be limited to one collection per account.
 	//
 	public ServerPickIDCollection getServerPickIDCollection() throws SkipUseException {
 		return (ServerPickIDCollection) getAndProcess("/collection", ServerPickIDCollection.NAME);
+	}
+
+	// Undo the last Pick ID Collection change.
+	//
+	public ServerPickIDCollection undoLastServerPickIDCollectionChange() throws SkipUseException {
+		return (ServerPickIDCollection) postAndProcess("/collection/undo", null,
+				ServerPickIDCollection.NAME);
 	}
 
 	// Set the query for getting Picks from the Pick ID collection (called a
@@ -135,9 +142,10 @@ public class SkipUseAPIService extends SkipUseAPI {
 		return (ServerPickList) getAndProcess("/query", ServerPickList.NAME);
 	}
 
-	// Get all Picks for a member.
+	// Get all Picks for a member list.
 	//
-	public ServerPickList getAllServerPickListByMemberID(int memberID) throws SkipUseException {
+	public ServerPickList getAllServerPickListByMemberID(List<Integer> memberIDList)
+			throws SkipUseException {
 		// get the maximum number of Picks...
 		PickQuery pickQuery = new PickQuery(SkipUseManager.MAX_PICK_ID_LIST_SIZE);
 		// include all recently offered Picks...
@@ -148,12 +156,20 @@ public class SkipUseAPIService extends SkipUseAPI {
 		pickQuery.setNewMixInPercentage(0);
 		// return back Picks that may have not been used yet...
 		pickQuery.setGetMorePicksIfShort(true);
-		// for this member...
-		pickQuery.addToMemberIDList(memberID);
+		// for these members...
+		pickQuery.setMemberIDList(memberIDList);
 		// un-comment below to add the category data too. This query could take
 		// longer and might cost more to use.
 		// pickQuery.setIncludeCategories(true);
 		return setPickQuery(pickQuery);
+	}
+
+	// Get all Picks for a member.
+	//
+	public ServerPickList getAllServerPickListByMemberID(int memberID) throws SkipUseException {
+		List<Integer> memberIDList = new ArrayList<>();
+		memberIDList.add(memberID);
+		return getAllServerPickListByMemberID(memberIDList);
 	}
 
 	// Get Pick for a member by Pick ID.
@@ -173,7 +189,7 @@ public class SkipUseAPIService extends SkipUseAPI {
 	//
 	public ServerPickList getServerPickListByMemberIDAndPickList(int memberID,
 			List<String> pickIDList) throws SkipUseException {
-		MemberPickIDList memberPickIDList = new MemberPickIDList();
+		MemberListPickIDList memberPickIDList = new MemberListPickIDList();
 		List<Integer> memberIDList = new ArrayList<Integer>();
 		memberIDList.add(memberID);
 		memberPickIDList.setMemberIDList(memberIDList);
@@ -181,23 +197,20 @@ public class SkipUseAPIService extends SkipUseAPI {
 		return (ServerPickList) postAndProcess("/pick", memberPickIDList, ServerPickList.NAME);
 	}
 
-	// Update a member Pick.
+	// Update a member's Pick.
 	// NOTE: updating a list of Picks for a member could be performed too.
 	//
-	public void updateMemberPick(Pick pick) throws SkipUseException {
-		MemberPickList memberPickList = new MemberPickList();
-		memberPickList.setMemberID(pick.getMemberID());
-		List<Pick> pickList = new ArrayList<>();
+	public void updatePick(Pick pick) throws SkipUseException {
+		PickList pickList = new PickList();
 		pickList.add(pick);
-		memberPickList.setPickList(pickList);
-		patchAndProcess("/pick", memberPickList, ServerResponse.NAME);
+		patchAndProcess("/pick", pickList, ServerResponse.NAME);
 	}
 
 	// Skip, Use or Pass Pick IDs by members.
 	// See the API documentation for what each version does to a Pick ID.
 	//
 	public void skipUsePassMemberPickIDList(SkipUsePass skipUsePass,
-			MemberPickIDList memberPickIDList) throws SkipUseException {
+			MemberListPickIDList memberPickIDList) throws SkipUseException {
 		postAndProcess("/" + skipUsePass.toString().toLowerCase(), memberPickIDList,
 				ServerResponse.NAME);
 	}
@@ -208,9 +221,10 @@ public class SkipUseAPIService extends SkipUseAPI {
 			throws SkipUseException {
 		List<Integer> memberIDList = new ArrayList<>();
 		memberIDList.add(memberID);
-		PickIDCollection collection = new PickIDCollection();
-		collection.addPickID(pickID);
-		MemberPickIDList memberPickIDList = new MemberPickIDList(collection, memberIDList);
+		PickIDCollection pickIDCollection = new PickIDCollection();
+		pickIDCollection.addPickID(pickID);
+		MemberListPickIDList memberPickIDList = new MemberListPickIDList(pickIDCollection,
+				memberIDList);
 		skipUsePassMemberPickIDList(skipUsePass, memberPickIDList);
 	}
 
@@ -229,7 +243,7 @@ public class SkipUseAPIService extends SkipUseAPI {
 	//
 	public void skipUsePassPickList(SkipUsePass skipUsePass, List<Pick> pickList)
 			throws SkipUseException {
-		MemberPickIDList memberPickIDList = new MemberPickIDList();
+		MemberListPickIDList memberPickIDList = new MemberListPickIDList();
 		List<Integer> memberIDList = new ArrayList<>();
 		List<String> pickIDList = new ArrayList<>();
 		for (Pick pick : pickList) {
