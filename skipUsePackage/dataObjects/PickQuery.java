@@ -36,7 +36,7 @@ public class PickQuery {
 	// Set to 0 for no 'new' Picks.
 	// Set to 100 for all 'new'Picks.
 	// See the isGetMorePicksIfShort setting below.
-	private int newMixInPercentage = 30;
+	private int newMixInPercentage = 0;
 
 	// Option to return Picks even if your other query options can't find the
 	// Picks you want.
@@ -46,7 +46,7 @@ public class PickQuery {
 	// or newMixInPercentage of 0 or 100 settings.
 	// Set to 'true' means you always get back the howMany result setting if
 	// available.
-	private boolean getMorePicksIfShort = true;
+	private boolean getMorePicksIfShort = false;
 
 	// **** Optional *********
 
@@ -85,6 +85,10 @@ public class PickQuery {
 	// processing.)
 	private List<String> categoryList = new ArrayList<String>();
 
+	// Option to only return Pick IDs that are in this list: IMPORTANT: Pick IDs
+	// in this list must already be in the collection or they will be ignored.
+	private List<String> pickIDList = new ArrayList<String>();
+
 	// **** Only ONE Pick *********
 
 	// Set this Pick ID string ONLY if you are searching for ONE Pick with this
@@ -101,6 +105,8 @@ public class PickQuery {
 	// If a Pick is not stored yet, an empty Pick List will be returned with a
 	// the Pick's member ID set to -1.
 	private String pickID = "";
+
+	private boolean debugQuery = false;
 
 	public PickQuery() {
 	}
@@ -236,19 +242,25 @@ public class PickQuery {
 		this.collectionID = collectionID;
 	}
 
-	public PickQuery clone(PickQuery original) {
-		PickQuery copy = new PickQuery();
-		copy.setHowMany(original.getHowMany());
-		copy.setSearchMode(original.getSearchMode());
-		copy.setNewMixInPercentage(original.getNewMixInPercentage());
-		copy.setCategories(new ArrayList<>(original.getCategories()));
-		copy.setRamp(original.getRamp());
-		copy.setExcludeRecentPicks(original.isExcludeRecentPicks());
-		copy.setIncludeStopUsing(original.isIncludeStopUsing());
-		copy.setMemberIDList(new ArrayList<>(original.getMemberIDList()));
-		copy.setGetMorePicksIfShort(original.isGetMorePicksIfShort());
-		copy.setCollectionID(original.getCollectionID());
-		return copy;
+	public List<String> getPickIDList() {
+		return pickIDList;
+	}
+
+	public void addToPickIDList(String pickID) {
+		if (pickID != null && !this.pickIDList.contains(pickID))
+			this.pickIDList.add(pickID);
+	}
+
+	public void setPickIDList(List<String> pickIDList) {
+		this.pickIDList = pickIDList;
+	}
+
+	public boolean isDebugQuery() {
+		return debugQuery;
+	}
+
+	public void setDebugQuery(boolean debugQuery) {
+		this.debugQuery = debugQuery;
 	}
 
 	public void makeExactQuery() {
@@ -268,7 +280,8 @@ public class PickQuery {
 				+ (isExcludeRecentPicks() ? "1" : "0") + ", isIncludeStopUsing="
 				+ (isIncludeStopUsing() ? "1" : "0") + ", isIncludeCategories="
 				+ (isIncludeCategories() ? "1" : "0") + ", getCategories.size="
-				+ getCategories().size() + ", getPickID=" + getPickID();
+				+ getCategories().toString() + ", getPickID=" + getPickID() + ", getPickIDList="
+				+ getPickIDList().toString();
 	}
 
 }

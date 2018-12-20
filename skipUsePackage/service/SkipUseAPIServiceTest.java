@@ -230,6 +230,7 @@ public class SkipUseAPIServiceTest {
 
 		PickQuery pickQuery = new PickQuery();
 		pickQuery.setHowMany(2);
+		pickQuery.setGetMorePicksIfShort(true);
 
 		// Test
 		ServerPickList serverPickList = service.setPickQuery(pickQuery);
@@ -468,6 +469,7 @@ public class SkipUseAPIServiceTest {
 		assertTrue("Create some Picks first", serverPickList.getPickList().size() > 0);
 
 		Pick pick = serverPickList.getPickList().get(0);
+		assertTrue("It should be the member's Pick", pick.getMemberID() == memberID);
 		boolean beforeIsStopUsing = pick.isStopUsing();
 
 		// change

@@ -30,10 +30,10 @@ import com.autogilmore.throwback.skipUsePackage.service.SkipUseProperties;
 public class SkipUseManager {
 	// Set the SkipUseAPI URL here. See the API documentation for more
 	// information.
-	private final String SKIP_USE_API_URL = SkipUseProperties.SKIP_USE_API_URL;
+	private static final String SKIP_USE_API_URL = SkipUseProperties.SKIP_USE_API_URL;
 
 	// Using the API service.
-	private SkipUseAPIService service = new SkipUseAPIService(SKIP_USE_API_URL);
+	private final SkipUseAPIService service = new SkipUseAPIService(SKIP_USE_API_URL);
 
 	// Automatic log-in option.
 	private final boolean IS_AUTOMATIC_LOGIN = true;
@@ -114,6 +114,7 @@ public class SkipUseManager {
 		if (getMemberIDByName(memberName) == -1) {
 			MemberList memberList = new MemberList();
 			memberList.addMemberName(memberName);
+			automaticLogin();
 			serverMemberMap = service.addMemberList(memberList);
 		}
 	}
@@ -151,20 +152,20 @@ public class SkipUseManager {
 			automaticLogin();
 			setServerMemberMap(service.updateMemberNameByMemberID(memberID, beforeName, afterName));
 		} else {
-			throw new SkipUseException("Mismatch of Member name and ID or name not found.");
+			throw new SkipUseException("Mismatch of member name and ID or name not found.");
 		}
 	}
 
 	// Delete a member by their ID.
 	// This will also deletes the member's Picks and categories.
 	// NOTE: You can recreate member, but you cannot restore their data after
-	// being
-	// deleted.
+	// being deleted.
 	//
 	public void deleteMemberByID(int memberID) throws SkipUseException {
 		if (getServerMemberMap().getMemberIDMap().containsValue(memberID)) {
 			automaticLogin();
 			service.deleteMemberByID(memberID);
+			// reset the member ID map so a reload is triggered.
 			setServerMemberMap(new ServerMemberMap());
 		}
 	}
@@ -193,6 +194,7 @@ public class SkipUseManager {
 	// Revert a collection with the previous change.
 	//
 	public void undoLastPickIDCollectionChange() throws SkipUseException {
+		automaticLogin();
 		service.undoLastServerPickIDCollectionChange();
 	}
 
@@ -218,6 +220,7 @@ public class SkipUseManager {
 	//
 	public List<Pick> getAllPickListByMemberIDList(List<Integer> memberIDList)
 			throws SkipUseException {
+		automaticLogin();
 		ServerPickList serverPickList = service.getAllServerPickListByMemberID(memberIDList);
 		return serverPickList.getPickList();
 	}
@@ -348,16 +351,18 @@ public class SkipUseManager {
 		ServerPickList serverPickList = service.getAllServerPickListByMemberID(memberID);
 		Pick _foundPick = serverPickList.getPickList().stream()
 				.filter(p -> p.getPickID().equals(pickID)).findFirst().orElse(null);
-		if (_foundPick != null) {
-			// if the pick is new, lets put our member ID on it.
-			if (_foundPick.getMemberID() == -1)
-				_foundPick.setMemberID(memberID);
-			_foundPick.setStopUsing(stopUsing);
-			updateMemberPick(_foundPick);
-		} else {
-			throw new SkipUseException("The pickID: '" + pickID
-					+ "' is not in the PickIDCollection. You might need to add it first.");
+
+		// do we have the Pick to update? If not, create a new one and update it
+		if (_foundPick == null) {
+			_foundPick = new Pick();
+			_foundPick.setPickID(pickID);
 		}
+
+		// if the pick is new, lets put our member ID on it.
+		if (_foundPick.getMemberID() == -1)
+			_foundPick.setMemberID(memberID);
+		_foundPick.setStopUsing(stopUsing);
+		updateMemberPick(_foundPick);
 	}
 
 	// Update JSON and StopUsing options for a member's Pick

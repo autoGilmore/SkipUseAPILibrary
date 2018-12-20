@@ -28,16 +28,16 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 public class SkipUseAPI {
 	public String api_url = "";
 
-	public SkipUseTokenHelper tokenHelper = new SkipUseTokenHelper();
+	public final SkipUseTokenHelper tokenHelper = new SkipUseTokenHelper();
 
 	// Store response from server.
 	public ServerResponse serverResponseData = new ServerResponse();
 
-	public ObjectMapper mapper = new ObjectMapper();
+	public final ObjectMapper mapper = new ObjectMapper();
 	{
 		// Don't worry about property cases from server
 		mapper.configure(MapperFeature.ACCEPT_CASE_INSENSITIVE_PROPERTIES, true);
-		// Don't fail if a property is not found on an incomming server object
+		// Don't fail if a property is not found on an incoming server object
 		mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 	}
 
@@ -181,8 +181,6 @@ public class SkipUseAPI {
 				+ " . To get a: " + expectedObject);
 	}
 
-	// TODO: Not a PATCH, should be a PUT.
-
 	// Helper to process PATCH requests to the SkipUseAPI server.
 	// postFixUrl: the / API call. Example edit category: '"/memberid/" +
 	// memberID + "/category"'
@@ -218,6 +216,51 @@ public class SkipUseAPI {
 			ResponseEntity<String> responseEntity = getRestTemplate_requestFactory().exchange(url,
 					HttpMethod.PATCH, entity, String.class);
 
+			returnJSON = responseEntity.getBody();
+
+			processStringResponse(returnJSON);
+
+			if (expectedObject.equals(ServerResponse.NAME))
+				return returnJSON;
+
+			return convertJSONToServerObject(returnJSON, expectedObject);
+
+		} catch (HttpClientErrorException e) {
+			handleHttpClientError(e, attempting);
+		}
+
+		throw new SkipUseException("There was a problem calling the API: " + postFixUrl
+				+ " . To get a: " + expectedObject);
+	}
+
+	// Helper to process PUT requests to the SkipUseAPI server.
+	//
+	public Object putAndProcess(String postFixUrl, Object data, String expectedObject)
+			throws SkipUseException {
+		String attempting = "PUT " + postFixUrl;
+		System.out.println(attempting);
+		String url = buildURLAddProxyIDSkipUseToken(postFixUrl, expectedObject);
+		String returnJSON = "";
+		try {
+			HttpEntity<String> entity;
+			HttpHeaders headers = new HttpHeaders();
+			headers.setContentType(MediaType.APPLICATION_JSON);
+
+			String json;
+			if (data == null) {
+				json = "";
+			} else {
+				try {
+					json = mapper.writeValueAsString(data);
+				} catch (JsonProcessingException e) {
+					throw new SkipUseException("Problem serializing object. " + e.getMessage());
+				}
+			}
+
+			entity = new HttpEntity<String>(json.toString(), headers);
+
+			ResponseEntity<String> responseEntity = getRestTemplate().exchange(url, HttpMethod.PUT,
+					entity, String.class);
 			returnJSON = responseEntity.getBody();
 
 			processStringResponse(returnJSON);

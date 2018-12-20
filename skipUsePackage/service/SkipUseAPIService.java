@@ -7,10 +7,10 @@ import com.autogilmore.throwback.skipUsePackage.dataObjects.CategoryPickIDCollec
 import com.autogilmore.throwback.skipUsePackage.dataObjects.MemberCategoryList;
 import com.autogilmore.throwback.skipUsePackage.dataObjects.MemberList;
 import com.autogilmore.throwback.skipUsePackage.dataObjects.MemberListPickIDList;
-import com.autogilmore.throwback.skipUsePackage.dataObjects.PickList;
 import com.autogilmore.throwback.skipUsePackage.dataObjects.PatchName;
 import com.autogilmore.throwback.skipUsePackage.dataObjects.Pick;
 import com.autogilmore.throwback.skipUsePackage.dataObjects.PickIDCollection;
+import com.autogilmore.throwback.skipUsePackage.dataObjects.PickList;
 import com.autogilmore.throwback.skipUsePackage.dataObjects.PickQuery;
 import com.autogilmore.throwback.skipUsePackage.dataObjects.incomingServer.ServerMemberCategoryList;
 import com.autogilmore.throwback.skipUsePackage.dataObjects.incomingServer.ServerMemberMap;
@@ -19,7 +19,6 @@ import com.autogilmore.throwback.skipUsePackage.dataObjects.incomingServer.Serve
 import com.autogilmore.throwback.skipUsePackage.dataObjects.incomingServer.ServerResponse;
 import com.autogilmore.throwback.skipUsePackage.enums.SkipUsePass;
 import com.autogilmore.throwback.skipUsePackage.exception.SkipUseException;
-import com.autogilmore.throwback.skipUsePackage.manager.SkipUseManager;
 import com.autogilmore.throwback.skipUsePackage.service.api.SkipUseAPI;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -146,18 +145,20 @@ public class SkipUseAPIService extends SkipUseAPI {
 	//
 	public ServerPickList getAllServerPickListByMemberID(List<Integer> memberIDList)
 			throws SkipUseException {
-		// get the maximum number of Picks...
-		PickQuery pickQuery = new PickQuery(SkipUseManager.MAX_PICK_ID_LIST_SIZE);
+		// get the maximum number of Picks... Defaults to the collection size
+		PickQuery pickQuery = new PickQuery();
 		// include all recently offered Picks...
 		pickQuery.setExcludeRecentPicks(false);
 		// include Picks marked as Stop Using...
 		pickQuery.setIncludeStopUsing(true);
-		// set to 0% new Picks...
+		// set to 0% to not get new Picks...
 		pickQuery.setNewMixInPercentage(0);
-		// return back Picks that may have not been used yet...
-		pickQuery.setGetMorePicksIfShort(true);
+		// do not return back Picks if short
+		pickQuery.setGetMorePicksIfShort(false);
 		// for these members...
 		pickQuery.setMemberIDList(memberIDList);
+		// set to 'true' to de-bug the PickQuery results if desired
+		pickQuery.setDebugQuery(true);
 		// un-comment below to add the category data too. This query could take
 		// longer and might cost more to use.
 		// pickQuery.setIncludeCategories(true);
@@ -203,7 +204,7 @@ public class SkipUseAPIService extends SkipUseAPI {
 	public void updatePick(Pick pick) throws SkipUseException {
 		PickList pickList = new PickList();
 		pickList.add(pick);
-		patchAndProcess("/pick", pickList, ServerResponse.NAME);
+		putAndProcess("/pick", pickList, ServerResponse.NAME);
 	}
 
 	// Skip, Use or Pass Pick IDs by members.

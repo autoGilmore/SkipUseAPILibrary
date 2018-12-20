@@ -29,6 +29,17 @@ skipuseapi@gmail.com
 ### Troubleshooting:
 
 ## Changelog:
+121918:  
+* Fix: Missing memberID when marking stop-using Picks
+* Update: SkipUseAPI changes for Put calls vs Patch
+* Update: Debug option for PickQuery feedback
+* Update: SkipUseManagerTest where get user Picks only returns current collection Picks
+* Added: More SkipUseManager automatic log-ins
+* Added: SkipUseManagerTest example to show how to only get a few Picks from a large collection
+* Sample Music Project: break-up getNextSong method
+* Sample Music Project: added reference for MemberCategoryList
+* Sample Music Project: remove Picks from current list that might have been updated
+
 101718:   
 * Update: A Pick ID may not contain ' @@@ ' characters
 * New: MemberListPickIDList and PickList data objects

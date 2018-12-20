@@ -27,7 +27,7 @@ public class MusicSelectionHelper {
 	private MySystemOut syso = MySystemOut.getInstance();
 
 	// Using the Manager to handle SkipUse requests.
-	private SkipUseManager skipUseManager = SkipUseManager.getInstance();
+	private final SkipUseManager skipUseManager = SkipUseManager.getInstance();
 
 	// Flags to verify service states.
 	private boolean isSkipUseRunning = false;
@@ -37,6 +37,7 @@ public class MusicSelectionHelper {
 	private PickQuery lastPickQuery = new PickQuery();
 	private PickIDCollection pickIDCollection = new PickIDCollection();
 	private Set<Integer> getListeningMemberIDSet = new HashSet<>();
+	private MemberCategoryList memberCategoryList = new MemberCategoryList();
 
 	// Play-back and selection variables.
 	private PlayMode playMode = PlayMode.ANY;
@@ -44,8 +45,9 @@ public class MusicSelectionHelper {
 	private int selectedCategoryMemberID = -1;
 
 	// Returned Picks from SkipUse
-	List<Pick> returnedPickList = new ArrayList<>();
-	Queue<String> pickIDQueue = new LinkedList<String>();
+	private PickQuery pickQuery = new PickQuery(10);
+	private List<Pick> returnedPickList = new ArrayList<>();
+	private Queue<String> pickIDQueue = new LinkedList<String>();
 
 	public MusicSelectionHelper() {
 		initialize();
@@ -93,119 +95,44 @@ public class MusicSelectionHelper {
 	//
 	public String _getNextSongID() {
 		String _songID = null;
-		if (isSkipUseRunning()) {
 
-			// create a Pick Query to get back ONE song ID.
-			// NOTE: you could save data Nibbles here by getting more than
-			// one song ID back. Here we assume an average 3 minute song
-			// play time and only ask for 4 songs to avoid getting the 15
-			// minute session timeout.
-			PickQuery pickQuery = new PickQuery(4);
-			// include categories that have been marked for the Picks.
-			pickQuery.setIncludeCategories(true);
-			// for now, set to get only Picks we currently have stored.
-			pickQuery.setNewMixInPercentage(0);
-			// don't send back Picks we recently updated.
-			pickQuery.setExcludeRecentPicks(true);
+		// check the pickQuery to see if it changed
+		loadPickQuery();
 
-			// add our listening members.
-			pickQuery.setMemberIDList(getListeningMemberIDSet());
-
-			// alter the Pick Query by the Play Mode.
-			if (getPlayMode() == PlayMode.FAVORITE) {
-				// get favorites.
-				pickQuery.setSearchMode(SearchMode.FAVORITES);
-			} else if (PlayerStatus.getPlayMode() == PlayMode.CATEGORY
-					&& !getSelectedCategory().isEmpty()) {
-				// get by a selected category.
-
-				// NOTE: getting only ONE member's category, because members
-				// can have different categories.
-				MemberCategoryList memberCategoryList = new MemberCategoryList();
-				try {
-					memberCategoryList = skipUseManager
-							.getCategoryListForMember(getListeningCategoryMemberID());
-				} catch (SkipUseException e) {
-					syso.logError("MusicSelectionHelper " + syso.getLineNumber(), e.getMessage());
-					isSkipUseError = true;
-				}
-
-				// see if SkipUse has the category for the member.
-				String _foundSkipUseCategory = memberCategoryList.getCategoryList().stream()
-						.filter(c -> c.equals(getSelectedCategory())).findFirst().orElse(null);
-
-				List<String> categories = new ArrayList<String>();
-				if (_foundSkipUseCategory != null) {
-					categories.add(_foundSkipUseCategory);
-				} else {
-					// automatically add the category, if not in member's
-					// list.
-					try {
-						skipUseManager.createCategoryForMember(getListeningCategoryMemberID(),
-								getSelectedCategory());
-					} catch (SkipUseException e) {
-						syso.logError("MusicSelectionHelper " + syso.getLineNumber(),
-								e.getMessage());
-						isSkipUseError = true;
-					}
-					// NOTE: member does not have this category, so no song
-					// will be returned anyway. Don't add to categories
-					// query list.
-				}
-				// look for this category.
-				pickQuery.setCategories(categories);
-			} else {
-				// just search as normal, but let's mixing in some new songs.
-				pickQuery.setNewMixInPercentage(35);
-			}
-
-			// load the pick list and pick ID queue
-			if (pickIDQueue.isEmpty() || !pickQuery.toString().equals(lastPickQuery.toString())) {
-				returnedPickList.clear();
-
-				try {
-					syso.logInfo("pickQuery: " + pickQuery.toString());
-
-					// if this query is the same no need to set it, just re-use
-					// it.
-					if (!pickQuery.toString().equals(lastPickQuery.toString())) {
-						lastPickQuery = pickQuery;
-						returnedPickList = skipUseManager.setPickQuery(pickQuery);
-					} else {
-						returnedPickList = skipUseManager.getPickQuery();
-					}
-				} catch (SkipUseException e) {
-					syso.logError("MusicSelectionHelper " + syso.getLineNumber(), e.getMessage());
-					isSkipUseError = true;
-				}
-
-				// reload the Pick queue
-				pickIDQueue.clear();
-				for (Pick pick : returnedPickList) {
-					if (!pickIDQueue.contains(pick.getPickID())) {
-						pickIDQueue.add(pick.getPickID());
-						syso.logInfo("PickIDQueue loading: " + pick.getPickID());
-					}
-				}
-			}
-
-			// load a song ID from the Pick queue
-			if (!pickIDQueue.isEmpty()) {
-				_songID = pickIDQueue.poll();
-			} else {
-				syso.logInfo("No song ID was returned.");
-			}
-
+		// did the Pick Query change? is the queue empty? Then load new songs
+		if (!pickQuery.toString().equals(lastPickQuery.toString())) {
+			pickIDQueue.clear();
+			loadPickQueue();
+		} else if (pickIDQueue.isEmpty()) {
+			loadPickQueue();
 		}
 
-		if (_songID == null) {
+		// load a song ID from the Pick queue
+		_songID = pickIDQueue.poll();
+
+		if (_songID == null)
 			syso.logInfo(
 					"Failed to get a song ID. NOTE: You could add code to get a random song ID to return.");
-		}
 
-		// NOTE: you could pass back the Pick instead, if you wanted to get
-		// fancy.
 		return _songID;
+	}
+
+	// Load Pick Queue
+	//
+	public void loadPickQueue() {
+		loadPickListByPickQuery();
+		for (Pick pick : returnedPickList) {
+			if (!pickIDQueue.contains(pick.getPickID())) {
+				pickIDQueue.add(pick.getPickID());
+				syso.logInfo("PickIDQueue loading: " + pick.getPickID());
+			}
+			if (pickIDQueue.size() >= pickQuery.getHowMany())
+				break;
+		}
+	}
+
+	public boolean isLoadPickQueueNeeded() {
+		return pickIDQueue.size() <= 1;
 	}
 
 	// Get the current Pick List.
@@ -248,6 +175,7 @@ public class MusicSelectionHelper {
 		if (isSkipUseRunning()) {
 			try {
 				skipUseManager.createCategoryForMember(memberID, category);
+				memberCategoryList = new MemberCategoryList();
 			} catch (SkipUseException e) {
 				syso.logError("MusicSelectionHelper " + syso.getLineNumber(), e.getMessage());
 				isSkipUseError = true;
@@ -282,6 +210,7 @@ public class MusicSelectionHelper {
 					createCategoryForMember(pick.getMemberID(), category);
 
 				skipUseManager.markPickWithCategoryTrueFalse(pick, category, isMark);
+				removePickFromCurrentPickList(pick);
 			} catch (SkipUseException e) {
 				syso.logError("MusicSelectionHelper " + syso.getLineNumber(), e.getMessage());
 				isSkipUseError = true;
@@ -300,6 +229,7 @@ public class MusicSelectionHelper {
 					createCategoryForMember(memberID, category);
 
 				skipUseManager.markPickIDWithCategoryTrueFalse(memberID, songID, category, true);
+				removePickFromCurrentPickList(memberID, songID);
 			} catch (SkipUseException e) {
 				syso.logError("MusicSelectionHelper " + syso.getLineNumber(), e.getMessage());
 				isSkipUseError = true;
@@ -334,7 +264,7 @@ public class MusicSelectionHelper {
 				// create a Pick and mark it.
 				syso.logInfo("create new pick and mark category: " + categoryName);
 				markSongIDWithCategoryTrueFalse(memberID,
-						PlayerStatus._getCurrentSongFile().getId() + "", categoryName, true);
+						PlayerStatus._getCurrentSongFile().getID() + "", categoryName, true);
 			}
 		}
 	}
@@ -360,6 +290,7 @@ public class MusicSelectionHelper {
 		if (isSkipUseRunning()) {
 			try {
 				skipUseManager.updateMemberPick(pick);
+				removePickFromCurrentPickList(pick);
 			} catch (SkipUseException e) {
 				syso.logError("MusicSelectionHelper " + syso.getLineNumber(), e.getMessage());
 				isSkipUseError = true;
@@ -371,20 +302,20 @@ public class MusicSelectionHelper {
 	// Returns null if not found.
 	//
 	public Pick _getPickByMemberIDAndSongID(int memberID, String songID) {
-		Pick _currentPick = null;
+		Pick _pick = null;
 		if (isSkipUseRunning() && songID != null) {
 			try {
 				syso.logInfo("MusicSelectionHelper " + syso.getLineNumber()
 						+ " Try _getPickByMemberIDAndSongID  memberID: " + memberID + " songID: "
 						+ songID);
-				_currentPick = skipUseManager._getPickByMemberIDAndPickID(memberID, "" + songID);
+				_pick = skipUseManager._getPickByMemberIDAndPickID(memberID, "" + songID);
 			} catch (SkipUseException e) {
 				syso.logError("MusicSelectionHelper " + syso.getLineNumber(),
 						e.getMessage() + " : memberID: " + memberID + " songID: " + songID);
 				isSkipUseError = true;
 			}
 		}
-		return _currentPick;
+		return _pick;
 	}
 
 	// Update a Pick ID for a member.
@@ -395,6 +326,7 @@ public class MusicSelectionHelper {
 				syso.logInfo("MusicSelectionHelper " + syso.getLineNumber() + " Try "
 						+ skipUsePass.toString() + " memberID: " + memberID + " songID: " + songID);
 				skipUseManager.skipUsePass(skipUsePass, memberID, songID);
+				removePickFromCurrentPickList(memberID, songID);
 			} catch (SkipUseException e) {
 				syso.logError("MusicSelectionHelper " + syso.getLineNumber(), e.getMessage());
 				isSkipUseError = true;
@@ -408,6 +340,8 @@ public class MusicSelectionHelper {
 		if (isSkipUseRunning()) {
 			try {
 				skipUseManager.skipUsePassPickList(skipUsePass, pickList);
+				for (Pick pick : pickList)
+					removePickFromCurrentPickList(pick);
 			} catch (SkipUseException e) {
 				syso.logError("MusicSelectionHelper " + syso.getLineNumber(), e.getMessage());
 				isSkipUseError = true;
@@ -495,6 +429,115 @@ public class MusicSelectionHelper {
 			}
 		}
 		return isSkipUseRunning;
+	}
+
+	// If a Pick has been changed, remove it from the current list to avoid
+	// stale data.
+	//
+	private void removePickFromCurrentPickList(Pick pick) {
+		removePickFromCurrentPickList(pick.getMemberID(), pick.getPickID());
+	}
+
+	private void removePickFromCurrentPickList(int memberID, String pickID) {
+		Pick _foundPick = getCurrentPickList().stream()
+				.filter(p -> p.getPickID().equals(pickID) && p.getMemberID() == memberID)
+				.findFirst().orElse(null);
+		if (_foundPick != null) {
+			getCurrentPickList().remove(_foundPick);
+		}
+	}
+
+	// Load Pick List by Pick Query
+	//
+	private void loadPickListByPickQuery() {
+		if (isSkipUseRunning()) {
+			returnedPickList.clear();
+			try {
+				// if this query is the same no need to set it, just re-use
+				// it.
+				if (!pickQuery.toString().equals(lastPickQuery.toString())) {
+					lastPickQuery = pickQuery;
+					returnedPickList = skipUseManager.setPickQuery(pickQuery);
+				} else {
+					returnedPickList = skipUseManager.getPickQuery();
+				}
+			} catch (SkipUseException e) {
+				syso.logError("MusicSelectionHelper " + syso.getLineNumber(), e.getMessage());
+				isSkipUseError = true;
+			}
+		}
+	}
+
+	// Load Pick Query
+	//
+	private void loadPickQuery() {
+		if (isSkipUseRunning()) {
+			// create a Pick Query to get back ONE song ID.
+			// NOTE: you could save data Nibbles here by getting more than
+			// one song ID back. Here we assume an average listening time of 30
+			// minutes.
+			pickQuery = new PickQuery(12);
+			// include categories that have been marked for the Picks.
+			pickQuery.setIncludeCategories(true);
+			// for now, set to get only Picks we currently have stored.
+			pickQuery.setNewMixInPercentage(0);
+			// don't send back Picks we recently updated.
+			pickQuery.setExcludeRecentPicks(true);
+
+			// add our listening members.
+			pickQuery.setMemberIDList(getListeningMemberIDSet());
+
+			// alter the Pick Query by the Play Mode.
+			if (getPlayMode() == PlayMode.FAVORITE) {
+				// get favorites.
+				pickQuery.setSearchMode(SearchMode.FAVORITES);
+			} else if (PlayerStatus.getPlayMode() == PlayMode.CATEGORY
+					&& !getSelectedCategory().isEmpty()) {
+				// get by a selected category.
+
+				// NOTE: getting only ONE member's category, because members
+				// can have different categories.
+				loadMemberCategoryList();
+
+				// see if SkipUse has the category for the member.
+				String _foundSkipUseCategory = memberCategoryList.getCategoryList().stream()
+						.filter(c -> c.equals(getSelectedCategory())).findFirst().orElse(null);
+
+				List<String> categories = new ArrayList<String>();
+				if (_foundSkipUseCategory != null) {
+					categories.add(_foundSkipUseCategory);
+				} else {
+					// automatically add the category, if not in member's
+					// list.
+					try {
+						skipUseManager.createCategoryForMember(getListeningCategoryMemberID(),
+								getSelectedCategory());
+					} catch (SkipUseException e) {
+						syso.logError("MusicSelectionHelper " + syso.getLineNumber(),
+								e.getMessage());
+						isSkipUseError = true;
+					}
+					// NOTE: member does not have this category, so no song
+					// will be returned anyway. Don't add to categories
+					// query list.
+				}
+				// look for this category.
+				pickQuery.setCategories(categories);
+			} else {
+				// just search as normal, but let's mixing in some new songs.
+				pickQuery.setNewMixInPercentage(35);
+			}
+		}
+	}
+
+	private void loadMemberCategoryList() {
+		try {
+			memberCategoryList = skipUseManager
+					.getCategoryListForMember(getListeningCategoryMemberID());
+		} catch (SkipUseException e) {
+			syso.logError("MusicSelectionHelper " + syso.getLineNumber(), e.getMessage());
+			isSkipUseError = true;
+		}
 	}
 
 	// Login to SkipUse.
