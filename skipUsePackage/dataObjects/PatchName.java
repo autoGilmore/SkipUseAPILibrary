@@ -1,11 +1,11 @@
 package com.autogilmore.throwback.skipUsePackage.dataObjects;
 
 /* 
- * This is an object to use for changing the name of another object.
+ * This is an object to use for changing/patching the value of another string.
 */
 public class PatchName {
-	String beforeName = "";
-	String afterName = "";
+	private String beforeName = "";
+	private String afterName = "";
 
 	public PatchName(String before, String after) {
 		setBeforeName(before);

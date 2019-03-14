@@ -29,6 +29,19 @@ skipuseapi@gmail.com
 ### Troubleshooting:
 
 ## Changelog:
+031419:
+* Added: Member's can now have their own collection
+* Added: Pick Query can now search from a member's collection by using the member ID
+* Added: Temporal search mode for Pick Query
+* Added: Owner profile object for changing email, name and password
+* Removed: Trending percentage meta from Pick
+* Update: search mode enum options for Pick Query
+* Update: default and unset values were switched from '-1' to now use '0'
+* Update: IDs for collections, members, accounts, now use Long data type
+* Sample Music Project: improved server connection testing and recovery
+* Sample Music Project: now using the new Temporal search mode option in the regular Pick Query
+* Sample Music Project: added some tests
+
 121918:  
 * Fix: Missing memberID when marking stop-using Picks
 * Update: SkipUseAPI changes for Put calls vs Patch

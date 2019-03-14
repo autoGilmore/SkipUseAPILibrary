@@ -15,13 +15,13 @@ public class Pick {
 	private String pickID = "";
 
 	// The member ID the Pick belongs to.
-	private int memberID = -1;
+	private long memberID = 0;
 
 	// Number of times Skipped.
-	private int skipped = 0;
+	private long skipped = 0;
 
 	// Number of times Used.
-	private int used = 0;
+	private long used = 0;
 
 	// My additional JSON.
 	private String json = "";
@@ -31,9 +31,6 @@ public class Pick {
 
 	// Percentage 0-100, where 0 is most Skipped and 100 is most Used.
 	private int autoRatePercentage = 50;
-
-	// Faster trending percentage 0-100.
-	private int trendingRatePercentage = 50;
 
 	// Flag to indicate no Pick information has been stored yet.
 	private boolean newPick = true;
@@ -58,27 +55,27 @@ public class Pick {
 			this.pickID = value;
 	}
 
-	public int getMemberID() {
+	public long getMemberID() {
 		return this.memberID;
 	}
 
-	public void setMemberID(int memberID) {
+	public void setMemberID(long memberID) {
 		this.memberID = memberID;
 	}
 
-	public int getUsed() {
+	public long getUsed() {
 		return used;
 	}
 
-	public void setUsed(int used) {
+	public void setUsed(long used) {
 		this.used = used;
 	}
 
-	public int getSkipped() {
+	public long getSkipped() {
 		return skipped;
 	}
 
-	public void setSkipped(int skipped) {
+	public void setSkipped(long skipped) {
 		this.skipped = skipped;
 	}
 
@@ -105,14 +102,6 @@ public class Pick {
 	public void setJSON(String json) {
 		if (json != null)
 			this.json = json;
-	}
-
-	public int getTrendingRatePercentage() {
-		return trendingRatePercentage;
-	}
-
-	public void setTrendingRatePercentage(int trendingRatePercentage) {
-		this.trendingRatePercentage = trendingRatePercentage;
 	}
 
 	public List<String> getCategoryList() {

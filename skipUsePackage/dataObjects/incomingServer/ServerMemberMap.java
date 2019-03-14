@@ -12,14 +12,14 @@ public class ServerMemberMap extends ServerResponse {
 	public static final String NAME = "memberIDMap";
 
 	// Map of Member name and their ID.
-	private Map<String, Integer> memberIDMap = new HashMap<String, Integer>();
+	private Map<String, Long> memberIDMap = new HashMap<String, Long>();
 
-	public Map<String, Integer> getMemberIDMap() {
+	public Map<String, Long> getMemberIDMap() {
 		return memberIDMap;
 	}
 
 	// Expected server JSON object name (don't rename)
-	public void setMemberIDMap(Map<String, Integer> memberIDMap) {
+	public void setMemberIDMap(Map<String, Long> memberIDMap) {
 		this.memberIDMap = memberIDMap;
 	}
 

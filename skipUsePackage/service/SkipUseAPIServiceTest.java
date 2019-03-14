@@ -13,13 +13,14 @@ import org.junit.After;
 import org.junit.Test;
 import org.springframework.http.HttpStatus;
 
-import com.autogilmore.throwback.skipUsePackage.dataObjects.CategoryPickIDCollection;
+import com.autogilmore.throwback.skipUsePackage.dataObjects.CategoryMemberPickIDCollection;
 import com.autogilmore.throwback.skipUsePackage.dataObjects.MemberCategoryList;
-import com.autogilmore.throwback.skipUsePackage.dataObjects.MemberList;
 import com.autogilmore.throwback.skipUsePackage.dataObjects.MemberListPickIDList;
+import com.autogilmore.throwback.skipUsePackage.dataObjects.MemberNameList;
+import com.autogilmore.throwback.skipUsePackage.dataObjects.MemberPickIDCollection;
 import com.autogilmore.throwback.skipUsePackage.dataObjects.Pick;
-import com.autogilmore.throwback.skipUsePackage.dataObjects.PickIDCollection;
 import com.autogilmore.throwback.skipUsePackage.dataObjects.PickQuery;
+import com.autogilmore.throwback.skipUsePackage.dataObjects.Profile;
 import com.autogilmore.throwback.skipUsePackage.dataObjects.incomingServer.ServerMemberCategoryList;
 import com.autogilmore.throwback.skipUsePackage.dataObjects.incomingServer.ServerMemberMap;
 import com.autogilmore.throwback.skipUsePackage.dataObjects.incomingServer.ServerPickIDCollection;
@@ -48,21 +49,35 @@ public class SkipUseAPIServiceTest {
 	private static final String TEST_MEMBER_BOB = "Bob";
 	private static final String TEST_MEMBER_SUE = "Sue";
 
+	private static final boolean INCLUDE_CATEGORY_INFO = false;
+
 	// After each test, remove the test member.
 	@After
 	public void after() {
 		try {
 			SkipUseManager manager = SkipUseManager.getInstance();
-			int testMemberID = manager.getMemberIDByName(TEST_MEMBER_BOB);
-			if (testMemberID != -1)
+			long testMemberID = manager.getMemberIDByName(TEST_MEMBER_BOB);
+			if (testMemberID != 0)
 				service.deleteMemberByID(testMemberID);
 			testMemberID = manager.getMemberIDByName(TEST_MEMBER_SUE);
-			if (testMemberID != -1)
+			if (testMemberID != 0)
 				service.deleteMemberByID(testMemberID);
 			service.logout();
 		} catch (SkipUseException e) {
 			// noop (no operation)
 		}
+	}
+
+	@Test
+	public void test_checkServerConnection() {
+		// Set up
+		assertTrue("Should have a connection", service.isServerAPIUp());
+		// use wrong API URL
+		service = new SkipUseAPIService("http://skipuseapi/v-hee-hee");
+
+		// Test
+		// Verify
+		assertFalse("Should NOT have a connection", service.isServerAPIUp());
 	}
 
 	@Test
@@ -118,30 +133,68 @@ public class SkipUseAPIServiceTest {
 	}
 
 	@Test
+	public void test_getProfile() throws SkipUseException {
+		// Set up
+		service.login(TEST_EMAIL, TEST_PASSWORD);
+		assertTrue(service.isLoggedIn());
+
+		// Test
+		Profile profile = service.getProfile();
+
+		// Verify
+
+		// if this is failing, try running the update Profile test first
+		assertTrue(profile.getOwnerName().equals(SkipUseProperties.OWNER_NAME));
+		assertTrue(profile.getEmail().equals(SkipUseProperties.TEST_SKIP_USE_EMAIL));
+		assertTrue(profile.getPassword().isEmpty());
+	}
+
+	@Test
+	public void test_updateProfile() throws SkipUseException {
+		// Set up
+		service.login(TEST_EMAIL, TEST_PASSWORD);
+		assertTrue(service.isLoggedIn());
+		Profile profile = service.getProfile();
+
+		profile.setOwnerName(SkipUseProperties.OWNER_NAME);
+
+		// Test
+		service.updateProfile(profile);
+		profile = service.getProfile();
+
+		// Verify
+		assertTrue("was: " + profile.getOwnerName(),
+				profile.getOwnerName().equals(SkipUseProperties.OWNER_NAME));
+		assertTrue("was: " + profile.getEmail(),
+				profile.getEmail().equals(SkipUseProperties.TEST_SKIP_USE_EMAIL));
+		assertTrue(profile.getPassword().isEmpty());
+	}
+
+	@Test
 	public void test_setPickIDCollection() throws SkipUseException {
 		// Set up
 		service.login(TEST_EMAIL, TEST_PASSWORD);
 		assertTrue(service.isLoggedIn());
 
 		String collectionName = "My collection";
-		List<String> collectionIDList = new ArrayList<>();
-		collectionIDList.add("A");
-		collectionIDList.add("B");
-		collectionIDList.add("C");
+		List<String> collectionPickIDList = new ArrayList<>();
+		collectionPickIDList.add("A");
+		collectionPickIDList.add("B");
+		collectionPickIDList.add("C");
 		// ignore duplicate
-		collectionIDList.add("C");
-		assertTrue(collectionIDList.size() == 4);
+		collectionPickIDList.add("C");
+		assertTrue(collectionPickIDList.size() == 4);
 
-		PickIDCollection pickIDCollection = new PickIDCollection();
-		pickIDCollection.setCollectionName(collectionName);
-		pickIDCollection.setPickIDList(collectionIDList);
-		pickIDCollection.setSplitCSV(false);
+		MemberPickIDCollection memberPickIDCollection = new MemberPickIDCollection();
+		memberPickIDCollection.setCollectionName(collectionName);
+		memberPickIDCollection.setPickIDList(collectionPickIDList);
+		memberPickIDCollection.setSplitCSV(false);
 
 		// Test
-		service.setPickIDCollection(pickIDCollection);
+		service.setPickIDCollection(memberPickIDCollection);
 
 		// Verify
-		ServerPickIDCollection foundServerCollection = service.getServerPickIDCollection();
+		ServerPickIDCollection foundServerCollection = service.getServerPickIDCollection(0);
 		assertNotNull(foundServerCollection);
 		List<String> foundCollectionList = foundServerCollection.getPickIDCollection()
 				.getPickIDList();
@@ -161,17 +214,17 @@ public class SkipUseAPIServiceTest {
 		collectionList.add("A, B, C");
 		collectionList.add("D,E,F");
 
-		PickIDCollection pickIDCollection = new PickIDCollection();
-		pickIDCollection.setCollectionName(collectionName);
-		pickIDCollection.setPickIDList(collectionList);
+		MemberPickIDCollection memberPickIDCollection = new MemberPickIDCollection();
+		memberPickIDCollection.setCollectionName(collectionName);
+		memberPickIDCollection.setPickIDList(collectionList);
 		// split
-		pickIDCollection.setSplitCSV(true);
+		memberPickIDCollection.setSplitCSV(true);
 
 		// Test
-		service.setPickIDCollection(pickIDCollection);
+		service.setPickIDCollection(memberPickIDCollection);
 
 		// Verify
-		ServerPickIDCollection foundServerCollection = service.getServerPickIDCollection();
+		ServerPickIDCollection foundServerCollection = service.getServerPickIDCollection(0);
 		assertNotNull(foundServerCollection);
 		List<String> foundCollectionList = foundServerCollection.getPickIDCollection()
 				.getPickIDList();
@@ -195,14 +248,14 @@ public class SkipUseAPIServiceTest {
 		collectionList.add("B");
 		collectionList.add("C");
 
-		PickIDCollection pickCollection = new PickIDCollection();
+		MemberPickIDCollection pickCollection = new MemberPickIDCollection();
 		pickCollection.setCollectionName(collectionName);
 		pickCollection.setPickIDList(collectionList);
 		pickCollection.setSplitCSV(false);
 		service.setPickIDCollection(pickCollection);
 
 		// Test
-		ServerPickIDCollection foundServerCollection = service.getServerPickIDCollection();
+		ServerPickIDCollection foundServerCollection = service.getServerPickIDCollection(0);
 
 		// Verify
 		assertNotNull(foundServerCollection);
@@ -222,7 +275,7 @@ public class SkipUseAPIServiceTest {
 		List<String> collectionList = new ArrayList<>();
 		collectionList.add("A, B, C");
 
-		PickIDCollection pickCollection = new PickIDCollection();
+		MemberPickIDCollection pickCollection = new MemberPickIDCollection();
 		pickCollection.setCollectionName(collectionName);
 		pickCollection.setPickIDList(collectionList);
 		pickCollection.setSplitCSV(true);
@@ -262,44 +315,47 @@ public class SkipUseAPIServiceTest {
 		service.login(TEST_EMAIL, TEST_PASSWORD);
 		assertTrue(service.isLoggedIn());
 
-		int memberID = addTestMember(TEST_MEMBER_BOB);
+		long memberID = addTestMember(TEST_MEMBER_BOB);
 
 		// Test
-		ServerPickList serverPickList = service.getAllServerPickListByMemberID(memberID);
+		ServerPickList serverPickList = service.getAllServerPickListByMemberID(memberID,
+				INCLUDE_CATEGORY_INFO);
 
 		// Verify
 		assertNotNull(serverPickList);
 	}
 
 	@Test
-	public void test__getPickByMemberIDAndPickID() throws SkipUseException {
+	public void test__getPickByMemberIDAndPickIDAndCollectionID() throws SkipUseException {
 		// Set up
 		service.login(TEST_EMAIL, TEST_PASSWORD);
 		assertTrue(service.isLoggedIn());
 
 		// create a member
-		int bobMemberID = addTestMember(TEST_MEMBER_BOB);
+		long bobMemberID = addTestMember(TEST_MEMBER_BOB);
 
 		// test Pick ID
 		String pickID = "<a href=\"http://www.skipuse.com\" target=\"_blank\" title=\"SkipUse Home Page\">SkipUse</a>";
 
 		// set collection
-		PickIDCollection pickIDCollection = new PickIDCollection();
-		pickIDCollection.setCollectionName("test collection");
-		pickIDCollection.addPickID(pickID);
-		service.setPickIDCollection(pickIDCollection);
+		MemberPickIDCollection memberPickIDCollection = new MemberPickIDCollection();
+		memberPickIDCollection.setCollectionName("test collection");
+		memberPickIDCollection.addPickID(pickID);
+		service.setPickIDCollection(memberPickIDCollection);
 
 		// Test: pick not stored yet
-		Pick _foundPick = service._getPickByMemberIDAndPickID(bobMemberID, pickID);
+		Pick _foundPick = service._getPickByMemberIDAndPickIDAndCollectionID(bobMemberID, pickID,
+				bobMemberID);
 
 		// Verify
 		assertTrue(_foundPick == null);
 
 		// store the pick
-		service.skipUsePassPickID(SkipUsePass.PASS, bobMemberID, pickID);
+		service.skipUsePassPickID(SkipUsePass.PASS, bobMemberID, pickID, bobMemberID);
 
 		// Test: pick is now found
-		_foundPick = service._getPickByMemberIDAndPickID(bobMemberID, pickID);
+		_foundPick = service._getPickByMemberIDAndPickIDAndCollectionID(bobMemberID, pickID,
+				bobMemberID);
 		assertNotNull(_foundPick);
 		assertTrue(_foundPick.getPickID().equals(pickID));
 
@@ -313,7 +369,7 @@ public class SkipUseAPIServiceTest {
 		service.login(TEST_EMAIL, TEST_PASSWORD);
 		assertTrue(service.isLoggedIn());
 
-		int memberID = addTestMember(TEST_MEMBER_BOB);
+		long memberID = addTestMember(TEST_MEMBER_BOB);
 
 		String collectionName = "My collection";
 		List<String> collectionList = new ArrayList<>();
@@ -323,20 +379,18 @@ public class SkipUseAPIServiceTest {
 		collectionList.add("C" + date.toString());
 		collectionList.add("D" + date.toString());
 
-		PickIDCollection pickCollection = new PickIDCollection();
+		MemberPickIDCollection pickCollection = new MemberPickIDCollection();
 		pickCollection.setCollectionName(collectionName);
 		pickCollection.setPickIDList(collectionList);
 		pickCollection.setSplitCSV(true);
 		service.setPickIDCollection(pickCollection);
-		assertTrue(
-				"was: " + service.getServerPickIDCollection().getPickIDCollection().getPickIDList()
-						.size(),
-				service.getServerPickIDCollection().getPickIDCollection().getPickIDList()
-						.size() == 4);
+		List<String> foundCollectionList = service.getServerPickIDCollection(0)
+				.getPickIDCollection().getPickIDList();
+		assertTrue("was: " + foundCollectionList.size(), foundCollectionList.size() == 4);
 
 		// Test: empty
 		ServerPickList serverPickList = service.getServerPickListByMemberIDAndPickList(memberID,
-				collectionList);
+				collectionList, memberID);
 
 		// Verify
 		assertNotNull(serverPickList);
@@ -345,15 +399,15 @@ public class SkipUseAPIServiceTest {
 				pickList.size() == 0);
 
 		// add picks
-		List<Integer> memberIDList = new ArrayList<>();
+		List<Long> memberIDList = new ArrayList<>();
 		memberIDList.add(memberID);
 		MemberListPickIDList memberPickIDList = new MemberListPickIDList(pickCollection,
 				memberIDList);
-		memberPickIDList.setSplitCSV(true);
 		service.skipUsePassMemberPickIDList(SkipUsePass.SKIP, memberPickIDList);
 
 		// Test: w/Picks
-		serverPickList = service.getServerPickListByMemberIDAndPickList(memberID, collectionList);
+		serverPickList = service.getServerPickListByMemberIDAndPickList(memberID, collectionList,
+				memberID);
 
 		// Verify
 		assertNotNull(serverPickList);
@@ -373,18 +427,17 @@ public class SkipUseAPIServiceTest {
 		String testPickID = "1";
 
 		// test member
-		int bobMemberID = addTestMember(TEST_MEMBER_BOB);
+		long bobMemberID = addTestMember(TEST_MEMBER_BOB);
 
 		// set collection
-		PickIDCollection pickIDCollection = new PickIDCollection();
-		pickIDCollection.setCollectionName("test collection");
-		pickIDCollection.addPickID(testPickID);
-		service.setPickIDCollection(pickIDCollection);
+		MemberPickIDCollection memberPickIDCollection = new MemberPickIDCollection();
+		memberPickIDCollection.setCollectionName("test collection");
+		memberPickIDCollection.addPickID(testPickID);
+		service.setPickIDCollection(memberPickIDCollection);
 
 		// create a pick (if needed) by using the Pass
-		MemberListPickIDList memberPickIDList = new MemberListPickIDList();
+		MemberListPickIDList memberPickIDList = new MemberListPickIDList(memberPickIDCollection);
 		memberPickIDList.addMemberID(bobMemberID);
-		memberPickIDList.addPickID(testPickID);
 		service.skipUsePassMemberPickIDList(SkipUsePass.PASS, memberPickIDList);
 
 		PickQuery pickQuery = new PickQuery();
@@ -398,8 +451,8 @@ public class SkipUseAPIServiceTest {
 		Pick startPick = pickList.get(0);
 		assertNotNull(startPick);
 		assertTrue(!startPick.getPickID().isEmpty());
-		int startingPickSkipCount = startPick.getSkipped();
-		int startingPickUseCount = startPick.getUsed();
+		long startingPickSkipCount = startPick.getSkipped();
+		long startingPickUseCount = startPick.getUsed();
 
 		// Test: Skip
 		service.skipUsePassMemberPickIDList(SkipUsePass.SKIP, memberPickIDList);
@@ -463,8 +516,9 @@ public class SkipUseAPIServiceTest {
 		service.login(TEST_EMAIL, TEST_PASSWORD);
 		assertTrue(service.isLoggedIn());
 
-		int memberID = addTestMember(TEST_MEMBER_BOB);
-		ServerPickList serverPickList = service.getAllServerPickListByMemberID(memberID);
+		long memberID = addTestMember(TEST_MEMBER_BOB);
+		ServerPickList serverPickList = service.getAllServerPickListByMemberID(memberID,
+				INCLUDE_CATEGORY_INFO);
 		assertNotNull(serverPickList);
 		assertTrue("Create some Picks first", serverPickList.getPickList().size() > 0);
 
@@ -479,7 +533,8 @@ public class SkipUseAPIServiceTest {
 		service.updatePick(pick);
 
 		// Verify
-		ServerPickList updatedServerPickList = service.getAllServerPickListByMemberID(memberID);
+		ServerPickList updatedServerPickList = service.getAllServerPickListByMemberID(memberID,
+				INCLUDE_CATEGORY_INFO);
 		assertNotNull(updatedServerPickList);
 		assertTrue(serverPickList.getPickList().size() > 0);
 		assertTrue("same pickID?",
@@ -495,7 +550,7 @@ public class SkipUseAPIServiceTest {
 		assertTrue(service.isLoggedIn());
 
 		// create a member
-		MemberList memberList = new MemberList();
+		MemberNameList memberList = new MemberNameList();
 		memberList.addMemberName(TEST_MEMBER_BOB);
 
 		// Test
@@ -506,7 +561,7 @@ public class SkipUseAPIServiceTest {
 		assertTrue(serverMemberMap.getMemberIDMap().get(TEST_MEMBER_BOB) > 0);
 
 		// create another member
-		MemberList newMemberList = new MemberList();
+		MemberNameList newMemberList = new MemberNameList();
 		newMemberList.addMemberName(TEST_MEMBER_SUE);
 
 		// Test
@@ -525,7 +580,7 @@ public class SkipUseAPIServiceTest {
 		assertTrue(service.isLoggedIn());
 
 		// create a member
-		MemberList memberList = new MemberList();
+		MemberNameList memberList = new MemberNameList();
 		memberList.addMemberName(TEST_MEMBER_BOB);
 		memberList.addMemberName(TEST_MEMBER_SUE);
 
@@ -534,8 +589,8 @@ public class SkipUseAPIServiceTest {
 		assertTrue(serverMemberMap.getMemberIDMap().size() > 0);
 		assertTrue(serverMemberMap.getMemberIDMap().get(TEST_MEMBER_BOB) > 0);
 		assertTrue(serverMemberMap.getMemberIDMap().get(TEST_MEMBER_SUE) > 0);
-		int bobMemberID = serverMemberMap.getMemberIDMap().get(TEST_MEMBER_BOB);
-		int sueMemberID = serverMemberMap.getMemberIDMap().get(TEST_MEMBER_SUE);
+		long bobMemberID = serverMemberMap.getMemberIDMap().get(TEST_MEMBER_BOB);
+		long sueMemberID = serverMemberMap.getMemberIDMap().get(TEST_MEMBER_SUE);
 		assertTrue(bobMemberID != sueMemberID);
 
 		// remove the previous test member name change if needed
@@ -567,7 +622,7 @@ public class SkipUseAPIServiceTest {
 		String TEST_MEMBER_SUE = "Sue";
 
 		// create a member
-		MemberList memberList = new MemberList();
+		MemberNameList memberList = new MemberNameList();
 		memberList.addMemberName(TEST_MEMBER_BOB);
 		memberList.addMemberName(TEST_MEMBER_SUE);
 
@@ -576,8 +631,8 @@ public class SkipUseAPIServiceTest {
 		assertTrue(serverMemberMap.getMemberIDMap().size() > 0);
 		assertTrue(serverMemberMap.getMemberIDMap().get(TEST_MEMBER_BOB) > 0);
 		assertTrue(serverMemberMap.getMemberIDMap().get(TEST_MEMBER_SUE) > 0);
-		int bobMemberID = serverMemberMap.getMemberIDMap().get(TEST_MEMBER_BOB);
-		int sueMemberID = serverMemberMap.getMemberIDMap().get(TEST_MEMBER_SUE);
+		long bobMemberID = serverMemberMap.getMemberIDMap().get(TEST_MEMBER_BOB);
+		long sueMemberID = serverMemberMap.getMemberIDMap().get(TEST_MEMBER_SUE);
 		assertTrue(bobMemberID != sueMemberID);
 
 		// Test
@@ -599,7 +654,7 @@ public class SkipUseAPIServiceTest {
 		// Set up
 		service.login(TEST_EMAIL, TEST_PASSWORD);
 		assertTrue(service.isLoggedIn());
-		int ownerMemberID = service.getMyMemberID();
+		long ownerMemberID = service.getMyMemberID();
 
 		try {
 			// Test
@@ -616,7 +671,7 @@ public class SkipUseAPIServiceTest {
 		// Set up
 		service.login(TEST_EMAIL, TEST_PASSWORD);
 		assertTrue(service.isLoggedIn());
-		MemberList memberList = new MemberList();
+		MemberNameList memberList = new MemberNameList();
 		String TEST_MEMBER_BOB = "Bob";
 		memberList.addMemberName(TEST_MEMBER_BOB);
 		ServerMemberMap serverMemberMap = service.addMemberList(memberList);
@@ -637,7 +692,7 @@ public class SkipUseAPIServiceTest {
 		service.login(TEST_EMAIL, TEST_PASSWORD);
 		assertTrue(service.isLoggedIn());
 
-		int memberID = addTestMember(TEST_MEMBER_BOB);
+		long memberID = addTestMember(TEST_MEMBER_BOB);
 		assertTrue(memberID > 0);
 		String testCategoryName = "Cat's with funny hats";
 		ServerMemberCategoryList serverMemberCategoryList = service
@@ -669,7 +724,7 @@ public class SkipUseAPIServiceTest {
 		service.login(TEST_EMAIL, TEST_PASSWORD);
 		assertTrue(service.isLoggedIn());
 
-		int memberID = addTestMember(TEST_MEMBER_BOB);
+		long memberID = addTestMember(TEST_MEMBER_BOB);
 		assertTrue(memberID > 0);
 		String testCategoryName = "Cat's with funny hats";
 		// delete previous test update if needed
@@ -696,7 +751,7 @@ public class SkipUseAPIServiceTest {
 		service.login(TEST_EMAIL, TEST_PASSWORD);
 		assertTrue(service.isLoggedIn());
 
-		int memberID = addTestMember(TEST_MEMBER_BOB);
+		long memberID = addTestMember(TEST_MEMBER_BOB);
 		assertTrue(memberID > 0);
 
 		// delete previous test update if needed
@@ -730,7 +785,7 @@ public class SkipUseAPIServiceTest {
 		service.login(TEST_EMAIL, TEST_PASSWORD);
 		assertTrue(service.isLoggedIn());
 
-		int memberID = addTestMember(TEST_MEMBER_BOB);
+		long memberID = addTestMember(TEST_MEMBER_BOB);
 		assertTrue(memberID > 0);
 
 		List<String> categoryList = new ArrayList<>();
@@ -768,7 +823,7 @@ public class SkipUseAPIServiceTest {
 		service.login(TEST_EMAIL, TEST_PASSWORD);
 		assertTrue(service.isLoggedIn());
 
-		int memberID = addTestMember(TEST_MEMBER_BOB);
+		long memberID = addTestMember(TEST_MEMBER_BOB);
 		assertTrue(memberID > 0);
 
 		String testCategoryName = "Cat's with funny hats";
@@ -786,23 +841,24 @@ public class SkipUseAPIServiceTest {
 
 		// create pick collection
 		String collectionName = "My collection";
-		List<String> collectionIDList = new ArrayList<>();
-		collectionIDList.add("A, B, C");
-		PickIDCollection pickIDCollection = new PickIDCollection();
-		pickIDCollection.setCollectionName(collectionName);
-		pickIDCollection.setPickIDList(collectionIDList);
-		pickIDCollection.setSplitCSV(true);
-		ServerPickIDCollection createdCollection = service.setPickIDCollection(pickIDCollection);
+		List<String> collectionPickIDList = new ArrayList<>();
+		collectionPickIDList.add("A, B, C");
+		MemberPickIDCollection memberPickIDCollection = new MemberPickIDCollection();
+		memberPickIDCollection.setCollectionName(collectionName);
+		memberPickIDCollection.setPickIDList(collectionPickIDList);
+		memberPickIDCollection.setSplitCSV(true);
+		ServerPickIDCollection createdCollection = service
+				.setPickIDCollection(memberPickIDCollection);
 
 		// Mark the pick with the category
-		CategoryPickIDCollection categoryPickIDCollection = new CategoryPickIDCollection();
+		CategoryMemberPickIDCollection categoryPickIDCollection = new CategoryMemberPickIDCollection();
 		MemberCategoryList memberCategoryList = new MemberCategoryList(memberID, categoryList);
 		categoryPickIDCollection.setMemberCategoryList(memberCategoryList);
-		PickIDCollection choosePickIDCollection = new PickIDCollection();
+		MemberPickIDCollection choosePickIDCollection = new MemberPickIDCollection();
 		choosePickIDCollection
 				.setCollectionName(createdCollection.getPickIDCollection().getCollectionName());
 		choosePickIDCollection.addPickID("B");
-		categoryPickIDCollection.setPickIDCollection(choosePickIDCollection);
+		categoryPickIDCollection.setMemberPickIDCollection(choosePickIDCollection);
 
 		// Test
 		service.markCategoryPickIDCollection(categoryPickIDCollection);
@@ -819,8 +875,9 @@ public class SkipUseAPIServiceTest {
 		pickQuery.setGetMorePicksIfShort(false);
 		// do not add new Picks
 		pickQuery.setNewMixInPercentage(0);
-		// from the collection
-		pickQuery.setCollectionID(createdCollection.getPickIDCollection().getCollectionID());
+		// from the member's collection
+		pickQuery.setMemberCollectionID(
+				createdCollection.getPickIDCollection().getMemberCollectionID());
 		// include the category info for the Picks
 		pickQuery.setIncludeCategories(true);
 
@@ -840,7 +897,7 @@ public class SkipUseAPIServiceTest {
 		service.login(TEST_EMAIL, TEST_PASSWORD);
 		assertTrue(service.isLoggedIn());
 
-		int memberID = addTestMember(TEST_MEMBER_BOB);
+		long memberID = addTestMember(TEST_MEMBER_BOB);
 		assertTrue(memberID > 0);
 
 		String testCategoryName = "Cat's with funny hats";
@@ -858,23 +915,24 @@ public class SkipUseAPIServiceTest {
 
 		// create pick collection
 		String collectionName = "My collection";
-		List<String> collectionIDList = new ArrayList<>();
-		collectionIDList.add("A, B, C");
-		PickIDCollection pickIDCollection = new PickIDCollection();
-		pickIDCollection.setCollectionName(collectionName);
-		pickIDCollection.setPickIDList(collectionIDList);
-		pickIDCollection.setSplitCSV(true);
-		ServerPickIDCollection createdCollection = service.setPickIDCollection(pickIDCollection);
+		List<String> collectionPickIDList = new ArrayList<>();
+		collectionPickIDList.add("A, B, C");
+		MemberPickIDCollection memberPickIDCollection = new MemberPickIDCollection();
+		memberPickIDCollection.setCollectionName(collectionName);
+		memberPickIDCollection.setPickIDList(collectionPickIDList);
+		memberPickIDCollection.setSplitCSV(true);
+		ServerPickIDCollection createdCollection = service
+				.setPickIDCollection(memberPickIDCollection);
 
 		// Mark the pick with the category
-		CategoryPickIDCollection categoryPickIDCollection = new CategoryPickIDCollection();
+		CategoryMemberPickIDCollection categoryPickIDCollection = new CategoryMemberPickIDCollection();
 		MemberCategoryList memberCategoryList = new MemberCategoryList(memberID, categoryList);
 		categoryPickIDCollection.setMemberCategoryList(memberCategoryList);
-		PickIDCollection choosePickIDCollection = new PickIDCollection();
+		MemberPickIDCollection choosePickIDCollection = new MemberPickIDCollection();
 		choosePickIDCollection
 				.setCollectionName(createdCollection.getPickIDCollection().getCollectionName());
 		choosePickIDCollection.addPickID("B");
-		categoryPickIDCollection.setPickIDCollection(choosePickIDCollection);
+		categoryPickIDCollection.setMemberPickIDCollection(choosePickIDCollection);
 
 		service.markCategoryPickIDCollection(categoryPickIDCollection);
 
@@ -888,8 +946,9 @@ public class SkipUseAPIServiceTest {
 		pickQuery.setGetMorePicksIfShort(false);
 		// do not add new Picks
 		pickQuery.setNewMixInPercentage(0);
-		// from the collection
-		pickQuery.setCollectionID(createdCollection.getPickIDCollection().getCollectionID());
+		// from the member's collection
+		pickQuery.setMemberCollectionID(
+				createdCollection.getPickIDCollection().getMemberCollectionID());
 		// include the category info for the Picks
 		pickQuery.setIncludeCategories(true);
 
@@ -924,34 +983,34 @@ public class SkipUseAPIServiceTest {
 		service.errorTest();
 
 		// Verify
-		ServerResponse serverResponse = service.getLastServerResponseData();
+		ServerResponse serverResponse = service.serverResponseData;
 		assertNotNull(serverResponse);
 		assertTrue(serverResponse.getStatus() == HttpStatus.BAD_REQUEST);
 		assertFalse("There should be an error message", serverResponse.getErrorMessage().isEmpty());
 		assertFalse("There should be a message with help", serverResponse.getMessage().isEmpty());
 
 		// should still have all the other communication parts
-		assertTrue(serverResponse.getMemberID() > -1);
-		assertFalse(serverResponse.getMemberName().isEmpty());
+		assertTrue(serverResponse.getOwnerID() > 0);
+		assertFalse(serverResponse.getOwnerName().isEmpty());
 		assertFalse(serverResponse.getProxyID().isEmpty());
 		assertFalse(serverResponse.getSkipUseToken().isEmpty());
 
 		// Verify can still use the service
-		ServerPickIDCollection foundServerCollection = service.getServerPickIDCollection();
+		ServerPickIDCollection foundServerCollection = service.getServerPickIDCollection(0);
 		assertNotNull(foundServerCollection);
 		List<String> foundCollectionList = foundServerCollection.getPickIDCollection()
 				.getPickIDList();
 		assertNotNull(foundCollectionList);
 	}
 
-	private int addTestMember(String memberName) throws SkipUseException {
-		MemberList memberList = new MemberList();
+	private long addTestMember(String memberName) throws SkipUseException {
+		MemberNameList memberList = new MemberNameList();
 		memberList.addMemberName(memberName);
 		ServerMemberMap serverMemberMap = service.addMemberList(memberList);
 		return serverMemberMap.getMemberIDMap().get(memberName);
 	}
 
-	private void deleteTestCategory(int memberID, String categoryName) throws SkipUseException {
+	private void deleteTestCategory(long memberID, String categoryName) throws SkipUseException {
 		ServerMemberCategoryList currentServerMemberCategoryList = service
 				.getCategoryListByMemberID(memberID);
 		List<String> currentCategoryList = currentServerMemberCategoryList.getMemberCategoryList()

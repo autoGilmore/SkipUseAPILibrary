@@ -16,6 +16,7 @@ import com.autogilmore.throwback.skipUsePackage.dataObjects.incomingServer.Serve
 import com.autogilmore.throwback.skipUsePackage.dataObjects.incomingServer.ServerMemberMap;
 import com.autogilmore.throwback.skipUsePackage.dataObjects.incomingServer.ServerPickIDCollection;
 import com.autogilmore.throwback.skipUsePackage.dataObjects.incomingServer.ServerPickList;
+import com.autogilmore.throwback.skipUsePackage.dataObjects.incomingServer.ServerProfile;
 import com.autogilmore.throwback.skipUsePackage.dataObjects.incomingServer.ServerResponse;
 import com.autogilmore.throwback.skipUsePackage.exception.SkipUseException;
 import com.autogilmore.throwback.skipUsePackage.tokenData.SkipUseToken;
@@ -27,6 +28,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class SkipUseAPI {
 	public String api_url = "";
+	private boolean hasServerConnection = false;
 
 	public final SkipUseTokenHelper tokenHelper = new SkipUseTokenHelper();
 
@@ -35,7 +37,7 @@ public class SkipUseAPI {
 
 	public final ObjectMapper mapper = new ObjectMapper();
 	{
-		// Don't worry about property cases from server
+		// Don't worry about property sensitive cases from server
 		mapper.configure(MapperFeature.ACCEPT_CASE_INSENSITIVE_PROPERTIES, true);
 		// Don't fail if a property is not found on an incoming server object
 		mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
@@ -45,28 +47,16 @@ public class SkipUseAPI {
 	//
 	public SkipUseAPI(String skipUseAPIURL) {
 		this.api_url = skipUseAPIURL;
-	}
-
-	// Get the last response from the server.
-	//
-	public ServerResponse getLastServerResponseData() {
-		return serverResponseData;
+		checkServerConnection();
 	}
 
 	// Checks if the SkipUserAPI server is up. It should respond back with a
 	// message to this call.
 	//
-	public boolean checkServerConnection() throws SkipUseException {
-		try {
-			String result = getRestTemplate().getForObject(api_url + "/hello", String.class);
-			if (result != null && true) {
-				System.out.println(result);
-				return true;
-			}
-		} catch (Exception e) {
-			System.err.println("Failed to get an acknowledgement from the SkipUseApi server.");
-		}
-		return false;
+	public boolean isServerAPIUp() {
+		if (hasServerConnection == false)
+			checkServerConnection();
+		return hasServerConnection;
 	}
 
 	// A proxyID is the server's reference ID for tracking user requests.
@@ -75,19 +65,21 @@ public class SkipUseAPI {
 	//
 	public void initiateProxy() throws SkipUseException {
 		serverResponseData = new ServerResponse();
-		SkipUseToken sendingToken = tokenHelper.getInitiateToken();
-		try {
-			String responseJson = getRestTemplate().getForObject(
-					api_url + "/skipusetoken/" + sendingToken.toString() + "/initiate",
-					String.class);
+		if (hasServerConnection) {
+			SkipUseToken sendingToken = tokenHelper.getInitiateToken();
+			try {
+				String responseJson = getRestTemplate().getForObject(
+						api_url + "/skipusetoken/" + sendingToken.toString() + "/initiate",
+						String.class);
 
-			processStringResponse(responseJson);
+				processStringResponse(responseJson);
 
-		} catch (HttpClientErrorException e) {
-			handleHttpClientError(e, "GET /initiate");
-		} catch (Exception e) {
-			throw new SkipUseException(
-					"Failed to initiate a proxy with the SkipUse server. " + e.getMessage());
+			} catch (HttpClientErrorException e) {
+				handleHttpClientError(e, "GET /initiate");
+			} catch (Exception e) {
+				throw new SkipUseException(
+						"Failed to initiate a proxy with the SkipUse server. " + e.getMessage());
+			}
 		}
 	}
 
@@ -114,20 +106,27 @@ public class SkipUseAPI {
 	public Object getAndProcess(String postFixUrl, String expectedObject) throws SkipUseException {
 		String attempting = "GET " + postFixUrl;
 		System.out.println(attempting);
-		String url = buildURLAddProxyIDSkipUseToken(postFixUrl, expectedObject);
-		try {
-			String returnJSON = getRestTemplate().getForObject(url, String.class);
-			processStringResponse(returnJSON);
+		if (hasServerConnection) {
+			String url = buildURLAddProxyIDSkipUseToken(postFixUrl, expectedObject);
+			try {
+				String returnJSON = getRestTemplate().getForObject(url, String.class);
+				processStringResponse(returnJSON);
 
-			if (expectedObject.equals(ServerResponse.NAME))
-				return returnJSON;
+				if (expectedObject.equals(ServerResponse.NAME))
+					return returnJSON;
 
-			return convertJSONToServerObject(returnJSON, expectedObject);
+				return convertJSONToServerObject(returnJSON, expectedObject);
 
-		} catch (HttpClientErrorException e) {
-			handleHttpClientError(e, attempting);
+			} catch (HttpClientErrorException e) {
+				handleHttpClientError(e, attempting);
+			} catch (Exception e) {
+				// something went wrong, check connection
+				checkServerConnection();
+				// and re-throw error
+				throw e;
+			}
 		}
-
+		System.out.println("No API connection.");
 		throw new SkipUseException("There was a problem calling the API: " + postFixUrl
 				+ " . To get a: " + expectedObject);
 	}
@@ -142,41 +141,48 @@ public class SkipUseAPI {
 			throws SkipUseException {
 		String attempting = "POST " + postFixUrl;
 		System.out.println(attempting);
-		String url = buildURLAddProxyIDSkipUseToken(postFixUrl, expectedObject);
-		String returnJSON = "";
-		try {
-			HttpEntity<String> entity;
-			HttpHeaders headers = new HttpHeaders();
-			headers.setContentType(MediaType.APPLICATION_JSON);
+		if (hasServerConnection) {
+			String url = buildURLAddProxyIDSkipUseToken(postFixUrl, expectedObject);
+			String returnJSON = "";
+			try {
+				HttpEntity<String> entity;
+				HttpHeaders headers = new HttpHeaders();
+				headers.setContentType(MediaType.APPLICATION_JSON);
 
-			String json;
-			if (data == null) {
-				json = "";
-			} else {
-				try {
-					json = mapper.writeValueAsString(data);
-				} catch (JsonProcessingException e) {
-					throw new SkipUseException("Problem serializing object. " + e.getMessage());
+				String json;
+				if (data == null) {
+					json = "";
+				} else {
+					try {
+						json = mapper.writeValueAsString(data);
+					} catch (JsonProcessingException e) {
+						throw new SkipUseException("Problem serializing object. " + e.getMessage());
+					}
 				}
+
+				entity = new HttpEntity<String>(json.toString(), headers);
+
+				ResponseEntity<String> responseEntity = getRestTemplate().exchange(url,
+						HttpMethod.POST, entity, String.class);
+				returnJSON = responseEntity.getBody();
+
+				processStringResponse(returnJSON);
+
+				if (expectedObject.equals(ServerResponse.NAME))
+					return returnJSON;
+
+				return convertJSONToServerObject(returnJSON, expectedObject);
+
+			} catch (HttpClientErrorException e) {
+				handleHttpClientError(e, attempting);
+			} catch (Exception e) {
+				// something went wrong, check connection
+				checkServerConnection();
+				// and re-throw error
+				throw e;
 			}
-
-			entity = new HttpEntity<String>(json.toString(), headers);
-
-			ResponseEntity<String> responseEntity = getRestTemplate().exchange(url, HttpMethod.POST,
-					entity, String.class);
-			returnJSON = responseEntity.getBody();
-
-			processStringResponse(returnJSON);
-
-			if (expectedObject.equals(ServerResponse.NAME))
-				return returnJSON;
-
-			return convertJSONToServerObject(returnJSON, expectedObject);
-
-		} catch (HttpClientErrorException e) {
-			handleHttpClientError(e, attempting);
 		}
-
+		System.out.println("No API connection.");
 		throw new SkipUseException("There was a problem calling the API: " + postFixUrl
 				+ " . To get a: " + expectedObject);
 	}
@@ -192,43 +198,50 @@ public class SkipUseAPI {
 			throws SkipUseException {
 		String attempting = "PATCH " + postFixUrl;
 		System.out.println(attempting);
-		String url = buildURLAddProxyIDSkipUseToken(postFixUrl, expectedObject);
-		String returnJSON = "";
-		try {
-			HttpEntity<String> entity;
-			HttpHeaders headers = new HttpHeaders();
-			MediaType mediaType = new MediaType("application", "merge-patch+json");
-			headers.setContentType(mediaType);
+		if (hasServerConnection) {
+			String url = buildURLAddProxyIDSkipUseToken(postFixUrl, expectedObject);
+			String returnJSON = "";
+			try {
+				HttpEntity<String> entity;
+				HttpHeaders headers = new HttpHeaders();
+				MediaType mediaType = new MediaType("application", "merge-patch+json");
+				headers.setContentType(mediaType);
 
-			String json;
-			if (data == null) {
-				json = "";
-			} else {
-				try {
-					json = mapper.writeValueAsString(data);
-				} catch (JsonProcessingException e) {
-					throw new SkipUseException("Problem serializing object. " + e.getMessage());
+				String json;
+				if (data == null) {
+					json = "";
+				} else {
+					try {
+						json = mapper.writeValueAsString(data);
+					} catch (JsonProcessingException e) {
+						throw new SkipUseException("Problem serializing object. " + e.getMessage());
+					}
 				}
+
+				entity = new HttpEntity<String>(json.toString(), headers);
+
+				ResponseEntity<String> responseEntity = getRestTemplate_requestFactory()
+						.exchange(url, HttpMethod.PATCH, entity, String.class);
+
+				returnJSON = responseEntity.getBody();
+
+				processStringResponse(returnJSON);
+
+				if (expectedObject.equals(ServerResponse.NAME))
+					return returnJSON;
+
+				return convertJSONToServerObject(returnJSON, expectedObject);
+
+			} catch (HttpClientErrorException e) {
+				handleHttpClientError(e, attempting);
+			} catch (Exception e) {
+				// something went wrong, check connection
+				checkServerConnection();
+				// and re-throw error
+				throw e;
 			}
-
-			entity = new HttpEntity<String>(json.toString(), headers);
-
-			ResponseEntity<String> responseEntity = getRestTemplate_requestFactory().exchange(url,
-					HttpMethod.PATCH, entity, String.class);
-
-			returnJSON = responseEntity.getBody();
-
-			processStringResponse(returnJSON);
-
-			if (expectedObject.equals(ServerResponse.NAME))
-				return returnJSON;
-
-			return convertJSONToServerObject(returnJSON, expectedObject);
-
-		} catch (HttpClientErrorException e) {
-			handleHttpClientError(e, attempting);
 		}
-
+		System.out.println("No API connection.");
 		throw new SkipUseException("There was a problem calling the API: " + postFixUrl
 				+ " . To get a: " + expectedObject);
 	}
@@ -239,41 +252,48 @@ public class SkipUseAPI {
 			throws SkipUseException {
 		String attempting = "PUT " + postFixUrl;
 		System.out.println(attempting);
-		String url = buildURLAddProxyIDSkipUseToken(postFixUrl, expectedObject);
-		String returnJSON = "";
-		try {
-			HttpEntity<String> entity;
-			HttpHeaders headers = new HttpHeaders();
-			headers.setContentType(MediaType.APPLICATION_JSON);
+		if (hasServerConnection) {
+			String url = buildURLAddProxyIDSkipUseToken(postFixUrl, expectedObject);
+			String returnJSON = "";
+			try {
+				HttpEntity<String> entity;
+				HttpHeaders headers = new HttpHeaders();
+				headers.setContentType(MediaType.APPLICATION_JSON);
 
-			String json;
-			if (data == null) {
-				json = "";
-			} else {
-				try {
-					json = mapper.writeValueAsString(data);
-				} catch (JsonProcessingException e) {
-					throw new SkipUseException("Problem serializing object. " + e.getMessage());
+				String json;
+				if (data == null) {
+					json = "";
+				} else {
+					try {
+						json = mapper.writeValueAsString(data);
+					} catch (JsonProcessingException e) {
+						throw new SkipUseException("Problem serializing object. " + e.getMessage());
+					}
 				}
+
+				entity = new HttpEntity<String>(json.toString(), headers);
+
+				ResponseEntity<String> responseEntity = getRestTemplate().exchange(url,
+						HttpMethod.PUT, entity, String.class);
+				returnJSON = responseEntity.getBody();
+
+				processStringResponse(returnJSON);
+
+				if (expectedObject.equals(ServerResponse.NAME))
+					return returnJSON;
+
+				return convertJSONToServerObject(returnJSON, expectedObject);
+
+			} catch (HttpClientErrorException e) {
+				handleHttpClientError(e, attempting);
+			} catch (Exception e) {
+				// something went wrong, check connection
+				checkServerConnection();
+				// and re-throw error
+				throw e;
 			}
-
-			entity = new HttpEntity<String>(json.toString(), headers);
-
-			ResponseEntity<String> responseEntity = getRestTemplate().exchange(url, HttpMethod.PUT,
-					entity, String.class);
-			returnJSON = responseEntity.getBody();
-
-			processStringResponse(returnJSON);
-
-			if (expectedObject.equals(ServerResponse.NAME))
-				return returnJSON;
-
-			return convertJSONToServerObject(returnJSON, expectedObject);
-
-		} catch (HttpClientErrorException e) {
-			handleHttpClientError(e, attempting);
 		}
-
+		System.out.println("No API connection.");
 		throw new SkipUseException("There was a problem calling the API: " + postFixUrl
 				+ " . To get a: " + expectedObject);
 	}
@@ -289,43 +309,66 @@ public class SkipUseAPI {
 			throws SkipUseException {
 		String attempting = "DELETE " + postFixUrl;
 		System.out.println(attempting);
-		String url = buildURLAddProxyIDSkipUseToken(postFixUrl, expectedObject);
-		String returnJSON = "";
-		try {
-			HttpEntity<String> entity;
-			HttpHeaders headers = new HttpHeaders();
-			headers.setContentType(MediaType.APPLICATION_JSON);
+		if (hasServerConnection) {
+			String url = buildURLAddProxyIDSkipUseToken(postFixUrl, expectedObject);
+			String returnJSON = "";
+			try {
+				HttpEntity<String> entity;
+				HttpHeaders headers = new HttpHeaders();
+				headers.setContentType(MediaType.APPLICATION_JSON);
 
-			String json;
-			if (data == null) {
-				json = "";
-			} else {
-				try {
-					json = mapper.writeValueAsString(data);
-				} catch (JsonProcessingException e) {
-					throw new SkipUseException("Problem serializing object. " + e.getMessage());
+				String json;
+				if (data == null) {
+					json = "";
+				} else {
+					try {
+						json = mapper.writeValueAsString(data);
+					} catch (JsonProcessingException e) {
+						throw new SkipUseException("Problem serializing object. " + e.getMessage());
+					}
 				}
+
+				entity = new HttpEntity<String>(json.toString(), headers);
+
+				ResponseEntity<String> responseEntity = getRestTemplate().exchange(url,
+						HttpMethod.DELETE, entity, String.class);
+				returnJSON = responseEntity.getBody();
+
+				processStringResponse(returnJSON);
+
+				if (expectedObject.equals(ServerResponse.NAME))
+					return returnJSON;
+
+				return convertJSONToServerObject(returnJSON, expectedObject);
+
+			} catch (HttpClientErrorException e) {
+				handleHttpClientError(e, attempting);
+			} catch (Exception e) {
+				// something went wrong, check connection
+				checkServerConnection();
+				// and re-throw error
+				throw e;
 			}
-
-			entity = new HttpEntity<String>(json.toString(), headers);
-
-			ResponseEntity<String> responseEntity = getRestTemplate().exchange(url,
-					HttpMethod.DELETE, entity, String.class);
-			returnJSON = responseEntity.getBody();
-
-			processStringResponse(returnJSON);
-
-			if (expectedObject.equals(ServerResponse.NAME))
-				return returnJSON;
-
-			return convertJSONToServerObject(returnJSON, expectedObject);
-
-		} catch (HttpClientErrorException e) {
-			handleHttpClientError(e, attempting);
 		}
-
+		System.out.println("No API connection.");
 		throw new SkipUseException("There was a problem calling the API: " + postFixUrl
 				+ " . To get a: " + expectedObject);
+	}
+
+	private boolean checkServerConnection() {
+		// reset
+		hasServerConnection = false;
+		try {
+			String result = getRestTemplate().getForObject(api_url + "/hello", String.class);
+			if (result != null && true) {
+				System.out.println(result);
+				hasServerConnection = true;
+			}
+		} catch (Exception e) {
+			System.err.println("Failed to get an acknowledgement from the SkipUseApi server.");
+		}
+
+		return hasServerConnection;
 	}
 
 	// Helper to add the ProxyID and SkipUseToken to the URL.
@@ -334,12 +377,12 @@ public class SkipUseAPI {
 			throws SkipUseException {
 		String url = api_url;
 
-		if (getLastServerResponseData().getProxyID().isEmpty() && !expectedObject.isEmpty())
+		if (serverResponseData.getProxyID().isEmpty() && !expectedObject.isEmpty())
 			throw new SkipUseException(
 					"Attempting an API call with no proxyID set. Maybe log-in first?");
 
-		if (!getLastServerResponseData().getProxyID().isEmpty())
-			url += "/proxyid/" + getLastServerResponseData().getProxyID();
+		if (!serverResponseData.getProxyID().isEmpty())
+			url += "/proxyid/" + serverResponseData.getProxyID();
 
 		url += "/skipusetoken/" + tokenHelper.getSkipUseToken().toString() + postFixUrl;
 
@@ -373,6 +416,9 @@ public class SkipUseAPI {
 			} else if (serverObjectName.equals(ServerMemberMap.NAME)
 					&& json.contains(ServerMemberMap.NAME)) {
 				return mapper.readValue(json.toString(), ServerMemberMap.class);
+			} else if (serverObjectName.equals(ServerProfile.NAME)
+					&& json.contains(ServerProfile.NAME)) {
+				return mapper.readValue(json.toString(), ServerProfile.class);
 			} else {
 				throw new SkipUseException("Could not convert the expected object: "
 						+ serverObjectName + " or the incoming JSON name changed. Was: " + json);
@@ -437,15 +483,15 @@ public class SkipUseAPI {
 	private void processResponse(ServerResponse skipUseResponse) throws SkipUseException {
 		if (skipUseResponse != null) {
 			// the logged in user's member ID
-			serverResponseData.setMemberID(skipUseResponse.getMemberID());
+			serverResponseData.setOwnerID(skipUseResponse.getOwnerID());
 
 			// the sever's proxyID reference
 			if (skipUseResponse.getProxyID() != null)
 				serverResponseData.setProxyID(skipUseResponse.getProxyID());
 
 			// the logged in user's display name
-			if (skipUseResponse.getMemberName() != null)
-				serverResponseData.setMemberName(skipUseResponse.getMemberName());
+			if (skipUseResponse.getOwnerName() != null)
+				serverResponseData.setOwnerName(skipUseResponse.getOwnerName());
 
 			// the sever's additional message from response
 			if (skipUseResponse.getMessage() != null) {
@@ -466,7 +512,7 @@ public class SkipUseAPI {
 				if (!skipUseResponse.getSkipUseToken().isEmpty()) {
 					serverResponseData.setSkipUseToken(skipUseResponse.getSkipUseToken());
 					tokenHelper.processToken(skipUseResponse.getSkipUseToken());
-					if (skipUseResponse.isConfirmRequired()) {
+					if (skipUseResponse.isFollowUpRequired()) {
 						clearFollowUp();
 					}
 				} else {

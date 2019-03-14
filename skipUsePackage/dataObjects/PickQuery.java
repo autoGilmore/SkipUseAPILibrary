@@ -20,12 +20,11 @@ public class PickQuery {
 	// For these Member IDs...
 	// (No need to set if you don't have any members and
 	// you are just searching for yourself)
-	private List<Integer> memberIDList = new ArrayList<Integer>();
+	private List<Long> memberIDList = new ArrayList<Long>();
 
-	// Use this Collection of Pick IDs...
-	// (Not required yet because one Collection per account is currently
-	// allowed)
-	private int collectionID = -1;
+	// Use this member's ID to reference their Collection of Pick IDs...
+	// NOTE: 0 defaults to the owner's collection.
+	private long memberCollectionID = 0;
 
 	// Return back this many Pick IDs...
 	// (Not required but, it's a good idea to set this.)
@@ -50,43 +49,50 @@ public class PickQuery {
 
 	// **** Optional *********
 
-	// Search for Picks by...
+	// Optional to search for Picks by...
 	// NORMAL: Standard mix of Picks with more Used count and less Skipped.
 	// FAVORITES: Descending by highest auto-rating percentage.
 	// STOPUSING: Picks that have been flagged,
-	// (Not required. This might ignore the newMixInPercentage setting.)
+	// (This might ignore the newMixInPercentage setting.)
+	// TEMPORAL: get Picks by the time-of-day they are Skipped or Used.
+	// This could be useful if Picks are Skipped or Used based on the
+	// time-of-day. An example would be if user's want slow songs at night but
+	// faster songs during the day. (Don't use this if time-of-use is not a
+	// factor. An example could be determining which batteries are holding a
+	// charge after use. The time the battery was used has no factor on it's
+	// capacity.)
 	private SearchMode searchMode = SearchMode.NORMAL;
 
-	// Returned Picks ordered by autoRatePercentage value:
+	// Optional to order returned Picks by:
 	// NONE: no ordering.
-	// DOWN: auto-rating percentage from High to Low.
-	// UP: auto-rating percentage for Low to High.
-	// (Not required.)
+	// RATE_DOWN: auto-rating percentage from High to Low.
+	// RATE_UP: auto-rating percentage for Low to High.
+	// OLDEST: oldest last timestamp updated Picks first
+	// NEWEST: newest last timestamp updated Picks first
 	private RampMode ramp = RampMode.NONE;
 
-	// Option to not return recently updated Picks in the next query.
-	// (Not required, but set to 'false' if you want to see popular Picks
+	// Optional to not return recently updated Picks in the next query.
+	// (Set to 'false' if you want to see popular Picks
 	// every query even if the Pick was just presented.)
 	private boolean excludeRecentPicks = false;
 
-	// Option to return Picks that have been flagged to not be included in
+	// Optional to return Picks that have been flagged to not be included in
 	// normal queries.
-	// (Not required.)
 	private boolean includeStopUsing = false;
 
-	// Option to get the Categories that have been marked for return Picks.
-	// (Not required. Slower response time and might cost more because of more
-	// server
-	// processing.)
+	// Optional to get the Categories that have been marked for return Picks.
+	// (Slower response time and might cost more because of more
+	// server processing.)
 	private boolean includeCategories = false;
 
-	// Option to return Picks that have been marked with these Categories...
-	// (Not required. This might also costs more to use because of server
+	// Optional to return Picks that have been marked with these Categories...
+	// (This might also costs more to use because of server
 	// processing.)
 	private List<String> categoryList = new ArrayList<String>();
 
-	// Option to only return Pick IDs that are in this list: IMPORTANT: Pick IDs
-	// in this list must already be in the collection or they will be ignored.
+	// Optional to only return Pick IDs that are in this list: IMPORTANT: Pick
+	// IDs in this list must already be in the collection or they will be
+	// ignored.
 	private List<String> pickIDList = new ArrayList<String>();
 
 	// **** Only ONE Pick *********
@@ -103,7 +109,7 @@ public class PickQuery {
 	// this.categoryMode = CategoryMode.ANY;
 	// this.getMorePicksIfShort = false;
 	// If a Pick is not stored yet, an empty Pick List will be returned with a
-	// the Pick's member ID set to -1.
+	// the Pick's member ID set to 0.
 	private String pickID = "";
 
 	private boolean debugQuery = false;
@@ -123,16 +129,16 @@ public class PickQuery {
 		this.howMany = howMany;
 	}
 
-	public List<Integer> getMemberIDList() {
+	public List<Long> getMemberIDList() {
 		return memberIDList;
 	}
 
-	public void setMemberIDList(List<Integer> memberIDList) {
+	public void setMemberIDList(List<Long> memberIDList) {
 		memberIDList.removeAll(Collections.singleton(null));
 		this.memberIDList = memberIDList;
 	}
 
-	public boolean addToMemberIDList(int memberID) {
+	public boolean addToMemberIDList(long memberID) {
 		if (!memberIDList.contains(memberID)) {
 			return this.memberIDList.add(memberID);
 		}
@@ -202,11 +208,11 @@ public class PickQuery {
 		this.ramp = ramp;
 	}
 
-	public Boolean isExcludeRecentPicks() {
+	public boolean isExcludeRecentPicks() {
 		return excludeRecentPicks;
 	}
 
-	public void setExcludeRecentPicks(Boolean excludeRecentPicks) {
+	public void setExcludeRecentPicks(boolean excludeRecentPicks) {
 		this.excludeRecentPicks = excludeRecentPicks;
 	}
 
@@ -234,12 +240,12 @@ public class PickQuery {
 		this.includeCategories = includeCategories;
 	}
 
-	public int getCollectionID() {
-		return this.collectionID;
+	public long getMemberCollectionID() {
+		return this.memberCollectionID;
 	}
 
-	public void setCollectionID(int collectionID) {
-		this.collectionID = collectionID;
+	public void setMemberCollectionID(long fromMemberIDCollection) {
+		this.memberCollectionID = fromMemberIDCollection;
 	}
 
 	public List<String> getPickIDList() {
@@ -272,9 +278,9 @@ public class PickQuery {
 
 	@Override
 	public String toString() {
-		return "getMemberIDList.size=" + getMemberIDList().toString() + ", getCollectionID="
-				+ getCollectionID() + ", getHowMany=" + getHowMany() + ", getNewMixInPercentage="
-				+ getNewMixInPercentage() + ", isGetMorePicksIfShort="
+		return "getMemberIDList.size=" + getMemberIDList().toString() + ", getMemberCollectionID="
+				+ getMemberCollectionID() + ", getHowMany=" + getHowMany()
+				+ ", getNewMixInPercentage=" + getNewMixInPercentage() + ", isGetMorePicksIfShort="
 				+ (isGetMorePicksIfShort() ? "1" : "0") + ", getSearchMode=" + getSearchMode()
 				+ ", getRamp=" + getRamp() + ", isExcludeRecentPicks="
 				+ (isExcludeRecentPicks() ? "1" : "0") + ", isIncludeStopUsing="

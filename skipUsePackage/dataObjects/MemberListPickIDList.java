@@ -5,72 +5,45 @@ import java.util.Collections;
 import java.util.List;
 
 /* 
- * This is a list of Member IDs and Pick IDs.
+ * This is a list of member IDs that reference a member's collection of Pick IDs.
 */
-public class MemberListPickIDList {
+public class MemberListPickIDList extends MemberPickIDCollection {
 
-	// For these Member IDs...
-	private List<Integer> memberIDList = new ArrayList<Integer>();
+	// From Pick IDs from a member's collection of Pick IDs...
 
-	// Use these Pick IDs...
-	private List<String> pickIDList = new ArrayList<String>();
+	// Use these member IDs...
+	private List<Long> memberIDList = new ArrayList<Long>();
 
-	// Split the Pick IDs by comma + space separator.
-	private boolean splitCSV = false;
-
-	public MemberListPickIDList() {
+	public MemberListPickIDList(MemberPickIDCollection memberPickIDCollection) {
+		setCollectionName(memberPickIDCollection.getCollectionName());
+		setMemberCollectionID(memberPickIDCollection.getMemberCollectionID());
+		setPickIDList(memberPickIDCollection.getPickIDList());
+		setSplitCSV(memberPickIDCollection.isSplitCSV());
 	}
 
-	public MemberListPickIDList(PickIDCollection collection, List<Integer> memberIDList) {
+	public MemberListPickIDList(MemberPickIDCollection memberPickIDCollection,
+			List<Long> memberIDList) {
+		setCollectionName(memberPickIDCollection.getCollectionName());
+		setMemberCollectionID(memberPickIDCollection.getMemberCollectionID());
+		setPickIDList(memberPickIDCollection.getPickIDList());
+		setSplitCSV(memberPickIDCollection.isSplitCSV());
 		setMemberIDList(memberIDList);
-		setPickIDList(collection.getPickIDList());
 	}
 
-	public List<Integer> getMemberIDList() {
+	public List<Long> getMemberIDList() {
 		return memberIDList;
 	}
 
-	public void setMemberIDList(List<Integer> memberIDList) {
-		memberIDList.removeAll(Collections.singleton(null));
-		this.memberIDList = memberIDList;
+	public void setMemberIDList(List<Long> memberIDList) {
+		if (memberIDList != null) {
+			memberIDList.removeAll(Collections.singleton(null));
+			for (long memberID : memberIDList)
+				addMemberID(memberID);
+		}
 	}
 
-	public void addMemberID(int memberID) {
-		if (memberID > -1 && !this.memberIDList.contains(memberID))
+	public void addMemberID(long memberID) {
+		if (memberID > 0 && !this.memberIDList.contains(memberID))
 			this.memberIDList.add(memberID);
 	}
-
-	public List<String> getPickIDList() {
-		return pickIDList;
-	}
-
-	public void setPickIDList(List<String> pickIDList) {
-		if (pickIDList != null && !pickIDList.isEmpty()) {
-			for (String setItem : pickIDList) {
-				addPickID(setItem);
-			}
-		}
-	}
-
-	public void addPickID(String pickID) {
-		if (pickID != null) {
-			String trimPick = pickID.trim();
-			if (!trimPick.isEmpty() && !pickIDList.contains(trimPick.trim())) {
-				this.pickIDList.add(trimPick);
-			}
-		}
-	}
-
-	public void clearPickIDList() {
-		this.pickIDList.clear();
-	}
-
-	public boolean isSplitCSV() {
-		return this.splitCSV;
-	}
-
-	public void setSplitCSV(boolean splitCSV) {
-		this.splitCSV = splitCSV;
-	}
-
 }

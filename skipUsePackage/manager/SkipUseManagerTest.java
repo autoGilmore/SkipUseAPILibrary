@@ -16,8 +16,9 @@ import com.autogilmore.throwback.skipUsePackage.dataObjects.MemberCategoryList;
 import com.autogilmore.throwback.skipUsePackage.dataObjects.MemberListPickIDList;
 import com.autogilmore.throwback.skipUsePackage.dataObjects.PatchName;
 import com.autogilmore.throwback.skipUsePackage.dataObjects.Pick;
-import com.autogilmore.throwback.skipUsePackage.dataObjects.PickIDCollection;
+import com.autogilmore.throwback.skipUsePackage.dataObjects.MemberPickIDCollection;
 import com.autogilmore.throwback.skipUsePackage.dataObjects.PickQuery;
+import com.autogilmore.throwback.skipUsePackage.dataObjects.Profile;
 import com.autogilmore.throwback.skipUsePackage.enums.SearchMode;
 import com.autogilmore.throwback.skipUsePackage.enums.SkipUsePass;
 import com.autogilmore.throwback.skipUsePackage.exception.SkipUseException;
@@ -43,15 +44,17 @@ public class SkipUseManagerTest {
 	private static final String TEST_MEMBER_BOB = "Bob";
 	private static final String TEST_MEMBER_SUE = "Sue";
 
+	private static final boolean INCLUDE_CATEGORY_INFO = false;
+
 	// After each test, remove the test member.
 	@After
 	public void after() {
 		try {
-			int testMemberID = manager.getMemberIDByName(TEST_MEMBER_BOB);
-			if (testMemberID != -1)
+			long testMemberID = manager.getMemberIDByName(TEST_MEMBER_BOB);
+			if (testMemberID != 0)
 				manager.deleteMemberByID(testMemberID);
 			testMemberID = manager.getMemberIDByName(TEST_MEMBER_SUE);
-			if (testMemberID != -1)
+			if (testMemberID != 0)
 				manager.deleteMemberByID(testMemberID);
 			manager.logout();
 		} catch (SkipUseException e) {
@@ -92,7 +95,7 @@ public class SkipUseManagerTest {
 
 		// after login add a member.
 		manager.addMemberName(TEST_MEMBER_BOB);
-		int testMemberID = manager.getMemberIDByName(TEST_MEMBER_BOB);
+		long testMemberID = manager.getMemberIDByName(TEST_MEMBER_BOB);
 		assertTrue(testMemberID > 0);
 
 		// logout.
@@ -119,11 +122,11 @@ public class SkipUseManagerTest {
 		manager.login(TEST_EMAIL, TEST_PASSWORD);
 		assertTrue(manager.isLoggedIn());
 		manager.addMemberName(TEST_MEMBER_BOB);
-		int testMemberID = manager.getMemberIDByName(TEST_MEMBER_BOB);
+		long testMemberID = manager.getMemberIDByName(TEST_MEMBER_BOB);
 		assertTrue(testMemberID > 0);
 
 		try {
-			manager.getCategoryListForMember(-1);
+			manager.getCategoryListForMember(1);
 			fail("Expected to throw an error");
 		} catch (SkipUseException e) {
 			// ignore.
@@ -161,7 +164,7 @@ public class SkipUseManagerTest {
 
 		// Test
 		manager.addMemberName(TEST_MEMBER_BOB);
-		int bobMemberID = manager.getMemberIDByName(TEST_MEMBER_BOB);
+		long bobMemberID = manager.getMemberIDByName(TEST_MEMBER_BOB);
 
 		// Verify
 		assertTrue(bobMemberID > 0);
@@ -178,7 +181,7 @@ public class SkipUseManagerTest {
 		manager.addMemberName(TEST_MEMBER_BOB);
 
 		// Test
-		int testMemberID = manager.getMemberIDByName(TEST_MEMBER_BOB);
+		long testMemberID = manager.getMemberIDByName(TEST_MEMBER_BOB);
 
 		// Verify
 		assertTrue(testMemberID > 0);
@@ -186,7 +189,7 @@ public class SkipUseManagerTest {
 				manager.getOwnerMemberID() != testMemberID);
 	}
 
-	// If a member is not found, -1 is returned for an ID.
+	// If a member is not found, 0 is returned for an ID.
 	@Test
 	public void test_getMemberIDByName_notFound() throws SkipUseException {
 		// Set up
@@ -195,15 +198,15 @@ public class SkipUseManagerTest {
 
 		// testing by the name 'Dewey' If it exists, fail the test. Change this
 		// name to a non-member name if needed.
-		int deweyMemberID = manager.getMemberIDByName("Dewey");
-		if (deweyMemberID != -1)
+		long deweyMemberID = manager.getMemberIDByName("Dewey");
+		if (deweyMemberID != 0)
 			fail("We need a member name that does not exist for this test");
 
 		// Test
-		int testMemberID = manager.getMemberIDByName("Dewey");
+		long testMemberID = manager.getMemberIDByName("Dewey");
 
 		// Verify
-		assertTrue(testMemberID == -1);
+		assertTrue(testMemberID == 0);
 	}
 
 	// A member name can be updated.
@@ -214,19 +217,19 @@ public class SkipUseManagerTest {
 		assertTrue(manager.isLoggedIn());
 
 		manager.addMemberName(TEST_MEMBER_BOB);
-		int bobMemberID = manager.getMemberIDByName(TEST_MEMBER_BOB);
+		long bobMemberID = manager.getMemberIDByName(TEST_MEMBER_BOB);
 		assertTrue(bobMemberID > 0);
 
 		// remove Sue if needed.
-		int sueMemberID = manager.getMemberIDByName(TEST_MEMBER_SUE);
-		if (sueMemberID != -1)
+		long sueMemberID = manager.getMemberIDByName(TEST_MEMBER_SUE);
+		if (sueMemberID != 0)
 			manager.deleteMemberByID(sueMemberID);
 
 		// Test
 		manager.updateMemberNameByID(bobMemberID, TEST_MEMBER_BOB, TEST_MEMBER_SUE);
 
 		// Verify
-		assertTrue(manager.getMemberIDByName(TEST_MEMBER_BOB) == -1);
+		assertTrue(manager.getMemberIDByName(TEST_MEMBER_BOB) == 0);
 		assertTrue(manager.getMemberIDByName(TEST_MEMBER_SUE) == bobMemberID);
 	}
 
@@ -238,7 +241,7 @@ public class SkipUseManagerTest {
 		assertTrue(manager.isLoggedIn());
 
 		manager.addMemberName(TEST_MEMBER_BOB);
-		int testMemberID = manager.getMemberIDByName(TEST_MEMBER_BOB);
+		long testMemberID = manager.getMemberIDByName(TEST_MEMBER_BOB);
 		assertTrue(testMemberID > 0);
 
 		// Test
@@ -246,7 +249,7 @@ public class SkipUseManagerTest {
 
 		// Verify
 		testMemberID = manager.getMemberIDByName(TEST_MEMBER_BOB);
-		assertTrue(testMemberID == -1);
+		assertTrue(testMemberID == 0);
 	}
 
 	// A collection is a Pick ID list that is shared among all members. Set it
@@ -267,10 +270,11 @@ public class SkipUseManagerTest {
 		collectionList.add("D, C");
 
 		// Test
-		PickIDCollection pickIDCollection = manager.addPickIDCollection(collectionList, true);
+		MemberPickIDCollection memberPickIDCollection = manager.addPickIDCollection(collectionList,
+				true);
 
 		// Verify
-		List<String> foundCollectionList = pickIDCollection.getPickIDList();
+		List<String> foundCollectionList = memberPickIDCollection.getPickIDList();
 		assertNotNull(foundCollectionList);
 		assertTrue(foundCollectionList.size() == 3);
 		assertTrue(foundCollectionList.stream().anyMatch(t -> t.equals("A,B,C,D")));
@@ -287,35 +291,39 @@ public class SkipUseManagerTest {
 		assertTrue(manager.isLoggedIn());
 
 		String collectionName = "My collection";
-		List<String> collectionIDList = new ArrayList<>();
-		collectionIDList.add("A, B, C");
-		PickIDCollection pickIDCollection = new PickIDCollection();
-		pickIDCollection.setCollectionName(collectionName);
-		pickIDCollection.setPickIDList(collectionIDList);
+		List<String> collectionPickIDList = new ArrayList<>();
+		collectionPickIDList.add("A, B, C");
+		MemberPickIDCollection memberPickIDCollection = new MemberPickIDCollection(
+				manager.getOwnerMemberID());
+		memberPickIDCollection.setCollectionName(collectionName);
+		memberPickIDCollection.setPickIDList(collectionPickIDList);
 		// don't split it by comma
-		pickIDCollection.setSplitCSV(false);
+		memberPickIDCollection.setSplitCSV(false);
 
 		// set the collection.
-		manager.addPickIDCollection(pickIDCollection);
-		PickIDCollection foundPickIDCollection = manager.getPickIDCollection();
+		manager.addPickIDCollection(memberPickIDCollection);
+		MemberPickIDCollection foundPickIDCollection = manager.getPickIDCollection();
 		assertNotNull(foundPickIDCollection);
 		// we have one long Pick: A, B, C.
 		assertTrue("was: " + foundPickIDCollection.getPickIDList().get(0),
 				foundPickIDCollection.getPickIDList().get(0).equals("A, B, C"));
 
 		// now let's split it by 'accident.'
-		pickIDCollection.setSplitCSV(true);
+		memberPickIDCollection.setSplitCSV(true);
 
 		// make the change.
-		manager.addPickIDCollection(pickIDCollection);
+		manager.addPickIDCollection(memberPickIDCollection);
 
 		foundPickIDCollection = manager.getPickIDCollection();
 		// whoops, we now have 3 Pick IDs.
 		assertTrue("was: " + foundPickIDCollection.getPickIDList().size(),
 				foundPickIDCollection.getPickIDList().size() == 3);
 
+		// let's undo the last change for the owner's collection.
+		long ownerCollectionID = manager.getOwnerMemberID();
+
 		// Test
-		manager.undoLastPickIDCollectionChange();
+		manager.undoLastPickIDCollectionChange(ownerCollectionID);
 
 		// Verify
 		foundPickIDCollection = manager.getPickIDCollection();
@@ -336,12 +344,12 @@ public class SkipUseManagerTest {
 		collectionList.add("A,B,C, D");
 		collectionList.add("D");
 		collectionList.add("C");
-		PickIDCollection createPickIDCollection = manager.addPickIDCollection(collectionList,
+		MemberPickIDCollection createPickIDCollection = manager.addPickIDCollection(collectionList,
 				false);
-		assertTrue(createPickIDCollection.getCollectionID() > 0);
+		assertTrue(createPickIDCollection.getMemberCollectionID() > 0);
 
 		// Test
-		PickIDCollection foundPickIDCollection = manager.getPickIDCollection();
+		MemberPickIDCollection foundPickIDCollection = manager.getPickIDCollection();
 
 		// Verify
 		List<String> foundCollectionList = foundPickIDCollection.getPickIDList();
@@ -366,12 +374,13 @@ public class SkipUseManagerTest {
 		assertTrue(manager.isLoggedIn());
 
 		manager.addMemberName(TEST_MEMBER_BOB);
-		int testMemberID = manager.getMemberIDByName(TEST_MEMBER_BOB);
+		long testMemberID = manager.getMemberIDByName(TEST_MEMBER_BOB);
 		assertTrue(testMemberID > 0);
 
 		List<String> collectionList = new ArrayList<String>();
 		collectionList.add("A, B, C, D");
-		PickIDCollection createPickIDCollection = manager.addPickIDCollection(collectionList, true);
+		MemberPickIDCollection createPickIDCollection = manager.addPickIDCollection(collectionList,
+				true);
 		assertTrue("Should have 4 Picks in the collection",
 				createPickIDCollection.getPickIDList().size() == 4);
 
@@ -380,7 +389,8 @@ public class SkipUseManagerTest {
 		manager.skipUsePass(SkipUsePass.SKIP, testMemberID, "C");
 
 		// Test
-		List<Pick> allPickMemberPickList = manager.getAllPickListByMemberID(testMemberID);
+		List<Pick> allPickMemberPickList = manager.getAllPickListByMemberID(testMemberID,
+				INCLUDE_CATEGORY_INFO);
 
 		// Verify
 		assertTrue("Should have created two Picks", allPickMemberPickList.size() == 2);
@@ -420,11 +430,12 @@ public class SkipUseManagerTest {
 		manager.login(TEST_EMAIL, TEST_PASSWORD);
 		assertTrue(manager.isLoggedIn());
 		manager.addMemberName(TEST_MEMBER_BOB);
-		int testMemberID = manager.getMemberIDByName(TEST_MEMBER_BOB);
+		long testMemberID = manager.getMemberIDByName(TEST_MEMBER_BOB);
 		String pickID = "meenie";
 		List<String> collectionList = new ArrayList<String>();
 		collectionList.add("eenie, meenie, miney, mo");
-		PickIDCollection createPickIDCollection = manager.addPickIDCollection(collectionList, true);
+		MemberPickIDCollection createPickIDCollection = manager.addPickIDCollection(collectionList,
+				true);
 		assertTrue(createPickIDCollection.getPickIDList().size() == 4);
 		assertTrue(createPickIDCollection.getPickIDList().contains(pickID));
 
@@ -435,7 +446,8 @@ public class SkipUseManagerTest {
 		manager.setStopUsingByMemberIDPickIDTrueFalse(testMemberID, pickID, true);
 
 		// we should now have a Pick to test with
-		Pick _pick = manager._getPickByMemberIDAndPickID(testMemberID, pickID);
+		Pick _pick = manager._getPickByMemberIDAndPickIDAndCollectionID(testMemberID, pickID,
+				testMemberID);
 		assertNotNull("we should have a Pick", _pick);
 		assertTrue(_pick.getPickID().equals(pickID));
 		assertTrue(_pick.isStopUsing());
@@ -482,7 +494,8 @@ public class SkipUseManagerTest {
 		// using other get Pick methods should not change the 'set' PickQuery.
 		// Let's find our Pick again and then make sure the 'set' PickQuery
 		// still works.
-		_pick = manager._getPickByMemberIDAndPickID(testMemberID, pickID);
+		_pick = manager._getPickByMemberIDAndPickIDAndCollectionID(testMemberID, pickID,
+				testMemberID);
 		assertNotNull("should still find the Pick", _pick);
 
 		// try the GET query again.
@@ -508,45 +521,49 @@ public class SkipUseManagerTest {
 		manager.login(TEST_EMAIL, TEST_PASSWORD);
 		assertTrue(manager.isLoggedIn());
 		manager.addMemberName(TEST_MEMBER_BOB);
-		int testMemberID = manager.getMemberIDByName(TEST_MEMBER_BOB);
+		manager.addMemberName(TEST_MEMBER_SUE);
+		long memberBobID = manager.getMemberIDByName(TEST_MEMBER_BOB);
+		long memberSueID = manager.getMemberIDByName(TEST_MEMBER_SUE);
 
 		// setting the collection.
-		PickIDCollection pickIDCollection = new PickIDCollection();
-		pickIDCollection.setCollectionName("Colorful Collection");
-		pickIDCollection.addPickID("Blue, Green, Red, Orange, Purple, Yellow");
-		pickIDCollection.setSplitCSV(true);
-		manager.addPickIDCollection(pickIDCollection);
+		MemberPickIDCollection memberPickIDCollection = new MemberPickIDCollection();
+		memberPickIDCollection.setCollectionName("Colorful Collection");
+		memberPickIDCollection.addPickID("Blue, Green, Red, Orange, Purple, Yellow");
+		memberPickIDCollection.setSplitCSV(true);
+		manager.addPickIDCollection(memberPickIDCollection);
 
-		// choose favorite colors for the account owner.
-		// Skip and Use a couple of times to change the Pick auto-ratings.
-		MemberListPickIDList ownerPickIDList = new MemberListPickIDList();
-		ownerPickIDList.addMemberID(manager.getOwnerMemberID());
-		ownerPickIDList.addPickID("Red, Green, Yellow");
-		ownerPickIDList.setSplitCSV(true);
-		manager.skipUsePassMemberPickIDList(SkipUsePass.USE, ownerPickIDList);
-		manager.skipUsePassMemberPickIDList(SkipUsePass.USE, ownerPickIDList);
-		ownerPickIDList.clearPickIDList();
-		ownerPickIDList.addPickID("Purple, Orange, Blue,");
-		manager.skipUsePassMemberPickIDList(SkipUsePass.SKIP, ownerPickIDList);
-		manager.skipUsePassMemberPickIDList(SkipUsePass.SKIP, ownerPickIDList);
+		// choose favorite colors for Bob.
+		// Skip and Use a few times to change the Pick auto-ratings.
+		memberPickIDCollection.clearPickIDList();
+		memberPickIDCollection.addPickID("Red, Green, Yellow");
+		MemberListPickIDList bobPickIDList = new MemberListPickIDList(memberPickIDCollection);
+		bobPickIDList.addMemberID(memberBobID);
+		bobPickIDList.setSplitCSV(true);
+		manager.skipUsePassMemberPickIDList(SkipUsePass.USE, bobPickIDList);
+		manager.skipUsePassMemberPickIDList(SkipUsePass.USE, bobPickIDList);
+		memberPickIDCollection.clearPickIDList();
+		memberPickIDCollection.addPickID("Purple, Orange, Blue,");
+		manager.skipUsePassMemberPickIDList(SkipUsePass.SKIP, bobPickIDList);
+		manager.skipUsePassMemberPickIDList(SkipUsePass.SKIP, bobPickIDList);
 
-		// choose favorite colors for the test member.
-		MemberListPickIDList memberPickIDList = new MemberListPickIDList();
-		memberPickIDList.addMemberID(testMemberID);
-		memberPickIDList.addPickID("Orange, Red, Yellow");
-		memberPickIDList.setSplitCSV(true);
-		manager.skipUsePassMemberPickIDList(SkipUsePass.USE, memberPickIDList);
-		manager.skipUsePassMemberPickIDList(SkipUsePass.USE, memberPickIDList);
-		memberPickIDList.clearPickIDList();
-		memberPickIDList.addPickID("Blue, Green, Purple");
-		manager.skipUsePassMemberPickIDList(SkipUsePass.SKIP, memberPickIDList);
-		manager.skipUsePassMemberPickIDList(SkipUsePass.SKIP, memberPickIDList);
+		// choose favorite colors for the Sue.
+		MemberListPickIDList suePickIDList = new MemberListPickIDList(memberPickIDCollection);
+		suePickIDList.addMemberID(memberSueID);
+		suePickIDList.setSplitCSV(true);
+		memberPickIDCollection.clearPickIDList();
+		memberPickIDCollection.addPickID("Orange, Red, Yellow");
+		manager.skipUsePassMemberPickIDList(SkipUsePass.USE, suePickIDList);
+		manager.skipUsePassMemberPickIDList(SkipUsePass.USE, suePickIDList);
+		memberPickIDCollection.clearPickIDList();
+		memberPickIDCollection.addPickID("Blue, Green, Purple");
+		manager.skipUsePassMemberPickIDList(SkipUsePass.SKIP, suePickIDList);
+		manager.skipUsePassMemberPickIDList(SkipUsePass.SKIP, suePickIDList);
 
 		// let's find their common favorites with a PickQuery:
 		PickQuery pickQuery = new PickQuery();
 		// look for these members.
-		pickQuery.addToMemberIDList(manager.getOwnerMemberID());
-		pickQuery.addToMemberIDList(testMemberID);
+		pickQuery.addToMemberIDList(memberBobID);
+		pickQuery.addToMemberIDList(memberSueID);
 		// look for favorites.
 		pickQuery.setSearchMode(SearchMode.FAVORITES);
 		// get the top four colors.
@@ -561,25 +578,27 @@ public class SkipUseManagerTest {
 		assertTrue("4 Picks should be found", pickList.size() == 4);
 		boolean isRedFound = false;
 		boolean isYellowFound = false;
-		boolean isOwnerIDFound = false;
-		boolean isMemberIDFound = false;
+		boolean isBobPickFound = false;
+		boolean isSuePickFound = false;
 		for (Pick pick : pickList) {
 			if (pick.getPickID().equals("Red")) {
 				isRedFound = true;
 			} else if (pick.getPickID().equals("Yellow")) {
 				isYellowFound = true;
 			}
-			if (pick.getMemberID() == manager.getOwnerMemberID()) {
-				isOwnerIDFound = true;
-			} else if (pick.getMemberID() == testMemberID) {
-				isMemberIDFound = true;
+			if (pick.getMemberID() == memberBobID) {
+				isBobPickFound = true;
+			} else if (pick.getMemberID() == memberSueID) {
+				isSuePickFound = true;
+			} else {
+				fail("something went wrong");
 			}
 
 		}
 		assertTrue("Red should be a favorite", isRedFound);
 		assertTrue("Yellow should be a favorite", isYellowFound);
-		assertTrue(isOwnerIDFound);
-		assertTrue(isMemberIDFound);
+		assertTrue(isBobPickFound);
+		assertTrue(isSuePickFound);
 	}
 
 	@Test
@@ -588,23 +607,23 @@ public class SkipUseManagerTest {
 		manager.login(TEST_EMAIL, TEST_PASSWORD);
 		assertTrue(manager.isLoggedIn());
 		manager.addMemberName(TEST_MEMBER_BOB);
-		int testMemberID = manager.getMemberIDByName(TEST_MEMBER_BOB);
+		long testMemberID = manager.getMemberIDByName(TEST_MEMBER_BOB);
 
 		// set the collection for our Picks.
-		PickIDCollection pickIDCollection = new PickIDCollection();
-		pickIDCollection.setCollectionName("Colorful Collection");
-		pickIDCollection.addPickID("Blue, Green, Red, Orange, Purple, Yellow");
-		pickIDCollection.setSplitCSV(true);
-		manager.addPickIDCollection(pickIDCollection);
+		MemberPickIDCollection memberPickIDCollection = new MemberPickIDCollection(
+				manager.getOwnerMemberID());
+		memberPickIDCollection.setCollectionName("Colorful Collection");
+		memberPickIDCollection.addPickID("Blue, Green, Red, Orange, Purple, Yellow");
+		memberPickIDCollection.setSplitCSV(true);
+		manager.addPickIDCollection(memberPickIDCollection);
 
 		// create all the Picks for the member in the collection
-		MemberListPickIDList memberPickIDList = new MemberListPickIDList();
+		MemberListPickIDList memberPickIDList = new MemberListPickIDList(memberPickIDCollection);
 		memberPickIDList.addMemberID(testMemberID);
-		memberPickIDList.setPickIDList(pickIDCollection.getPickIDList());
-		memberPickIDList.setSplitCSV(true);
 		manager.skipUsePassMemberPickIDList(SkipUsePass.USE, memberPickIDList);
 
-		assertTrue(manager.getAllPickListByMemberID(testMemberID).size() == 6);
+		assertTrue(
+				manager.getAllPickListByMemberID(testMemberID, INCLUDE_CATEGORY_INFO).size() == 6);
 
 		// let's start with the default PickQuery for our test member
 		PickQuery pickQuery = new PickQuery();
@@ -667,19 +686,20 @@ public class SkipUseManagerTest {
 		assertTrue(manager.isLoggedIn());
 
 		manager.addMemberName(TEST_MEMBER_BOB);
-		int testMemberID = manager.getMemberIDByName(TEST_MEMBER_BOB);
+		long testMemberID = manager.getMemberIDByName(TEST_MEMBER_BOB);
 
 		String pickID = "With a Pick Pick here. And a Pick Pick there.";
 		List<String> collectionList = new ArrayList<String>();
 		collectionList.add(pickID);
-		PickIDCollection createPickIDCollection = manager.addPickIDCollection(collectionList,
+		MemberPickIDCollection createPickIDCollection = manager.addPickIDCollection(collectionList,
 				false);
 		assertTrue(createPickIDCollection.getPickIDList().size() == 1);
 
 		// Test : no Pick found
 		// NOTE: the underscore symbol on the method indicates a null Pick could
 		// be returned.
-		Pick _pick = manager._getPickByMemberIDAndPickID(testMemberID, pickID);
+		Pick _pick = manager._getPickByMemberIDAndPickIDAndCollectionID(testMemberID, pickID,
+				testMemberID);
 
 		// Verify
 		assertTrue(_pick == null);
@@ -688,7 +708,8 @@ public class SkipUseManagerTest {
 		manager.skipUsePass(SkipUsePass.SKIP, testMemberID, pickID);
 
 		// Test : a Pick is found
-		_pick = manager._getPickByMemberIDAndPickID(testMemberID, pickID);
+		_pick = manager._getPickByMemberIDAndPickIDAndCollectionID(testMemberID, pickID,
+				testMemberID);
 		assertNotNull(_pick);
 		assertTrue(_pick.getPickID().equals(pickID));
 		assertTrue(_pick.getSkipped() == 1);
@@ -700,10 +721,11 @@ public class SkipUseManagerTest {
 		assertTrue(createPickIDCollection.getPickIDList().size() == 0);
 
 		// NOTE: the Pick is still there, but if it is not in the current
-		// collection it will not be available even when using a PickQuery to
+		// collection, it will NOT be available even when using a PickQuery to
 		// search by. The collection acts as a filter for which Pick are allowed
 		// to be used or not.
-		_pick = manager._getPickByMemberIDAndPickID(testMemberID, pickID);
+		_pick = manager._getPickByMemberIDAndPickIDAndCollectionID(testMemberID, pickID,
+				testMemberID);
 		assertTrue(_pick == null);
 	}
 
@@ -714,7 +736,7 @@ public class SkipUseManagerTest {
 		manager.login(TEST_EMAIL, TEST_PASSWORD);
 		assertTrue(manager.isLoggedIn());
 		manager.addMemberName(TEST_MEMBER_BOB);
-		int testMemberID = manager.getMemberIDByName(TEST_MEMBER_BOB);
+		long testMemberID = manager.getMemberIDByName(TEST_MEMBER_BOB);
 		MemberCategoryList currentMemberCategoryList = manager
 				.getCategoryListForMember(testMemberID);
 		if (currentMemberCategoryList.getCategoryList().size() > 0)
@@ -740,7 +762,7 @@ public class SkipUseManagerTest {
 		manager.login(TEST_EMAIL, TEST_PASSWORD);
 		assertTrue(manager.isLoggedIn());
 		manager.addMemberName(TEST_MEMBER_BOB);
-		int testMemberID = manager.getMemberIDByName(TEST_MEMBER_BOB);
+		long testMemberID = manager.getMemberIDByName(TEST_MEMBER_BOB);
 		MemberCategoryList currentMemberCategoryList = manager
 				.getCategoryListForMember(testMemberID);
 		if (currentMemberCategoryList.getCategoryList().size() > 0)
@@ -779,7 +801,7 @@ public class SkipUseManagerTest {
 		manager.login(TEST_EMAIL, TEST_PASSWORD);
 		assertTrue(manager.isLoggedIn());
 		manager.addMemberName(TEST_MEMBER_BOB);
-		int testMemberID = manager.getMemberIDByName(TEST_MEMBER_BOB);
+		long testMemberID = manager.getMemberIDByName(TEST_MEMBER_BOB);
 
 		// create a shared Pick ID collection.
 		List<String> collectionList = new ArrayList<String>();
@@ -820,7 +842,6 @@ public class SkipUseManagerTest {
 		updateThisPick.setSkipped(20);
 		updateThisPick.setUsed(30);
 		updateThisPick.setAutoRatePercentage(200);
-		updateThisPick.setTrendingRatePercentage(130);
 		List<String> categoryList = new ArrayList<String>();
 		categoryList.add("Add categories");
 		categoryList.add("using the");
@@ -833,7 +854,8 @@ public class SkipUseManagerTest {
 		manager.updateMemberPick(updateThisPick);
 
 		// Verify
-		List<Pick> updatedPickList = manager.getAllPickListByMemberID(testMemberID);
+		List<Pick> updatedPickList = manager.getAllPickListByMemberID(testMemberID,
+				INCLUDE_CATEGORY_INFO);
 		Pick _updatedPick = updatedPickList.stream().filter(t -> t.getPickID().equals(pickID))
 				.findFirst().orElse(null);
 		assertNotNull("Should find the Pick", _updatedPick);
@@ -846,8 +868,6 @@ public class SkipUseManagerTest {
 
 		// can't change these.
 		assertTrue(_updatedPick.getAutoRatePercentage() != updateThisPick.getAutoRatePercentage());
-		assertTrue(_updatedPick.getTrendingRatePercentage() != updateThisPick
-				.getTrendingRatePercentage());
 		assertFalse(_updatedPick.isNewPick());
 		assertFalse(_updatedPick.getCategoryList().contains("Add categories"));
 		assertFalse(_updatedPick.getSkipped() == updateThisPick.getSkipped());
@@ -864,7 +884,7 @@ public class SkipUseManagerTest {
 		manager.login(TEST_EMAIL, TEST_PASSWORD);
 		assertTrue(manager.isLoggedIn());
 		manager.addMemberName(TEST_MEMBER_BOB);
-		int testMemberID = manager.getMemberIDByName(TEST_MEMBER_BOB);
+		long testMemberID = manager.getMemberIDByName(TEST_MEMBER_BOB);
 
 		MemberCategoryList currentMemberCategoryList = manager
 				.getCategoryListForMember(testMemberID);
@@ -894,7 +914,7 @@ public class SkipUseManagerTest {
 		manager.login(TEST_EMAIL, TEST_PASSWORD);
 		assertTrue(manager.isLoggedIn());
 		manager.addMemberName(TEST_MEMBER_BOB);
-		int testMemberID = manager.getMemberIDByName(TEST_MEMBER_BOB);
+		long testMemberID = manager.getMemberIDByName(TEST_MEMBER_BOB);
 
 		MemberCategoryList currentMemberCategoryList = manager
 				.getCategoryListForMember(testMemberID);
@@ -927,14 +947,15 @@ public class SkipUseManagerTest {
 		manager.login(TEST_EMAIL, TEST_PASSWORD);
 		assertTrue(manager.isLoggedIn());
 		manager.addMemberName(TEST_MEMBER_BOB);
-		int testMemberID = manager.getMemberIDByName(TEST_MEMBER_BOB);
+		long testMemberID = manager.getMemberIDByName(TEST_MEMBER_BOB);
 
 		// add collection
-		PickIDCollection pickIDCollection = new PickIDCollection();
-		pickIDCollection.setCollectionName("test collection");
+		MemberPickIDCollection memberPickIDCollection = new MemberPickIDCollection(
+				manager.getOwnerMemberID());
+		memberPickIDCollection.setCollectionName("test collection");
 		String pickID = "my Pick ID";
-		pickIDCollection.addPickID(pickID);
-		manager.addPickIDCollection(pickIDCollection);
+		memberPickIDCollection.addPickID(pickID);
+		manager.addPickIDCollection(memberPickIDCollection);
 		// add category.
 		String categoryName = "Bingo";
 		manager.createCategoryForMember(testMemberID, categoryName);
@@ -952,8 +973,8 @@ public class SkipUseManagerTest {
 		assertTrue(_havePick == null);
 
 		// Test
-		manager.markPickIDListWithCategoryTrueFalse(testMemberID, pickIDCollection, categoryName,
-				true);
+		manager.markPickIDListWithCategoryTrueFalse(testMemberID, memberPickIDCollection,
+				categoryName, true);
 
 		// Verify
 		pickQuery.setIncludeCategories(true);
@@ -988,27 +1009,30 @@ public class SkipUseManagerTest {
 		manager.login(TEST_EMAIL, TEST_PASSWORD);
 		assertTrue(manager.isLoggedIn());
 		manager.addMemberName(TEST_MEMBER_BOB);
-		int testMemberID = manager.getMemberIDByName(TEST_MEMBER_BOB);
+		long testMemberID = manager.getMemberIDByName(TEST_MEMBER_BOB);
 
 		// add test Picks to collection.
 		String keepUsingPickID = "Normal Pick";
 		String stopUsingPickID = "Stop Using Pick";
-		PickIDCollection pickIDCollection = new PickIDCollection();
-		pickIDCollection.setCollectionName("test collection");
-		pickIDCollection.addPickID(keepUsingPickID);
-		pickIDCollection.addPickID(stopUsingPickID);
-		manager.addPickIDCollection(pickIDCollection);
+		MemberPickIDCollection memberPickIDCollection = new MemberPickIDCollection(
+				manager.getOwnerMemberID());
+		memberPickIDCollection.setCollectionName("test collection");
+		memberPickIDCollection.addPickID(keepUsingPickID);
+		memberPickIDCollection.addPickID(stopUsingPickID);
+		manager.addPickIDCollection(memberPickIDCollection);
 
 		// first check that we don't have the Picks
-		assertTrue(manager._getPickByMemberIDAndPickID(testMemberID, keepUsingPickID) == null);
-		assertTrue(manager._getPickByMemberIDAndPickID(testMemberID, stopUsingPickID) == null);
+		assertTrue(manager._getPickByMemberIDAndPickIDAndCollectionID(testMemberID, keepUsingPickID,
+				testMemberID) == null);
+		assertTrue(manager._getPickByMemberIDAndPickIDAndCollectionID(testMemberID, stopUsingPickID,
+				testMemberID) == null);
 
 		// create the Picks
 		manager.skipUsePass(SkipUsePass.USE, testMemberID, keepUsingPickID);
 		manager.skipUsePass(SkipUsePass.USE, testMemberID, stopUsingPickID);
 
 		// check that we now have the Picks
-		List<Pick> pickList = manager.getAllPickListByMemberID(testMemberID);
+		List<Pick> pickList = manager.getAllPickListByMemberID(testMemberID, INCLUDE_CATEGORY_INFO);
 		Pick _reqularPick = pickList.stream().filter(t -> t.getPickID().equals(keepUsingPickID))
 				.findFirst().orElse(null);
 		assertNotNull(_reqularPick);
@@ -1027,8 +1051,8 @@ public class SkipUseManagerTest {
 		// Verify
 
 		// the Pick is marked stop using
-		assertTrue(
-				manager._getPickByMemberIDAndPickID(testMemberID, stopUsingPickID).isStopUsing());
+		assertTrue(manager._getPickByMemberIDAndPickIDAndCollectionID(testMemberID, stopUsingPickID,
+				testMemberID).isStopUsing());
 
 		// stop using is not included in a normal PickQuery.
 		// get all Picks for this member ID
@@ -1054,38 +1078,40 @@ public class SkipUseManagerTest {
 		manager.login(TEST_EMAIL, TEST_PASSWORD);
 		assertTrue(manager.isLoggedIn());
 		manager.addMemberName(TEST_MEMBER_BOB);
-		int testMemberID = manager.getMemberIDByName(TEST_MEMBER_BOB);
-		PickIDCollection pickIDCollection = manager.getPickIDCollection();
-		assertTrue(pickIDCollection.getPickIDList().size() > 0);
-		String pickID = pickIDCollection.getPickIDList().get(0);
+		long testMemberID = manager.getMemberIDByName(TEST_MEMBER_BOB);
+
+		// add a collection.
+		List<String> collectionList = new ArrayList<String>();
+		collectionList.add("brand new Pick");
+		MemberPickIDCollection memberPickIDCollection = manager.addPickIDCollection(collectionList,
+				true);
+		assertTrue(memberPickIDCollection.getPickIDList().size() > 0);
+		String pickID = memberPickIDCollection.getPickIDList().get(0);
 		assertTrue(pickID.length() > 0);
-		Pick _newPick = manager._getPickByMemberIDAndPickID(testMemberID, pickID);
+		Pick _newPick = manager._getPickByMemberIDAndPickIDAndCollectionID(testMemberID, pickID,
+				testMemberID);
 		assertTrue("This should be a brand new Pick", _newPick == null);
 
 		// Test
 		manager.skipUsePass(SkipUsePass.SKIP, testMemberID, pickID);
 
 		// Verify
-		List<Pick> updatedPickList = manager.getAllPickListByMemberID(testMemberID);
+		List<Pick> updatedPickList = manager.getAllPickListByMemberID(testMemberID,
+				INCLUDE_CATEGORY_INFO);
 		Pick _foundPick = updatedPickList.stream().filter(t -> t.getPickID().equals(pickID))
 				.findFirst().orElse(null);
 		assertNotNull(_foundPick);
-		int startingSkipCount = _foundPick.getSkipped();
-		int startingTrendingRatePercentage = _foundPick.getTrendingRatePercentage();
+		long startingSkipCount = _foundPick.getSkipped();
 		assertTrue("The Pick should have been Skipped once", startingSkipCount == 1);
-		assertTrue("The trending percentage will not change until the next update",
-				_foundPick.getTrendingRatePercentage() == startingTrendingRatePercentage);
 
 		// Test: try a 'Use'
 		manager.skipUsePass(SkipUsePass.USE, testMemberID, pickID);
-		updatedPickList = manager.getAllPickListByMemberID(testMemberID);
+		updatedPickList = manager.getAllPickListByMemberID(testMemberID, INCLUDE_CATEGORY_INFO);
 		_foundPick = updatedPickList.stream().filter(t -> t.getPickID().equals(pickID)).findFirst()
 				.orElse(null);
 		assertNotNull(_foundPick);
 		assertTrue("Skipped count should not have changed", _foundPick.getSkipped() == 1);
 		assertTrue("Used count should now be 1", _foundPick.getUsed() == 1);
-		assertTrue("After a 'use' the trending percentage should raise",
-				_foundPick.getTrendingRatePercentage() > startingTrendingRatePercentage);
 	}
 
 	// Another way to update Picks (Skip, Use, Pass) is by using the
@@ -1096,27 +1122,29 @@ public class SkipUseManagerTest {
 		manager.login(TEST_EMAIL, TEST_PASSWORD);
 		assertTrue(manager.isLoggedIn());
 		manager.addMemberName(TEST_MEMBER_BOB);
-		int testMemberID = manager.getMemberIDByName(TEST_MEMBER_BOB);
+		long testMemberID = manager.getMemberIDByName(TEST_MEMBER_BOB);
 
 		// setting the collection.
-		PickIDCollection pickIDCollection = new PickIDCollection();
-		pickIDCollection.setCollectionName("Dog Breed Collection");
-		pickIDCollection.addPickID(
+		MemberPickIDCollection memberPickIDCollection = new MemberPickIDCollection(
+				manager.getOwnerMemberID());
+		memberPickIDCollection.setCollectionName("Dog Breed Collection");
+		memberPickIDCollection.addPickID(
 				"Pomeranian, German Shepherd, Golden Retriever, Labrador Retriever, Old English Sheepdog, SaintBernard, Chihuahua, Border Collie, Australian Shepherd");
-		pickIDCollection.setSplitCSV(true);
-		manager.addPickIDCollection(pickIDCollection);
+		memberPickIDCollection.setSplitCSV(true);
+		manager.addPickIDCollection(memberPickIDCollection);
 
 		// 'Skip' some Picks for the test member
-		MemberListPickIDList memberPickIDList = new MemberListPickIDList();
+		memberPickIDCollection.clearPickIDList();
+		memberPickIDCollection.addPickID("Golden Retriever, Labrador Retriever");
+		MemberListPickIDList memberPickIDList = new MemberListPickIDList(memberPickIDCollection);
 		memberPickIDList.addMemberID(testMemberID);
-		memberPickIDList.addPickID("Golden Retriever, Labrador Retriever");
-		memberPickIDList.setSplitCSV(true);
 
 		// Test
 		manager.skipUsePassMemberPickIDList(SkipUsePass.SKIP, memberPickIDList);
 
 		// Verify
-		List<Pick> allPickMemberPickList = manager.getAllPickListByMemberID(testMemberID);
+		List<Pick> allPickMemberPickList = manager.getAllPickListByMemberID(testMemberID,
+				INCLUDE_CATEGORY_INFO);
 		assertNotNull(allPickMemberPickList);
 		assertTrue(allPickMemberPickList.size() > 0);
 		boolean isDog1Found = false;
@@ -1139,40 +1167,87 @@ public class SkipUseManagerTest {
 	@Test
 	public void test_youCannotDoThisWithPickIDCollection() {
 		// Set up
+		long fromMemberIDCollection = 0;
 		try {
 			manager.login(TEST_EMAIL, TEST_PASSWORD);
 			assertTrue(manager.isLoggedIn());
 			manager.addMemberName(TEST_MEMBER_BOB);
+			fromMemberIDCollection = manager.getOwnerMemberID();
 		} catch (SkipUseException e) {
 			fail("This should not error");
 		}
 
-		// a collection must have a name.
-		PickIDCollection pickIDCollection = new PickIDCollection();
+		MemberPickIDCollection memberPickIDCollection = new MemberPickIDCollection();
+
+		// a collection must reference a member's collection of Pick ID by
+		// setting a member ID.
 		try {
-			manager.addPickIDCollection(pickIDCollection);
+			memberPickIDCollection.setMemberCollectionID(1234);
+			manager.addPickIDCollection(memberPickIDCollection);
+			fail("an error should be thrown");
+		} catch (SkipUseException e) {
+			assertTrue("was: " + e.getMessage(), e.getMessage().contains("Check your memberID"));
+			memberPickIDCollection.setMemberCollectionID(fromMemberIDCollection);
+		}
+
+		// a collection must have a name.
+		memberPickIDCollection.setCollectionName("");
+		try {
+			manager.addPickIDCollection(memberPickIDCollection);
+			fail("an error should be thrown");
 		} catch (SkipUseException e) {
 			assertTrue("was: " + e.getMessage(),
 					e.getMessage().contains("collectionName: property may not be empty"));
-			pickIDCollection.setCollectionName("Add a collection name, maybe");
+			memberPickIDCollection.setCollectionName("Add a collection name, maybe");
 		}
 
 		// a collection name may not have a comma in it.
 		try {
-			manager.addPickIDCollection(pickIDCollection);
+			manager.addPickIDCollection(memberPickIDCollection);
+			fail("an error should be thrown");
 		} catch (SkipUseException e) {
 			assertTrue("was: " + e.getMessage(), e.getMessage()
 					.contains("a collection name must not contain a comma character"));
-			pickIDCollection.setCollectionName("No comma name");
+			memberPickIDCollection.setCollectionName("No comma name");
 		}
 
 		// the '@@@' set of characters is not allowed in a Pick ID collection.
 		try {
-			pickIDCollection.addPickID("@@@");
-			manager.addPickIDCollection(pickIDCollection);
+			memberPickIDCollection.addPickID("@@@");
+			manager.addPickIDCollection(memberPickIDCollection);
+			fail("an error should be thrown");
 		} catch (SkipUseException e) {
 			assertTrue("was: " + e.getMessage(),
 					e.getMessage().contains("A Pick ID may not contain ' @@@ ' characters"));
 		}
+	}
+
+	// Here are some other not-so-common API options that are available.
+
+	// User profile: By using the Profile data object, you can update the
+	// account owner's name, email address and password.
+	@Test
+	public void test_updateProfile_ownerName() throws SkipUseException {
+		// Set up
+		manager.login(TEST_EMAIL, TEST_PASSWORD);
+		assertTrue(manager.isLoggedIn());
+		manager.addMemberName(TEST_MEMBER_BOB);
+
+		Profile profile = manager.getProfile();
+
+		// change the account owner's name
+		profile.setOwnerName("My new name!");
+
+		// Test
+		manager.updateProfile(profile);
+
+		// Verify
+		Profile updatedProfile = manager.getProfile();
+		assertTrue(updatedProfile.getOwnerName().equals("My new name!"));
+
+		// we should set the name back now
+		profile.setOwnerName(SkipUseProperties.OWNER_NAME);
+		manager.updateProfile(profile);
+		assertTrue(manager.getProfile().getOwnerName().equals(SkipUseProperties.OWNER_NAME));
 	}
 }

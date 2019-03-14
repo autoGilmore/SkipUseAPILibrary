@@ -1,6 +1,6 @@
 package com.autogilmore.throwback.skipUsePackage.dataObjects.incomingServer;
 
-import com.autogilmore.throwback.skipUsePackage.dataObjects.PickIDCollection;
+import com.autogilmore.throwback.skipUsePackage.dataObjects.MemberPickIDCollection;
 
 /* 
 * The API server response containing a PickIDCollection.
@@ -8,16 +8,16 @@ import com.autogilmore.throwback.skipUsePackage.dataObjects.PickIDCollection;
 public class ServerPickIDCollection extends ServerResponse {
 
 	// JSON object name
-	public static final String NAME = "clientCollection";
+	public static final String NAME = "pickIDCollection";
 
-	private PickIDCollection pickIDCollection = new PickIDCollection();
+	private MemberPickIDCollection memberPickIDCollection = new MemberPickIDCollection();
 
-	public PickIDCollection getPickIDCollection() {
-		return pickIDCollection;
+	public MemberPickIDCollection getPickIDCollection() {
+		return memberPickIDCollection;
 	}
 
 	// Expected server JSON object name (don't rename)
-	public void setClientCollection(PickIDCollection clientCollection) {
-		this.pickIDCollection = clientCollection;
+	public void setPickIDCollection(MemberPickIDCollection clientCollection) {
+		this.memberPickIDCollection = clientCollection;
 	}
 }

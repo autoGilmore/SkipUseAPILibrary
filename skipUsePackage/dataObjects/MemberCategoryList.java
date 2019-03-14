@@ -9,12 +9,12 @@ import java.util.List;
 public class MemberCategoryList {
 
 	// For this member...
-	private int memberID = -1;
+	private long memberID = 0;
 
 	// Use these Categories.
 	private List<String> categoryList = new ArrayList<String>();
 
-	public MemberCategoryList(int memberID, List<String> categoryList) {
+	public MemberCategoryList(long memberID, List<String> categoryList) {
 		this.memberID = memberID;
 		this.categoryList = categoryList;
 	}
@@ -22,11 +22,11 @@ public class MemberCategoryList {
 	public MemberCategoryList() {
 	}
 
-	public int getMemberID() {
+	public long getMemberID() {
 		return memberID;
 	}
 
-	public void setMemberID(int memberID) {
+	public void setMemberID(long memberID) {
 		this.memberID = memberID;
 	}
 

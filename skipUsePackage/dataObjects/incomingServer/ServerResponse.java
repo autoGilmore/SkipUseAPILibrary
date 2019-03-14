@@ -11,10 +11,10 @@ public class ServerResponse extends ServerSession {
 
 	private HttpStatus status = HttpStatus.EXPECTATION_FAILED;
 	private String remainingNibbles = "";
-	private String memberName = "";
-	private int memberID = -1;
+	private String ownerName = "";
+	private long ownerID = 0;
 	private String errorMessage = "";
-	private boolean confirmRequired = false;
+	private boolean followUpRequired = false;
 	private boolean validationCodeRequired;
 	private String message = "";
 
@@ -35,20 +35,21 @@ public class ServerResponse extends ServerSession {
 		this.remainingNibbles = remainingNibbles;
 	}
 
-	public String getMemberName() {
-		return memberName;
+	public String getOwnerName() {
+		return this.ownerName;
 	}
 
-	public void setMemberName(String memberName) {
-		this.memberName = memberName;
+	public void setOwnerName(String ownerName) {
+		if (ownerName != null)
+			this.ownerName = ownerName;
 	}
 
-	public int getMemberID() {
-		return memberID;
+	public long getOwnerID() {
+		return this.ownerID;
 	}
 
-	public void setMemberID(int memberID) {
-		this.memberID = memberID;
+	public void setOwnerID(long ownerID) {
+		this.ownerID = ownerID;
 	}
 
 	public String getErrorMessage() {
@@ -59,12 +60,12 @@ public class ServerResponse extends ServerSession {
 		this.errorMessage = errorMessage;
 	}
 
-	public boolean isConfirmRequired() {
-		return confirmRequired;
+	public boolean isFollowUpRequired() {
+		return followUpRequired;
 	}
 
-	public void setConfirmRequired(boolean confirmRequired) {
-		this.confirmRequired = confirmRequired;
+	public void setFollowUpRequired(boolean followUpRequired) {
+		this.followUpRequired = followUpRequired;
 	}
 
 	public boolean isValidationCodeRequired() {
