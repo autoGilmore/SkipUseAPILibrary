@@ -299,6 +299,25 @@ public class SkipUseAPIServiceTest {
 		// Set up
 		service.login(TEST_EMAIL, TEST_PASSWORD);
 		assertTrue(service.isLoggedIn());
+		
+		// create a member
+		long bobMemberID = addTestMember(TEST_MEMBER_BOB);
+		// test Pick ID
+		String pickID = "209456830495603849003948560934";
+		// set collection
+		MemberPickIDCollection memberPickIDCollection = new MemberPickIDCollection(bobMemberID);
+		memberPickIDCollection.setCollectionName("test collection");
+		memberPickIDCollection.addPickID(pickID);
+		service.setPickIDCollection(memberPickIDCollection);
+		// store the pick
+		service.skipUsePassPickID(SkipUsePass.PASS, bobMemberID, pickID, bobMemberID);
+		// set a Pick Query
+		PickQuery pickQuery = new PickQuery();
+		pickQuery.addToMemberIDList(bobMemberID);
+		pickQuery.setMemberCollectionID(bobMemberID);
+		pickQuery.setExcludeRecentPicks(false);
+		pickQuery.makeExactQuery();
+		service.setPickQuery(pickQuery);
 
 		// Test
 		ServerPickList serverPickList = service.getServerPickList();
@@ -867,7 +886,7 @@ public class SkipUseAPIServiceTest {
 		// look for Picks by category
 		PickQuery pickQuery = new PickQuery();
 		// look for the category
-		pickQuery.setCategories(categoryList);
+		pickQuery.setCategoryList(categoryList);
 		// this member
 		pickQuery.addToMemberIDList(memberID);
 		pickQuery.setHowMany(50);
@@ -940,7 +959,7 @@ public class SkipUseAPIServiceTest {
 		// this member
 		pickQuery.addToMemberIDList(memberID);
 		// look for the category
-		pickQuery.setCategories(categoryList);
+		pickQuery.setCategoryList(categoryList);
 		pickQuery.setHowMany(50);
 		// get the exact query amount
 		pickQuery.setGetMorePicksIfShort(false);

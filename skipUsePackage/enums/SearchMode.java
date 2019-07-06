@@ -1,8 +1,8 @@
 package com.autogilmore.throwback.skipUsePackage.enums;
 
 /* 
- * Enumerations for the PickQuery for type of Picks returned.
+ * Enumerations for the PickQuery for how Picks will be searched for.
 */
 public enum SearchMode {
-	NORMAL, TEMPORAL, FAVORITES, STOPUSING, WORST
+    NORMAL, BALANCED, RACING, FAVORITE, WORST, STOPUSING
 }

@@ -8,17 +8,17 @@ public class CategoryPickIDCollection {
 	// For this member's categories...
 	private MemberCategoryList memberCategoryList = new MemberCategoryList();
 
-	// Use these Pick IDs...
-	private PickIDCollection pickIDCollection = new PickIDCollection();
+	// Use these Pick IDs from this member's Pick ID collection...
+	private MemberPickIDCollection pickIDCollection = new MemberPickIDCollection();
 
 	public CategoryPickIDCollection() {
 	}
 
-	public PickIDCollection getPickIDCollection() {
+	public MemberPickIDCollection getPickIDCollection() {
 		return pickIDCollection;
 	}
 
-	public void setPickIDCollection(PickIDCollection pickIDCollection) {
+	public void setPickIDCollection(MemberPickIDCollection pickIDCollection) {
 		this.pickIDCollection = pickIDCollection;
 	}
 

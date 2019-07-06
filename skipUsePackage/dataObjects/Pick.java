@@ -11,122 +11,121 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 */
 public class Pick {
 
-	// Your Pick ID.
-	private String pickID = "";
+    // Your Pick ID.
+    private String pickID = "";
 
-	// The member ID the Pick belongs to.
-	private long memberID = 0;
+    // The member ID the Pick belongs to.
+    private long memberID = 0;
 
-	// Number of times Skipped.
-	private long skipped = 0;
+    // Number of times Skipped.
+    private long skipped = 0;
 
-	// Number of times Used.
-	private long used = 0;
+    // Number of times Used.
+    private long used = 0;
 
-	// My additional JSON.
-	private String json = "";
+    // My additional JSON.
+    private String json = "";
 
-	// Ignore flag for use during typical Pick queries.
-	private boolean stopUsing = false;
+    // Ignore flag for use during typical Pick queries.
+    private boolean stopUsing = false;
 
-	// Percentage 0-100, where 0 is most Skipped and 100 is most Used.
-	private int autoRatePercentage = 50;
+    // Percentage 0-100, where 0 is most Skipped and 100 is most Used.
+    private int autoRatePercentage = 50;
 
-	// Flag to indicate no Pick information has been stored yet.
-	private boolean newPick = true;
+    // Flag to indicate no Pick information has been stored yet.
+    private boolean newPick = true;
 
-	// List of a member's categories that are marked for this Pick.
-	// Will be empty if includeCategories is not set in PickQuery.
-	private List<String> categoryList = new ArrayList<String>();
+    // List of a member's categories that are marked for this Pick.
+    private List<String> categoryList = new ArrayList<String>();
 
-	// Timestamp when Pick was last updated. Rounding by minutes.
-	@JsonProperty("lastUpdated")
-	private Timestamp _lastUpdated;
+    // Timestamp when Pick was last updated. Rounding by minutes.
+    @JsonProperty("lastUpdated")
+    private Timestamp _lastUpdated;
 
-	public Pick() {
-	}
+    public Pick() {
+    }
 
-	public String getPickID() {
-		return pickID;
-	}
+    public String getPickID() {
+	return pickID;
+    }
 
-	public void setPickID(String value) {
-		if (value != null)
-			this.pickID = value;
-	}
+    public void setPickID(String value) {
+	if (value != null)
+	    this.pickID = value;
+    }
 
-	public long getMemberID() {
-		return this.memberID;
-	}
+    public long getMemberID() {
+	return this.memberID;
+    }
 
-	public void setMemberID(long memberID) {
-		this.memberID = memberID;
-	}
+    public void setMemberID(long memberID) {
+	this.memberID = memberID;
+    }
 
-	public long getUsed() {
-		return used;
-	}
+    public long getUsed() {
+	return used;
+    }
 
-	public void setUsed(long used) {
-		this.used = used;
-	}
+    public void setUsed(long used) {
+	this.used = used;
+    }
 
-	public long getSkipped() {
-		return skipped;
-	}
+    public long getSkipped() {
+	return skipped;
+    }
 
-	public void setSkipped(long skipped) {
-		this.skipped = skipped;
-	}
+    public void setSkipped(long skipped) {
+	this.skipped = skipped;
+    }
 
-	public boolean isStopUsing() {
-		return stopUsing;
-	}
+    public boolean isStopUsing() {
+	return stopUsing;
+    }
 
-	public void setStopUsing(boolean stopUsing) {
-		this.stopUsing = stopUsing;
-	}
+    public void setStopUsing(boolean stopUsing) {
+	this.stopUsing = stopUsing;
+    }
 
-	public int getAutoRatePercentage() {
-		return autoRatePercentage;
-	}
+    public int getAutoRatePercentage() {
+	return autoRatePercentage;
+    }
 
-	public void setAutoRatePercentage(int autoRatePercentage) {
-		this.autoRatePercentage = autoRatePercentage;
-	}
+    public void setAutoRatePercentage(int autoRatePercentage) {
+	this.autoRatePercentage = autoRatePercentage;
+    }
 
-	public String getJSON() {
-		return json;
-	}
+    public String getJSON() {
+	return json;
+    }
 
-	public void setJSON(String json) {
-		if (json != null)
-			this.json = json;
-	}
+    public void setJSON(String json) {
+	if (json != null)
+	    this.json = json;
+    }
 
-	public List<String> getCategoryList() {
-		return categoryList;
-	}
+    public List<String> getCategoryList() {
+	return categoryList;
+    }
 
-	public void setCategoryList(List<String> categoryList) {
-		if (categoryList != null)
-			this.categoryList = categoryList;
-	}
+    public void setCategoryList(List<String> categoryList) {
+	if (categoryList != null)
+	    this.categoryList = categoryList;
+    }
 
-	public void setNewPick(boolean newPick) {
-		this.newPick = newPick;
-	}
+    public void setNewPick(boolean newPick) {
+	this.newPick = newPick;
+    }
 
-	public boolean isNewPick() {
-		return newPick;
-	}
+    public boolean isNewPick() {
+	return newPick;
+    }
 
-	public Timestamp _getLastUpdated() {
-		return _lastUpdated;
-	}
+    public Timestamp _getLastUpdated() {
+	return _lastUpdated;
+    }
 
-	public void setLastUpdated(Timestamp lastUpdated) {
-		if (lastUpdated != null)
-			this._lastUpdated = lastUpdated;
-	}
+    public void setLastUpdated(Timestamp lastUpdated) {
+	if (lastUpdated != null)
+	    this._lastUpdated = lastUpdated;
+    }
 }

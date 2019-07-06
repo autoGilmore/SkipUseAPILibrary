@@ -8,12 +8,12 @@ import com.autogilmore.throwback.skipUsePackage.service.SkipUseProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /* 
- * A 'PickIDCollection' is a list of Pick IDs.
+ * A 'PickIDCollection' is a list of Pick IDs for a member.
 */
 public class PickIDCollection {
 
-	// The Collection's identification number.
-	private int collectionID = -1;
+	// The member's ID for their collection.
+	private int memberID = -1;
 
 	// The name for the Collection of Pick IDs.
 	private String collectionName = "";
@@ -33,12 +33,12 @@ public class PickIDCollection {
 		setCollectionName(SkipUseProperties.PICK_ID_COLLECTION_NAME);
 	}
 
-	public int getCollectionID() {
-		return this.collectionID;
+	public int getMemberID() {
+		return this.memberID;
 	}
 
-	public void setCollectionID(int collectionID) {
-		this.collectionID = collectionID;
+	public void setMemberID(int memberID) {
+		this.memberID = memberID;
 	}
 
 	public String getCollectionName() {
