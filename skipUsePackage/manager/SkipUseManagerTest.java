@@ -377,7 +377,7 @@ public class SkipUseManagerTest {
 	MemberPickIDCollection createPickIDCollection = manager.addPickIDCollection(collectionList, true);
 	assertTrue("Should have 4 Picks in the collection", createPickIDCollection.getPickIDList().size() == 4);
 
-	// create a "Skipped" Pick which will now not be considered 'new.'
+	// create a "Skipped" Pick which will now no longer be considered 'new.'
 	manager.skipUsePass(SkipUsePass.SKIP, testMemberID, "B");
 	manager.skipUsePass(SkipUsePass.SKIP, testMemberID, "C");
 
@@ -710,6 +710,7 @@ public class SkipUseManagerTest {
 	// let's start with the default Pick Query for our test member
 	PickQuery pickQuery = new PickQuery();
 	pickQuery.addToMemberIDList(testMemberID);
+	pickQuery.setIncludeCategories(true);
 	List<Pick> pickList = manager.setPickQuery(pickQuery);
 	// the default Pick Query returns all the stored Picks
 	assertTrue("All 6 Picks should be found", pickList.size() == 6);
@@ -751,7 +752,8 @@ public class SkipUseManagerTest {
 	assertTrue("the Burger should be found", pickList.get(0).getPickID().equals("Burger"));
 	assertTrue("the Chicken should be found", pickList.get(1).getPickID().equals("Chicken"));
 
-	// if we use the category mode NOT, only Picks without the categories in the Pick Query
+	// if we use the category mode NOT, only Picks without the categories in the
+	// Pick Query
 	// will be returned.
 	pickQuery.getCategoryList().clear();
 	pickQuery.addToCategoryList("NOT");
@@ -767,7 +769,8 @@ public class SkipUseManagerTest {
     }
 
     // Members can have their own collections. Other members, under the same
-    // account, can create Picks and Pick Query to search for Picks from other member
+    // account, can create Picks and Pick Query to search for Picks from other
+    // member
     // collections.
     @Test
     public void test_setPickQuery_otherMemberCollection() throws SkipUseException {
@@ -914,9 +917,10 @@ public class SkipUseManagerTest {
     }
 
     // A member's Pick can be updated to mark the 'stop using' or add additional
-    // JSON data.
+    // JSON data. If the Pick has not been created yet (isNewPick = true and null
+    // updated time stamp) a new Pick will be created using the update.
     @Test
-    public void test_updateMemberPick_createAPickIfNewPickID() throws SkipUseException {
+    public void test_updateMemberPick_createsANewPickIfNotUsedYet() throws SkipUseException {
 	// Set up
 	manager.login(TEST_EMAIL, TEST_PASSWORD);
 	assertTrue(manager.isLoggedIn());
@@ -925,6 +929,8 @@ public class SkipUseManagerTest {
 
 	// create a shared Pick ID collection.
 	List<String> collectionList = new ArrayList<String>();
+	// the Pick ID will just use the current date so that it is unique from test to
+	// test
 	Date date = new Date();
 	String pickID = "TestPickID=" + date.toString();
 	collectionList.add(pickID);
@@ -941,15 +947,16 @@ public class SkipUseManagerTest {
 	// return exactly this many with this criteria.
 	pickQuery.makeExactQuery();
 
-	// make the query.
+	// make the query and get back a new Pick
 	List<Pick> pickList = manager.setPickQuery(pickQuery);
 	Pick _testPick = pickList.stream().filter(t -> t.getPickID().equals(pickID)).findFirst().orElse(null);
 	assertNotNull(_testPick);
 	assertTrue(_testPick.isNewPick());
 	assertTrue("Should not have a timestamp", _testPick._getLastUpdated() == null);
 
-	// pick attributes to update:
+	// create a new Pick and set the attributes.
 	Pick updateThisPick = new Pick();
+	// these are required to indicate which Pick to update.
 	updateThisPick.setMemberID(testMemberID);
 	updateThisPick.setPickID(_testPick.getPickID());
 	// additional JSON you can set for your app.
@@ -957,16 +964,13 @@ public class SkipUseManagerTest {
 	// flag a pick to 'stop using' in normal queries.
 	updateThisPick.setStopUsing(true);
 
-	// you can't change these values, they will be ignored by the API.
-	updateThisPick.setSkipped(20);
-	updateThisPick.setUsed(30);
-	updateThisPick.setAutoRatePercentage(200);
+	// you can't change these values, they will be ignored by the API. We'll test
+	// setting them anyway.
 	List<String> categoryList = new ArrayList<String>();
 	categoryList.add("Add categories");
 	categoryList.add("using the");
 	categoryList.add("create category for member method instead");
 	updateThisPick.setCategoryList(categoryList);
-	updateThisPick.setNewPick(true);
 	updateThisPick.setLastUpdated(new java.sql.Timestamp(new java.util.Date().getTime()));
 
 	// Test
@@ -982,14 +986,80 @@ public class SkipUseManagerTest {
 	assertTrue("was: " + _updatedPick.getJSON(), _updatedPick.getJSON().equals("{\"hello\":\"world\"}"));
 	assertTrue(_updatedPick.isStopUsing() == updateThisPick.isStopUsing());
 
-	// can't change these.
-	assertTrue(_updatedPick.getAutoRatePercentage() != updateThisPick.getAutoRatePercentage());
+	// could not change these.
 	assertFalse(_updatedPick.isNewPick());
 	assertFalse(_updatedPick.getCategoryList().contains("Add categories"));
-	assertFalse(_updatedPick.getSkipped() == updateThisPick.getSkipped());
-	assertFalse(_updatedPick.getUsed() == updateThisPick.getUsed());
 	assertNotNull("Should now have a timestamp", _updatedPick._getLastUpdated());
 	assertTrue(_updatedPick._getLastUpdated().getTime() != updateThisPick._getLastUpdated().getTime());
+    }
+
+    // If you use a non-demo account, (an account that has been paid) you can update
+    // additional attributes on a Pick.
+    // NOTE: this will also work if your account linked using the One Bill Account.
+    @Test
+    public void test_updateMemberPick_usingPayingAccount() throws SkipUseException {
+	// Set up
+	manager.login(TEST_EMAIL, TEST_PASSWORD);
+	assertTrue(manager.isLoggedIn());
+	manager.addMemberName(TEST_MEMBER_BOB);
+	long testMemberID = manager.getMemberIDByName(TEST_MEMBER_BOB);
+
+	// create a shared Pick ID collection.
+	List<String> collectionList = new ArrayList<String>();
+	Date date = new Date();
+	String pickID = "TestPickID=" + date.toString();
+	collectionList.add(pickID);
+	manager.addPickIDCollection(collectionList, true);
+
+	// store the  Pick.
+	manager.skipUsePass(SkipUsePass.SKIP, testMemberID, pickID);
+
+	// get new a Pick by the Pick Query.
+	PickQuery pickQuery = new PickQuery();
+	// for this member.
+	pickQuery.addToMemberIDList(testMemberID);
+	// just the one Pick.
+	pickQuery.setPickID(pickID);
+
+	// make the query and get back a new Pick.
+	List<Pick> pickList = manager.setPickQuery(pickQuery);
+	Pick _testPick = pickList.stream().filter(t -> t.getPickID().equals(pickID)).findFirst().orElse(null);
+	assertNotNull(_testPick);
+	assertTrue("Should get back the one Pick", _testPick.getPickID().equals(pickID));
+	assertFalse("The Pick should not be new.", _testPick.isNewPick());
+
+	// create a new Pick and set the required attributes.
+	Pick updateThisPick = new Pick();
+	updateThisPick.setMemberID(testMemberID);
+	updateThisPick.setPickID(_testPick.getPickID());
+
+	// you can change these if you are a using a paying account.
+	updateThisPick.setSkipped(20);
+	updateThisPick.setUsed(30);
+	updateThisPick.setAutoRatePercentage(90);
+
+	// Test
+	manager.updateMemberPick(updateThisPick);
+
+	// Verify
+	List<Pick> updatedPickList = manager.getAllPickListByMemberID(testMemberID, INCLUDE_CATEGORY_INFO);
+	Pick _updatedPick = updatedPickList.stream().filter(t -> t.getPickID().equals(pickID)).findFirst().orElse(null);
+	assertNotNull("Should find the Pick", _updatedPick);
+
+	// paid accounts can change these.
+	// NOTE: this test will not work if you are using a demo account.
+	assertTrue(_updatedPick.getAutoRatePercentage() == updateThisPick.getAutoRatePercentage());
+	assertTrue(_updatedPick.getSkipped() == updateThisPick.getSkipped());
+	assertTrue(_updatedPick.getUsed() == updateThisPick.getUsed());
+	
+	// the values have changed from the original Pick.
+	assertTrue(_updatedPick.getAutoRatePercentage() != _testPick.getAutoRatePercentage());
+	assertTrue(_updatedPick.getSkipped() != _testPick.getSkipped());
+	assertTrue(_updatedPick.getUsed() != _testPick.getUsed());
+
+	// nothing else changed.
+	assertTrue(_updatedPick.getPickID().equals(_testPick.getPickID()));
+	assertTrue(_updatedPick.getMemberID() == _testPick.getMemberID());
     }
 
     // A member can update a category name.
@@ -1293,18 +1363,8 @@ public class SkipUseManagerTest {
 	    manager.addPickIDCollection(memberPickIDCollection);
 	    fail("an error should be thrown");
 	} catch (SkipUseException e) {
-	    assertTrue("was: " + e.getMessage(), e.getMessage().contains("collectionName: property may not be empty"));
-	    memberPickIDCollection.setCollectionName("Add a collection name, maybe");
-	}
-
-	// a collection name may not have a comma in it.
-	try {
-	    manager.addPickIDCollection(memberPickIDCollection);
-	    fail("an error should be thrown");
-	} catch (SkipUseException e) {
-	    assertTrue("was: " + e.getMessage(),
-		    e.getMessage().contains("a collection name must not contain a comma character"));
-	    memberPickIDCollection.setCollectionName("No comma name");
+	    assertTrue("was: " + e.getMessage(), e.getMessage().contains("Collection must have a name"));
+	    memberPickIDCollection.setCollectionName("Add a collection name");
 	}
 
 	// the '@@@' set of characters is not allowed in a Pick ID collection.

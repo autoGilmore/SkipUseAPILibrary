@@ -1,5 +1,5 @@
 # SkipUseAPI Library
-This SkipUseAPI Library provides sample Java code for accessing the SkipUseAPI microservice. About and API documentation will be available at www.SkipUse.com in July 2019.
+This SkipUseAPI Library provides sample Java code for accessing the SkipUseAPI microservice. About and API documentation will be available at www.SkipUse.com. NOTE: Accounts are currently limited to Beta users. Non-API users; look for a WordPress plugin to help with your site content in the future.
 
 ## Configuration:
 This demo code uses the SkipUseAPI and was pulled out of another Spring Boot project that is still in development. Although the code will not run on its own, you can place this folder structure within your Java project (changing the package imports) and use the SkipUseManager class to test your SkipUse access. Be sure to note the import dependencies in the service class that use Spring for http calls and Jackson for serialization. There are JUnit tests for the SkipUseManager and SkipUseAPIService classes that provide insights into using some of the most common API functionality.
@@ -13,7 +13,7 @@ This example package/library includes:
 * enums folder: contains a collection of constants and optional search parameters
 * exception folder: contains a custom exception for the SkipUse service
 * manager folder: contains the SkipUseManager and test files
-* service folder: contains the SkipUseAPIService and test files used by the manager
+* service folder: contains the SkipUseAPIService and test files used by the manager 
 * tokenData folder: contains a SkipUseToken and helper methods required by the service for communication
 
 ## Copyright and licensing information:
@@ -28,7 +28,13 @@ skipuseapi@gmail.com
 ### Known bugs:
 ### Troubleshooting:
 
+
 ## Changelog:
+111119:
+* Added: RESET modifier for the NORMAL search mode for resetting the Pick Query queue
+* Updated: the ignoreRecentlyUpdated to use number of hours instead of true/false
+* Sample Music Project: added Category list modifiers for "ANY, NONE, NOT"
+
 070619:
 * Added: new search modes: BALANCED and RACING
 * Added: 2 search modes selected will be blended into a single Pick list
@@ -43,14 +49,14 @@ skipuseapi@gmail.com
 031419:
 * Added: Member's can now have their own collection
 * Added: Pick Query can now search from a member's collection by using the member ID
-* Added: TEMPORAL search mode for Pick Query
+* Added: Temporal search mode for Pick Query
 * Added: Owner profile object for changing email, name and password
 * Removed: Trending percentage meta from Pick
 * Update: search mode enum options for Pick Query
 * Update: default and unset values were switched from '-1' to now use '0'
 * Update: IDs for collections, members, accounts, now use Long data type
 * Sample Music Project: improved server connection testing and recovery
-* Sample Music Project: now using the new TEMPORAL search mode option in the regular Pick Query
+* Sample Music Project: now using the new Temporal search mode option in the regular Pick Query
 * Sample Music Project: added some tests
 
 121918:  
@@ -67,7 +73,7 @@ skipuseapi@gmail.com
 101718:   
 * Update: A Pick ID may not contain ' @@@ ' characters
 * New: MemberListPickIDList and PickList data objects
-* Added: Last updated timestamp for Pick ID collection
+* Added: Last updated timestamp for Pick ID collection 
 * Added: Undo for the last collection change
 * Added: Get a list of all Picks from a list of members
 * Added: properties now can include test user credentials
@@ -86,10 +92,10 @@ skipuseapi@gmail.com
 080318:   
 * Maximum collection size increased from 5,000 to 50,000 Pick IDs
 * Manager now logs-out before attempting to log-in
-* Updated tests to verify locally-stored members are properly retrieved
+* Updated tests to verify locally-stored members are properly retrieved 
 * Updated API test to remove test members for testing consistency
 * Sample Music Project: added a category list and reference to the properties file for name and password
-* FIXED: a problem when getting locally-stored members were not found. Now will automatically get the member list from the service when referenced
+* FIXED: a problem when getting locally-stored members were not found. Now will automatically get the member list from the service when referenced 
 
 071218:   
 * Added properties file for settings
@@ -105,11 +111,12 @@ skipuseapi@gmail.com
 * Moved the server API calls from the SkipUseAPIService to a new SkipUseAPI file.
 * FIXED: a problem when getting one pick for a member and it was a new pick. A new Pick is returned with member ID of -1. Now adding the member ID when getting a new Pick and then updating it using the Manager.
 
-060618:
-* Copy updates to the README.md, Manager, Service and test classes.
+060618: 
+* Copy updates to the README.md, Manager, Service and test classes. 
 
-060518:
-* README Markdown conversion
+060518: 
+* README Markdown conversion 
+ 
+060418: 
+* Initial demo files prepared 
 
-060418:
-* Initial demo files prepared

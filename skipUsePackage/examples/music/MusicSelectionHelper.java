@@ -39,6 +39,7 @@ public class MusicSelectionHelper {
 
     // Listening members and song collections.
     private String lastPickQuery = "";
+    private List<String> lastCategoryList = new ArrayList<String>();
     private MemberPickIDCollection memberPickIDCollection = new MemberPickIDCollection();
     private Set<Long> getListeningMemberIDSet = new HashSet<>();
     private MemberCategoryList memberCategoryList = new MemberCategoryList();
@@ -54,7 +55,7 @@ public class MusicSelectionHelper {
     private List<Pick> returnedPickList = new ArrayList<>();
     private Queue<String> pickIDQueue = new LinkedList<String>();
 
-    // Replay
+    // Replay previous song ID
     private String _lastSongID = null;
 
     public MusicSelectionHelper() {
@@ -90,6 +91,7 @@ public class MusicSelectionHelper {
     // Add a collection of song IDs to SkipUse.
     //
     public void setSongIDCollection(List<String> songIDList, boolean isCommaSpaceDelimted) {
+	memberPickIDCollection = new MemberPickIDCollection();
 	if (isSkipUseRunning()) {
 	    try {
 		syso.logInfo(
@@ -400,7 +402,7 @@ public class MusicSelectionHelper {
     public void addOnePlayerSearchModeList(SearchMode searchMode) {
 	if (searchMode != null) {
 	    playerSearchModeList.clear();
-	    playerSearchModeList.add(searchMode);
+	    addToPlayerSearchModeList(searchMode);
 	}
     }
 
@@ -554,7 +556,7 @@ public class MusicSelectionHelper {
 	    // include categories that have been marked for the Picks.
 	    pickQuery.setIncludeCategories(true);
 	    // don't send back Picks we recently updated.
-	    pickQuery.setExcludeRecentPicks(true);
+	    pickQuery.setExcludeRecentPicksHours(24);
 	    // ramp High to Low percentages.
 	    pickQuery.setRamp(RampMode.RATE_DOWN);
 	    // get more Picks if the search comes up short.
@@ -572,16 +574,18 @@ public class MusicSelectionHelper {
 		pickQuery.setUseTimeOfDay(true);
 
 	    // check that the categories are stored by SkipUse
-	    if (!getCategoryList().isEmpty() && !getCategoryList().contains("ANY")) {
+	    if (!getCategoryList().isEmpty() && !getCategoryList().toString().equals(lastCategoryList.toString())) {
+		lastCategoryList = getCategoryList();
 		// NOTE: getting only ONE member's categories, because members
 		// can have different categories.
 		loadMemberCategoryList();
 
 		// automatically add the category, if not in member's list.
 		for (String categoryName : getCategoryList()) {
-		    // Can't add reserved search words as categories
+		    // Can't add reserved category mode words as categories
 		    if (!categoryName.equalsIgnoreCase("ANY") && !categoryName.equalsIgnoreCase("NONE")
-			    && !categoryName.equalsIgnoreCase("NOT") && !categoryName.equalsIgnoreCase("PICK")) {
+			    && !categoryName.equalsIgnoreCase("NOT") && !categoryName.equalsIgnoreCase("EACH_CATEGORY")
+			    && !categoryName.equalsIgnoreCase("PICK")) {
 			String _foundSkipUseCategory = memberCategoryList.getCategoryList().stream()
 				.filter(c -> c.equals(categoryName)).findFirst().orElse(null);
 			if (_foundSkipUseCategory == null) {
@@ -595,23 +599,17 @@ public class MusicSelectionHelper {
 		    }
 		}
 
-		// when listening by categories, set to get only Picks we currently have stored.
-		pickQuery.setNewMixInPercentage(0);
-
-		// set to look for these categories.
-		pickQuery.setCategoryList(getCategoryList());
-	    } else {
-		// if no categories are specified, exclude ones we don't want to hear regularly
-		// NOTE: these are my categories
-		pickQuery.addToCategoryList("NOT");
-		pickQuery.addToCategoryList("XMAS");
-		pickQuery.addToCategoryList("SLOW");
-		pickQuery.addToCategoryList("INSTRUMENTAL");
-		pickQuery.addToCategoryList("FOLK");
-		pickQuery.addToCategoryList("JAZZ");
-		pickQuery.addToCategoryList("CLASSICAL");
-		pickQuery.addToCategoryList("NOT_MUSIC");
 	    }
+
+	    // when listening by categories, set to get only Picks we currently have stored.
+	    if (getCategoryList().size() > 1) {
+		if (!getCategoryList().contains("ANY") && !getCategoryList().contains("NONE")
+			&& !getCategoryList().contains("NOT"))
+		    pickQuery.setNewMixInPercentage(0);
+	    }
+
+	    // set to look for these categories.
+	    pickQuery.setCategoryList(getCategoryList());
 	}
     }
 

@@ -10,22 +10,21 @@ import com.autogilmore.throwback.skipUsePackage.dataObjects.Pick;
 */
 public class ServerPickList extends ServerResponse {
 
-	// JSON object name
-	public static final String NAME = "pickList";
+    // JSON object name
+    public static final String NAME = "pickList";
 
-	private List<Pick> pickList = new ArrayList<Pick>();
+    private List<Pick> pickList = new ArrayList<Pick>();
 
-	public void addPick(Pick pick) {
-		this.pickList.add(pick);
-	}
+    public void addPick(Pick pick) {
+	this.pickList.add(pick);
+    }
 
-	public void setPickList(List<Pick> pickList) {
-		this.pickList = pickList;
-	}
+    public void setPickList(List<Pick> pickList) {
+	this.pickList = pickList;
+    }
 
-	// Expected server JSON object name (don't rename)
-	public List<Pick> getPickList() {
-		return pickList;
-	}
-
+    // Expected server JSON object name (don't rename)
+    public List<Pick> getPickList() {
+	return pickList;
+    }
 }

@@ -32,13 +32,11 @@ public class Pick {
     // Percentage 0-100, where 0 is most Skipped and 100 is most Used.
     private int autoRatePercentage = 50;
 
-    // Flag to indicate no Pick information has been stored yet.
-    private boolean newPick = true;
-
     // List of a member's categories that are marked for this Pick.
     private List<String> categoryList = new ArrayList<String>();
 
     // Timestamp when Pick was last updated. Rounding by minutes.
+    // NOTE: if this value is null, the Pick is new and has not yet been stored
     @JsonProperty("lastUpdated")
     private Timestamp _lastUpdated;
 
@@ -112,14 +110,6 @@ public class Pick {
 	    this.categoryList = categoryList;
     }
 
-    public void setNewPick(boolean newPick) {
-	this.newPick = newPick;
-    }
-
-    public boolean isNewPick() {
-	return newPick;
-    }
-
     public Timestamp _getLastUpdated() {
 	return _lastUpdated;
     }
@@ -127,5 +117,9 @@ public class Pick {
     public void setLastUpdated(Timestamp lastUpdated) {
 	if (lastUpdated != null)
 	    this._lastUpdated = lastUpdated;
+    }
+
+    public boolean isNewPick() {
+	return _lastUpdated == null;
     }
 }

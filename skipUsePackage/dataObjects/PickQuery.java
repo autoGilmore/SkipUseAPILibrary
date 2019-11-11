@@ -50,7 +50,7 @@ public class PickQuery {
 
     // **** Additional options *********
 
-    // Optional to Search Modes for Picks by...
+    // Available Search Modes for Picks include:
     // NORMAL: Standard mix of Picks with more Used count and less Skipped.
     // BALANCED: Picks by presented by count used vs the auto-percentage expected to
     // be used. Picks are returned by how much they are not in balance.
@@ -62,6 +62,10 @@ public class PickQuery {
     // FAVORITE: Descending Picks by highest auto-rating percentage.
     // WORST: Ascending Picks by lowest auto-rating percentage.
     // STOPUSING: Picks that have been flagged stopUsing
+
+    // Additional modifiers:
+    // RESET: re-orders Picks when using the NORMAL search mode. (use ONCE to reset
+    // if another search mode has changed the the NORMAL ordering)
     private List<String> searchModeList = new ArrayList<String>();
 
     // Optional: set to have Search Modes search by the Time Of Day.
@@ -80,9 +84,8 @@ public class PickQuery {
     private String ramp = RampMode.NONE.toString();
 
     // Optional to not return recently updated Picks in the next query.
-    // (Set to 'false' if you want to see popular Picks
-    // every query even if the Pick was just presented.)
-    private boolean excludeRecentPicks = false;
+    // Set the number of hours to ignore a Pick since it was last updated.
+    private int excludeRecentPicksHours = 0;
 
     // Optional to return Picks that have been flagged to not be included in
     // normal queries.
@@ -93,16 +96,16 @@ public class PickQuery {
     // server processing.)
     private boolean includeCategories = false;
 
-    // Optional to return Picks that have been marked with these Categories.
+    // Optional to return only Picks that have been marked with these Categories.
     // NOTE: Remember to set 'includeCategories' to 'true' if you want to see
     // category information.
-    // >> You can also include a 'category mode' word option below by placing a in
-    // the list.
+    // >> You can also include the 'category option' words below, by placing them a
+    // in the list.
     // Category Modes:
     // ANY: this is the default. Picks will be returned with or without any
     // categories.
     // NONE: only Picks with no categories will be returned.
-    // NOT: only Pick that do not that this category will be returned.
+    // NOT: only Picks that do not that this category will be returned.
     // (Using categories might costs more to use because of the additional server
     // processing.)
     private List<String> categoryList = new ArrayList<String>();
@@ -239,12 +242,12 @@ public class PickQuery {
 	this.ramp = ramp.toString();
     }
 
-    public boolean isExcludeRecentPicks() {
-	return excludeRecentPicks;
+    public int getExcludeRecentPicksHours() {
+	return excludeRecentPicksHours;
     }
 
-    public void setExcludeRecentPicks(boolean excludeRecentPicks) {
-	this.excludeRecentPicks = excludeRecentPicks;
+    public void setExcludeRecentPicksHours(int excludeRecentPicksHours) {
+	this.excludeRecentPicksHours = excludeRecentPicksHours;
     }
 
     public boolean isIncludeStopUsing() {
@@ -320,11 +323,11 @@ public class PickQuery {
 	return "getMemberIDList.size=" + getMemberIDList().toString() + ", getMemberCollectionID="
 		+ getMemberCollectionID() + ", getHowMany=" + getHowMany() + ", getNewMixInPercentage="
 		+ getNewMixInPercentage() + ", isGetMorePicksIfShort=" + (isGetMorePicksIfShort() ? "1" : "0")
-		+ ", getSearchModeList=" + getSearchModeList() + ", getRamp=" + getRamp() + ", isExcludeRecentPicks="
-		+ (isExcludeRecentPicks() ? "1" : "0") + ", isIncludeStopUsing=" + (isIncludeStopUsing() ? "1" : "0")
-		+ ", isIncludeCategories=" + (isIncludeCategories() ? "1" : "0") + ", getCategories.size="
-		+ getCategoryList().toString() + ", getPickID=" + getPickID() + ", getPickIDList="
-		+ getPickIDList().toString();
+		+ ", getSearchModeList=" + getSearchModeList() + ", getRamp=" + getRamp()
+		+ ", isExcludeRecentPicksHours=" + getExcludeRecentPicksHours() + ", isIncludeStopUsing="
+		+ (isIncludeStopUsing() ? "1" : "0") + ", isIncludeCategories=" + (isIncludeCategories() ? "1" : "0")
+		+ ", getCategories.size=" + getCategoryList().toString() + ", getPickID=" + getPickID()
+		+ ", getPickIDList=" + getPickIDList().toString();
     }
 
 }

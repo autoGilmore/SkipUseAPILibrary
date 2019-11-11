@@ -197,7 +197,7 @@ public class SkipUseManager {
 	service.undoLastServerPickIDCollectionChange(memberCollectionID);
     }
 
-    // Get the Pick ID collection.
+    // Get the OWNER Pick ID collection.
     //
     public MemberPickIDCollection getPickIDCollection() throws SkipUseException {
 	automaticLogin();
@@ -367,9 +367,7 @@ public class SkipUseManager {
     public void updateMemberPick(Pick pick) throws SkipUseException {
 	if (pick != null) {
 	    if (pick.getMemberID() > 0) {
-		pick.setJSON(pick.getJSON());
-		pick.setStopUsing(pick.isStopUsing());
-		// NOTE: Other fields may not be changeable, check the API doc.
+		// NOTE: some fields may not be changeable, check the API doc.
 		service.updatePick(pick);
 	    } else {
 		throw new SkipUseException("The Pick member ID was invalid. It was: pick.getMemberID()");
