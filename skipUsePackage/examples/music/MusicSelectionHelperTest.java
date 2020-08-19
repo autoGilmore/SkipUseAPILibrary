@@ -6,7 +6,6 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Queue;
 
 import org.junit.Test;
 
@@ -20,14 +19,7 @@ public class MusicSelectionHelperTest {
     private static final String TEST_MEMBER_BOB = "Bob";
 
     @Test
-    public void testMusicSelectionHelper() {
-	// Test
-	// Verify
-	assertTrue("We need a running instance for testing", musicSelectionHelper.isSkipUseRunning());
-    }
-
-    @Test
-    public void testInitialize() throws SkipUseException {
+    public void test_initialize() throws SkipUseException {
 	// logout to have initialize log back in
 	SkipUseManager manager = SkipUseManager.getInstance();
 	manager.logout();
@@ -42,7 +34,7 @@ public class MusicSelectionHelperTest {
     }
 
     @Test
-    public void testGetSongIDCollection() {
+    public void test_getSongIDCollection() {
 	boolean isCommaSpaceDelimted = false;
 	List<String> songIDList = new ArrayList<>();
 	songIDList.add("song1");
@@ -59,7 +51,7 @@ public class MusicSelectionHelperTest {
     }
 
     @Test
-    public void testSetSongIDCollection() {
+    public void test_setSongIDCollection() {
 	boolean isCommaSpaceDelimted = true;
 	List<String> songIDList = new ArrayList<>();
 	songIDList.add("song1, song2, song3, song4");
@@ -94,16 +86,6 @@ public class MusicSelectionHelperTest {
 	// Verify
 	assertNotNull(_songID);
 	assertTrue("song ID should be one of song list", foundSongList.contains(_songID));
-    }
-
-    @Test
-    public void testgetPickIDQueue() {
-
-	// Test
-	Queue<String> pickIDQueue = musicSelectionHelper.getPickIDQueue();
-
-	// Verify
-	assertTrue("should not have anything in the queue yet", pickIDQueue.size() == 0);
     }
 
 }

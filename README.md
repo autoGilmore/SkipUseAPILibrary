@@ -1,11 +1,11 @@
 # SkipUseAPI Library
-This SkipUseAPI Library provides sample Java code for accessing the SkipUseAPI microservice. About and API documentation will be available at www.SkipUse.com. NOTE: Accounts are currently limited to Beta users. Non-API users; look for a WordPress plugin to help with your site content in the future.
+This SkipUseAPI Library provides sample Java code for accessing the SkipUseAPI microservice. About and API documentation will be available at https://www.skipuse.com/rest-api-documentation/. NOTE: Accounts are currently limited to Beta users. Non-API users; look for a WordPress plugin to use with your site content in the future.
 
 ## Configuration:
 This demo code uses the SkipUseAPI and was pulled out of another Spring Boot project that is still in development. Although the code will not run on its own, you can place this folder structure within your Java project (changing the package imports) and use the SkipUseManager class to test your SkipUse access. Be sure to note the import dependencies in the service class that use Spring for http calls and Jackson for serialization. There are JUnit tests for the SkipUseManager and SkipUseAPIService classes that provide insights into using some of the most common API functionality.
 
 ## Instructions:
-The SkipUseManager is the intending access point for communication with the server API. Examples of login and other feature usage are given in the SkipUseManagerTest class.
+The SkipUseManager is the intended access point for communication with the server API. Examples of login and other feature usage are given in the SkipUseManagerTest class.
 
 ## File manifest:
 This example package/library includes:
@@ -30,6 +30,12 @@ skipuseapi@gmail.com
 
 
 ## Changelog:
+081820:
+* Added: PickIDCountAdvance object which can be used in batch and delayed updates that change a member's Pick Skip and Use counts advancement values 
+* Added: SkipUseManager using new PickIDCountAdvanceList object for batch member Pick updates
+* Updated: Pick Query searching options were condensed into 3 lists to set options and modifiers for selection, result and advanced changes
+* Sample Music Project: updates to use more of the Pick Query search options
+
 111119:
 * Added: RESET modifier for the NORMAL search mode for resetting the Pick Query queue
 * Updated: the ignoreRecentlyUpdated to use number of hours instead of true/false

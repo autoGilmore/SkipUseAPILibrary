@@ -19,7 +19,8 @@ import com.autogilmore.throwback.skipUsePackage.dataObjects.Pick;
 import com.autogilmore.throwback.skipUsePackage.dataObjects.MemberPickIDCollection;
 import com.autogilmore.throwback.skipUsePackage.dataObjects.PickQuery;
 import com.autogilmore.throwback.skipUsePackage.dataObjects.Profile;
-import com.autogilmore.throwback.skipUsePackage.enums.SearchMode;
+import com.autogilmore.throwback.skipUsePackage.enums.ResultOption;
+import com.autogilmore.throwback.skipUsePackage.enums.SearchOption;
 import com.autogilmore.throwback.skipUsePackage.enums.SkipUsePass;
 import com.autogilmore.throwback.skipUsePackage.exception.SkipUseException;
 import com.autogilmore.throwback.skipUsePackage.service.SkipUseProperties;
@@ -447,7 +448,7 @@ public class SkipUseManagerTest {
 	// looking for this member.
 	pickQuery.addToMemberIDList(testMemberID);
 	// for Picks marked as 'StopUsing.'
-	pickQuery.addToSearchModeList(SearchMode.STOPUSING.toString());
+	pickQuery.addToSearchOptionList(SearchOption.STOP_USING_ONLY);
 
 	// Test
 	// 'set' the Pick Query.
@@ -554,7 +555,7 @@ public class SkipUseManagerTest {
 	pickQuery.addToMemberIDList(memberBobID);
 	pickQuery.addToMemberIDList(memberSueID);
 	// look for favorites.
-	pickQuery.addToSearchModeList(SearchMode.FAVORITE.toString());
+	pickQuery.addToSearchOptionList(SearchOption.FAVORITE);
 	// get the top four colors.
 	pickQuery.setHowMany(4);
 	// don't include new Picks or send back more if none are found.
@@ -667,7 +668,8 @@ public class SkipUseManagerTest {
     }
 
     // You can filter your search for Picks that have been marked with a category.
-    // Include or Exclude Picks by adding a 'category mode' word in the Pick Query.
+    // Include or Exclude Picks by adding a 'category option' word in the Pick
+    // Query.
     @Test
     public void test_setPickQuery_categoryModes() throws SkipUseException {
 	// Set up
@@ -679,7 +681,7 @@ public class SkipUseManagerTest {
 	if (currentMemberCategoryList.getCategoryList().size() > 0)
 	    manager.deleteCategoryListForMember(currentMemberCategoryList);
 
-	// set the collection for our Picks.
+	// set the collection for our Picks
 	MemberPickIDCollection memberPickIDCollection = new MemberPickIDCollection(manager.getOwnerMemberID());
 	memberPickIDCollection.setCollectionName("Food Collection");
 	memberPickIDCollection.addPickID("Apple, Pizza, Shake, Fries, Burger, Chicken");
@@ -710,7 +712,7 @@ public class SkipUseManagerTest {
 	// let's start with the default Pick Query for our test member
 	PickQuery pickQuery = new PickQuery();
 	pickQuery.addToMemberIDList(testMemberID);
-	pickQuery.setIncludeCategories(true);
+	pickQuery.addToResultOptionList(ResultOption.INCLUDE_CATEGORY_INFO);
 	List<Pick> pickList = manager.setPickQuery(pickQuery);
 	// the default Pick Query returns all the stored Picks
 	assertTrue("All 6 Picks should be found", pickList.size() == 6);
@@ -734,9 +736,9 @@ public class SkipUseManagerTest {
 	assertTrue("the Apple should be found", pickList.get(0).getPickID().equals("Apple"));
 	assertTrue("the Apple should be found", pickList.get(1).getPickID().equals("Fries"));
 
-	// About category modes:
+	// About category options:
 	// you can do additional filtering by adding reserved words (words that can't be
-	// used as category names) to the Pick Query. The category mode words are ANY,
+	// used as category names) to the Pick Query. The category option words are ANY,
 	// NONE, NOT. ANY is the default, returning any Picks with or without a
 	// category. If we add the ANY to our Pick Query, all Picks will be returned.
 	pickQuery.addToCategoryList("ANY");
@@ -752,9 +754,8 @@ public class SkipUseManagerTest {
 	assertTrue("the Burger should be found", pickList.get(0).getPickID().equals("Burger"));
 	assertTrue("the Chicken should be found", pickList.get(1).getPickID().equals("Chicken"));
 
-	// if we use the category mode NOT, only Picks without the categories in the
-	// Pick Query
-	// will be returned.
+	// if we use the category option NOT, only Picks without the categories in the
+	// Pick Query will be returned.
 	pickQuery.getCategoryList().clear();
 	pickQuery.addToCategoryList("NOT");
 	pickQuery.addToCategoryList("Drink");
@@ -770,8 +771,7 @@ public class SkipUseManagerTest {
 
     // Members can have their own collections. Other members, under the same
     // account, can create Picks and Pick Query to search for Picks from other
-    // member
-    // collections.
+    // member collections.
     @Test
     public void test_setPickQuery_otherMemberCollection() throws SkipUseException {
 	// Set up
@@ -1011,7 +1011,7 @@ public class SkipUseManagerTest {
 	collectionList.add(pickID);
 	manager.addPickIDCollection(collectionList, true);
 
-	// store the  Pick.
+	// store the Pick.
 	manager.skipUsePass(SkipUsePass.SKIP, testMemberID, pickID);
 
 	// get new a Pick by the Pick Query.
@@ -1051,7 +1051,7 @@ public class SkipUseManagerTest {
 	assertTrue(_updatedPick.getAutoRatePercentage() == updateThisPick.getAutoRatePercentage());
 	assertTrue(_updatedPick.getSkipped() == updateThisPick.getSkipped());
 	assertTrue(_updatedPick.getUsed() == updateThisPick.getUsed());
-	
+
 	// the values have changed from the original Pick.
 	assertTrue(_updatedPick.getAutoRatePercentage() != _testPick.getAutoRatePercentage());
 	assertTrue(_updatedPick.getSkipped() != _testPick.getSkipped());
@@ -1155,7 +1155,7 @@ public class SkipUseManagerTest {
 	manager.markPickIDListWithCategoryTrueFalse(testMemberID, memberPickIDCollection, categoryName, true);
 
 	// Verify
-	pickQuery.setIncludeCategories(true);
+	pickQuery.addToResultOptionList(ResultOption.INCLUDE_CATEGORY_INFO);
 	pickList = manager.setPickQuery(pickQuery);
 
 	Pick _markedPick = pickList.stream().filter(p -> p.getPickID().equals(pickID)).findFirst().orElse(null);
@@ -1328,6 +1328,57 @@ public class SkipUseManagerTest {
 	}
 	assertTrue(isDog1Found);
 	assertTrue(isDog2Found);
+    }
+
+    // Bulk update Picks.
+    @Test
+    public void test_pickIDCountAdvance() throws SkipUseException {
+	// Set up
+	manager.login(TEST_EMAIL, TEST_PASSWORD);
+	assertTrue(manager.isLoggedIn());
+	manager.addMemberName(TEST_MEMBER_BOB);
+	manager.addMemberName(TEST_MEMBER_SUE);
+	long memberBobID = manager.getMemberIDByName(TEST_MEMBER_BOB);
+	long memberSueID = manager.getMemberIDByName(TEST_MEMBER_SUE);
+
+	// setting Sue's movie collection.
+	MemberPickIDCollection memberPickIDCollection = new MemberPickIDCollection(memberSueID);
+	memberPickIDCollection.setCollectionName("1984 Movives");
+	memberPickIDCollection.addPickID(
+		"Ghostbusters, Gremlins, Indiana Jones and the Temple of Doom, The Karate Kid, Star Trek III: The Search for Spock, The Natural, Police Academy, Beverly Hills Cop, The Terminator, A Nightmare on Elm Street, This Is Spinal Tap");
+	memberPickIDCollection.setSplitCSV(true);
+	manager.addPickIDCollection(memberPickIDCollection);
+
+	// choose movies to advance the Skipped and Used counts for Bob.
+	// for Sue's movie collection, for Bob, for the movie, Skipped 1, Used 12 time
+	manager.addToPickIDCount(memberSueID, memberBobID, "The Karate Kid", 1, 12);
+	manager.addToPickIDCount(memberSueID, memberBobID, "Gremlins", 1, 1);
+	manager.addToPickIDCount(memberSueID, memberBobID, "A Nightmare on Elm Street", 5, 1);
+
+	// choose count updates for Sue.
+	manager.addToPickIDCount(memberSueID, memberSueID, "The Terminator", 0, 24);
+	manager.addToPickIDCount(memberSueID, memberSueID, "Indiana Jones and the Temple of Doom", 1, 9);
+	manager.addToPickIDCount(memberSueID, memberSueID, "Ghostbusters", 4, 3);
+
+	// the update can be delayed if you don't want to wait for a response. For this
+	// test, we want the update to happen now to verify the count change happened.
+	boolean isUpdateASAP = true;
+
+	// Test - update all
+	manager.pickIDCountAdvance(isUpdateASAP);
+
+	// Verify
+	// check one of Bob's movies
+	Pick _pick = manager._getPickByMemberIDAndPickIDAndCollectionID(memberBobID, "The Karate Kid", memberSueID);
+	assertNotNull(_pick);
+	assertTrue(_pick.getSkipped() == 1);
+	assertTrue(_pick.getUsed() == 12);
+
+	// check one of Sue's movies
+	_pick = manager._getPickByMemberIDAndPickIDAndCollectionID(memberSueID, "Ghostbusters", memberSueID);
+	assertNotNull(_pick);
+	assertTrue(_pick.getSkipped() == 4);
+	assertTrue(_pick.getUsed() == 3);
     }
 
     // Things to know about collections.

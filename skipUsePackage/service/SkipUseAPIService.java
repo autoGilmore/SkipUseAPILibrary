@@ -5,11 +5,12 @@ import java.util.List;
 
 import com.autogilmore.throwback.skipUsePackage.dataObjects.CategoryMemberPickIDCollection;
 import com.autogilmore.throwback.skipUsePackage.dataObjects.MemberCategoryList;
-import com.autogilmore.throwback.skipUsePackage.dataObjects.MemberNameList;
 import com.autogilmore.throwback.skipUsePackage.dataObjects.MemberListPickIDList;
+import com.autogilmore.throwback.skipUsePackage.dataObjects.MemberNameList;
+import com.autogilmore.throwback.skipUsePackage.dataObjects.MemberPickIDCollection;
 import com.autogilmore.throwback.skipUsePackage.dataObjects.PatchName;
 import com.autogilmore.throwback.skipUsePackage.dataObjects.Pick;
-import com.autogilmore.throwback.skipUsePackage.dataObjects.MemberPickIDCollection;
+import com.autogilmore.throwback.skipUsePackage.dataObjects.PickIDCountAdvanceList;
 import com.autogilmore.throwback.skipUsePackage.dataObjects.PickList;
 import com.autogilmore.throwback.skipUsePackage.dataObjects.PickQuery;
 import com.autogilmore.throwback.skipUsePackage.dataObjects.Profile;
@@ -19,6 +20,9 @@ import com.autogilmore.throwback.skipUsePackage.dataObjects.incomingServer.Serve
 import com.autogilmore.throwback.skipUsePackage.dataObjects.incomingServer.ServerPickList;
 import com.autogilmore.throwback.skipUsePackage.dataObjects.incomingServer.ServerProfile;
 import com.autogilmore.throwback.skipUsePackage.dataObjects.incomingServer.ServerResponse;
+import com.autogilmore.throwback.skipUsePackage.enums.AdvancedOption;
+import com.autogilmore.throwback.skipUsePackage.enums.ResultOption;
+import com.autogilmore.throwback.skipUsePackage.enums.SearchOption;
 import com.autogilmore.throwback.skipUsePackage.enums.SkipUsePass;
 import com.autogilmore.throwback.skipUsePackage.exception.SkipUseException;
 import com.autogilmore.throwback.skipUsePackage.service.api.SkipUseAPI;
@@ -82,6 +86,18 @@ public class SkipUseAPIService extends SkipUseAPI {
 	return true;
     }
 
+    // Get the message, if any, from the last API call.
+    //
+    public String getAPIMessage() {
+	return serverResponseData.getMessage();
+    }
+
+    // Get the error message, if any, from the last API call.
+    //
+    public String getAPIErrorMessage() {
+	return serverResponseData.getErrorMessage();
+    }
+
     // Return the logged in user/owner's member ID.
     // NOTE: the owner ID is not changeable and it is recommended that you
     // create new member ID to represent the owner because IDs can be
@@ -129,7 +145,7 @@ public class SkipUseAPIService extends SkipUseAPI {
     // NOTE: 0 for memberPickIDCollection parameter defaults to the owner's
     // Pick ID collection.
     //
-    public ServerPickIDCollection getServerPickIDCollection(int memberCollectionID) throws SkipUseException {
+    public ServerPickIDCollection getServerPickIDCollection(long memberCollectionID) throws SkipUseException {
 	return (ServerPickIDCollection) getAndProcess("/collection/" + memberCollectionID, ServerPickIDCollection.NAME);
     }
 
@@ -171,18 +187,18 @@ public class SkipUseAPIService extends SkipUseAPI {
 	// include all recently offered Picks...
 	pickQuery.setExcludeRecentPicksHours(0);
 	// include Picks marked as Stop Using...
-	pickQuery.setIncludeStopUsing(true);
+	pickQuery.addToSearchOptionList(SearchOption.INCLUDE_STOP_USING);
 	// set to 0% to not get new Picks...
 	pickQuery.setNewMixInPercentage(0);
-	// do not return back Picks if short
-	pickQuery.setGetMorePicksIfShort(false);
+	// do not return back Picks if short.
 	// for these members...
 	pickQuery.setMemberIDList(memberIDList);
-	// set to 'true' to de-bug the Pick Query results if desired
-	pickQuery.setDebugQuery(true);
+	// set the de-bug the Pick Query results if desired
+	pickQuery.addToAdvancedOptionList(AdvancedOption.DEBUG_QUERY);
 	// If set to 'true' this query could take
 	// longer and might cost more to use.
-	pickQuery.setIncludeCategories(includeCategoryInfo);
+	if (includeCategoryInfo)
+	    pickQuery.addToResultOptionList(ResultOption.INCLUDE_CATEGORY_INFO);
 	return setPickQuery(pickQuery);
     }
 
@@ -277,6 +293,12 @@ public class SkipUseAPIService extends SkipUseAPI {
 	memberPickIDCollection.setPickIDList(pickIDList);
 	MemberListPickIDList memberPickIDList = new MemberListPickIDList(memberPickIDCollection, memberIDList);
 	skipUsePassMemberPickIDList(skipUsePass, memberPickIDList);
+    }
+
+    // Update Pick ID Skip and Use counts for members.
+    //
+    public void pickIDCountAdvance(PickIDCountAdvanceList pickIDCountUpdates) throws SkipUseException {
+	postAndProcess("/picks/advance", pickIDCountUpdates, ServerResponse.NAME);
     }
 
     // Add members to an account.

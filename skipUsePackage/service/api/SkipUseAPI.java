@@ -32,14 +32,14 @@ public class SkipUseAPI {
 
     public final SkipUseTokenHelper tokenHelper = new SkipUseTokenHelper();
 
-    // Store response from server.
+    // Store response from server for future calls to the API.
     public ServerResponse serverResponseData = new ServerResponse();
 
     public final ObjectMapper mapper = new ObjectMapper();
     {
-	// Don't worry about property sensitive cases from server
+	// Don't worry about property sensitive cases from server.
 	mapper.configure(MapperFeature.ACCEPT_CASE_INSENSITIVE_PROPERTIES, true);
-	// Don't fail if a property is not found on an incoming server object
+	// Don't fail if a property is not found on an incoming server object.
 	mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     }
 
@@ -359,7 +359,7 @@ public class SkipUseAPI {
 		hasServerConnection = true;
 	    }
 	} catch (Exception e) {
-	    System.err.println("Failed to get an acknowledgement from the SkipUseApi server.");
+	    System.err.println("Failed to get an acknowledgement from the SkipUse API server.");
 	}
 
 	return hasServerConnection;
@@ -465,30 +465,32 @@ public class SkipUseAPI {
     //
     private void processResponse(ServerResponse skipUseResponse) throws SkipUseException {
 	if (skipUseResponse != null) {
+	    // update our stored serverResponseData with changes received
+
 	    // the logged in user's member ID
 	    serverResponseData.setOwnerID(skipUseResponse.getOwnerID());
 
 	    // the sever's proxyID reference
-	    if (skipUseResponse.getProxyID() != null)
-		serverResponseData.setProxyID(skipUseResponse.getProxyID());
+	    serverResponseData.setProxyID(skipUseResponse.getProxyID());
 
 	    // the logged in user's display name
-	    if (skipUseResponse.getOwnerName() != null)
-		serverResponseData.setOwnerName(skipUseResponse.getOwnerName());
+	    serverResponseData.setOwnerName(skipUseResponse.getOwnerName());
 
 	    // the sever's additional message from response
-	    if (skipUseResponse.getMessage() != null) {
-		serverResponseData.setMessage(skipUseResponse.getMessage());
-		System.out.println(serverResponseData.getMessage());
+	    serverResponseData.setMessage(skipUseResponse.getMessage());
+	    System.out.println(serverResponseData.getMessage());
+
+	    // error message
+	    serverResponseData.setErrorMessage(skipUseResponse.getErrorMessage());
+	    if (!serverResponseData.getErrorMessage().isEmpty()) {
+		System.err.println(skipUseResponse.getErrorMessage());
 	    }
 
 	    // the user's remaining data nibbles
-	    if (skipUseResponse.getRemainingNibbles() != null)
-		serverResponseData.setRemainingNibbles(skipUseResponse.getRemainingNibbles());
+	    serverResponseData.setRemainingNibbles(skipUseResponse.getRemainingNibbles());
 
 	    // the status of the response
-	    if (skipUseResponse.getStatus() != null)
-		serverResponseData.setStatus(skipUseResponse.getStatus());
+	    serverResponseData.setStatus(skipUseResponse.getStatus());
 
 	    // process the SkipUseToken
 	    if (skipUseResponse.getSkipUseToken() != null) {
@@ -506,11 +508,8 @@ public class SkipUseAPI {
 	    }
 
 	    // throw error if error message is found
-	    if (skipUseResponse.getErrorMessage() != null && !skipUseResponse.getErrorMessage().isEmpty()) {
-		serverResponseData.setErrorMessage(skipUseResponse.getErrorMessage());
-		if (!serverResponseData.getMessage().isEmpty())
-		    System.err.println(skipUseResponse.getMessage());
-		throw new SkipUseException(serverResponseData.getErrorMessage());
+	    if (!skipUseResponse.getErrorMessage().isEmpty()) {
+		throw new SkipUseException(skipUseResponse.getErrorMessage());
 	    }
 	}
     }

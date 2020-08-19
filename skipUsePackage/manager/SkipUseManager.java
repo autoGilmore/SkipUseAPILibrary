@@ -7,11 +7,13 @@ import java.util.WeakHashMap;
 
 import com.autogilmore.throwback.skipUsePackage.dataObjects.CategoryMemberPickIDCollection;
 import com.autogilmore.throwback.skipUsePackage.dataObjects.MemberCategoryList;
-import com.autogilmore.throwback.skipUsePackage.dataObjects.MemberNameList;
 import com.autogilmore.throwback.skipUsePackage.dataObjects.MemberListPickIDList;
+import com.autogilmore.throwback.skipUsePackage.dataObjects.MemberNameList;
+import com.autogilmore.throwback.skipUsePackage.dataObjects.MemberPickIDCollection;
 import com.autogilmore.throwback.skipUsePackage.dataObjects.PatchName;
 import com.autogilmore.throwback.skipUsePackage.dataObjects.Pick;
-import com.autogilmore.throwback.skipUsePackage.dataObjects.MemberPickIDCollection;
+import com.autogilmore.throwback.skipUsePackage.dataObjects.PickIDCountAdvance;
+import com.autogilmore.throwback.skipUsePackage.dataObjects.PickIDCountAdvanceList;
 import com.autogilmore.throwback.skipUsePackage.dataObjects.PickQuery;
 import com.autogilmore.throwback.skipUsePackage.dataObjects.Profile;
 import com.autogilmore.throwback.skipUsePackage.dataObjects.incomingServer.ServerMemberCategoryList;
@@ -52,6 +54,9 @@ public class SkipUseManager {
 
     // Split Pick IDs in collection by comma + space
     public static final String PICKID_CSV_DELIMITER = ", ";
+
+    // Manager helper variables
+    private PickIDCountAdvanceList pickIDCountUpdates = new PickIDCountAdvanceList();
 
     // Manager singleton instance.
     private static SkipUseManager instance;
@@ -405,11 +410,33 @@ public class SkipUseManager {
 	service.skipUsePassPickList(skipUsePass, pickList, fromMemberIDCollection);
     }
 
+    // Add to the list of bulk Pick ID count updates.
+    //
+    public void addToPickIDCount(long collectionID, long memberID, String pickID, int addSkipCNT, int addUseCNT) {
+	pickIDCountUpdates
+		.addCountAdvance(new PickIDCountAdvance(collectionID, memberID, pickID, addSkipCNT, addUseCNT));
+    }
+
+    // Send the bulk Pick ID count updates.
+    //
+    public void pickIDCountAdvance(boolean isUpdateASAP) throws SkipUseException {
+	if (!pickIDCountUpdates.getPickIDCountAdvanceList().isEmpty()) {
+	    automaticLogin();
+	    pickIDCountUpdates.setUpdateASAP(isUpdateASAP);
+	    service.pickIDCountAdvance(pickIDCountUpdates);
+	    pickIDCountUpdates.getPickIDCountAdvanceList().clear();
+	}
+    }
+
+    // The owner's profile.
+    //
     public Profile getProfile() throws SkipUseException {
 	automaticLogin();
 	return service.getProfile();
     }
 
+    // Update owner profile
+    //
     public void updateProfile(Profile profile) throws SkipUseException {
 	automaticLogin();
 	service.updateProfile(profile);
@@ -451,6 +478,8 @@ public class SkipUseManager {
 	memberIDCategoryListMap.clear();
     }
 
+    // The map of member name with their ID.
+    //
     private ServerMemberMap getServerMemberMap() throws SkipUseException {
 	if (serverMemberMap.getMemberIDMap().size() == 0) {
 	    automaticLogin();
@@ -459,6 +488,8 @@ public class SkipUseManager {
 	return serverMemberMap;
     }
 
+    // Set member name/ID map.
+    //
     private void setServerMemberMap(ServerMemberMap serverMemberMap) {
 	if (serverMemberMap != null)
 	    this.serverMemberMap = serverMemberMap;

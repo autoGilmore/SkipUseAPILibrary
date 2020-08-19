@@ -4,8 +4,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import com.autogilmore.throwback.skipUsePackage.enums.RampMode;
-import com.autogilmore.throwback.skipUsePackage.enums.SearchMode;
+import com.autogilmore.throwback.skipUsePackage.enums.AdvancedOption;
+import com.autogilmore.throwback.skipUsePackage.enums.ResultOption;
+import com.autogilmore.throwback.skipUsePackage.enums.SearchOption;
 import com.autogilmore.throwback.skipUsePackage.manager.SkipUseManager;
 
 /* 
@@ -38,103 +39,110 @@ public class PickQuery {
     // NOTE: See the isGetMorePicksIfShort setting below.
     private int newMixInPercentage = 0;
 
-    // Optional: to return Picks even if your other query options can't find the
-    // Picks you want.
-    // (Not required. But keep this setting in mind if your is not returning
-    // what you expect.)
-    // Set to 'false' if you want exact results when using categories
-    // or newMixInPercentage of 0 or 100 settings.
-    // Set to 'true' means you always get back the howMany result setting if
-    // available.
-    private boolean getMorePicksIfShort = false;
-
-    // **** Additional options *********
-
-    // Available Search Modes for Picks include:
-    // NORMAL: Standard mix of Picks with more Used count and less Skipped.
-    // BALANCED: Picks by presented by count used vs the auto-percentage expected to
-    // be used. Picks are returned by how much they are not in balance.
-    // RACING: Think of the Tortoise and the Hare story where Picks race to be
-    // chosen. The Picks in the lead are chosen.Their speed is determined by the
-    // auto-percentage and their track placement by when they were last updated.
-
-    // Other search modes to help find specific Picks:
-    // FAVORITE: Descending Picks by highest auto-rating percentage.
-    // WORST: Ascending Picks by lowest auto-rating percentage.
-    // STOPUSING: Picks that have been flagged stopUsing
-
-    // Additional modifiers:
-    // RESET: re-orders Picks when using the NORMAL search mode. (use ONCE to reset
-    // if another search mode has changed the the NORMAL ordering)
-    private List<String> searchModeList = new ArrayList<String>();
-
-    // Optional: set to have Search Modes search by the Time Of Day.
-    // Not all search modes use this option. This option works well for finding
-    // Favorite Picks at the current time of day, where the Picks might not be
-    // favorites at a different time of day.
-    // NOTE: NORMAL and BALANCED search modes do not use this option.
-    private boolean useTimeOfDay = false;
-
-    // Optional to order returned Picks by:
-    // NONE: no ordering.
-    // RATE_DOWN: auto-rating percentage from High to Low.
-    // RATE_UP: auto-rating percentage for Low to High.
-    // OLDEST: oldest last time stamp updated Picks first
-    // NEWEST: newest last time stamp updated Picks first
-    private String ramp = RampMode.NONE.toString();
-
-    // Optional to not return recently updated Picks in the next query.
+    // Optional: Do not return recently updated Picks in the next query.
     // Set the number of hours to ignore a Pick since it was last updated.
     private int excludeRecentPicksHours = 0;
 
-    // Optional to return Picks that have been flagged to not be included in
-    // normal queries.
-    private boolean includeStopUsing = false;
+    // Optional Pick Query Key-words: There are key-words you can provide to alter
+    // how Picks are Searched for and how the results are returned. There are 3
+    // optional lists to provide this information: SearchOptionList,
+    // ResultOptionList and AdvancedOptionList.
 
-    // Optional to get the Categories that have been marked for return Picks.
-    // (Slower response time and might cost more because of more
-    // server processing.)
-    private boolean includeCategories = false;
+    // The SearchOptionList is where you provide how you want to search for Picks:
+    private List<SearchOption> searchOptionList = new ArrayList<SearchOption>();
+    // In the searchOptionList you can provide various options for how Picks
+    // are searched for and how the results are returned. Choose the options to add
+    // to the list below.
+    // The available search options are located in the SearchOption.java enum.
 
-    // Optional to return only Picks that have been marked with these Categories.
-    // NOTE: Remember to set 'includeCategories' to 'true' if you want to see
-    // category information.
-    // >> You can also include the 'category option' words below, by placing them a
-    // in the list.
-    // Category Modes:
-    // ANY: this is the default. Picks will be returned with or without any
-    // categories.
-    // NONE: only Picks with no categories will be returned.
-    // NOT: only Picks that do not that this category will be returned.
-    // (Using categories might costs more to use because of the additional server
-    // processing.)
+    // You can provide 2 ways to search for Pick:
+    // SearchOption.NORMAL: The default. A mix with more of the previously Used and
+    // less Skipped Picks.
+    // SearchOption.BALANCED: Returns Picks that have been Used too few times then
+    // what is expected based the auto-rating values.
+    // SearchOption.RACING: Think of the Tortoise and the Hare story where Picks
+    // race to be chosen. The Picks in the lead are chosen for the result. Their
+    // speed is determined by the auto-percentage and their track placement by when
+    // they were last updated.
+    // SearchOption.FAVORITE: Descending Picks by highest auto-rating percentage.
+    // SearchOption.WORST: Ascending Picks by lowest auto-rating percentage.
+    // SearchOption.STOP_USING_ONLY: Picks that have been flagged stopUsing.
+
+    // There are additional modifier key-words you can provide as well.
+    // SearchOption.USE_TIME_OF_DAY: Not all searching modes use this option. This
+    // option works well for finding Favorite Picks at the current time of day,
+    // where the Picks might not be favorites at a different time of day.
+    // NOTE: NORMAL and BALANCED search options do not use this option.
+    // SearchOption.GET_MORE_IF_SHORT: Return Picks even if your other query options
+    // can't find the Picks you want. (keep this option in mind if is not returning
+    // what you expect.
+    // SearchOption.INCLUDE_STOP_USING: If there are Picks marked with the
+    // STOP_USING flag they normally will not be returned. Use this option if you
+    // would like to include these Picks in the results.
+    // SearchOption.ENHANCE: This may provide better Pick results based on what is
+    // actively being Skipped and Used; attempting to match Picks with the live
+    // trends.
+
+    // The ResultOptionList is where you provide key-words to alter the results from
+    // from the SearchOptions.
+    private List<ResultOption> resultOptionList = new ArrayList<ResultOption>();
+    // The available options are located in the ResultOption.java enum.
+
+    // Result ordering options:
+    // ResultOption.RAMP_NONE: no ordering.
+    // ResultOption.RAMP_RATE_DOWN: auto-rating percentage from High to Low.
+    // ResultOption.RAMP_RATE_UP: auto-rating percentage for Low to High.
+    // ResultOption.RAMP_OLDEST: oldest last time stamp updated Picks first
+    // ResultOption.RAMP_NEWEST: newest last time stamp updated Picks first
+
+    // Combining results option when using multiple Search options:
+    // ResultOption.BLEND: The default, which combines the agreed upon best results
+    // together.
+    // ResultOption.MERGE: Treats results equally when combining together.
+
+    // ResultOption.INCLUDE_CATEGORY_INFO: Returns any category information
+    // associated with the Picks returned. (Slower response time and might cost more
+    // because of additional server processing.)
+
+    // The AdvancedOptionList is where you provide key-words for other options.
+    private List<AdvancedOption> advancedOptionList = new ArrayList<AdvancedOption>();
+    // The available options are located in the AdvancedOption.java enum.
+
+    // AdvancedOption.DEBUG_QUERY: See what is happening with your Pick Query.
+    // Returns a detailed message about what settings were used to return the Pick
+    // List.
+    // AdvancedOption.RESET: re-orders Picks to work with SearchOption.NORMAL search
+    // option if it is no longer returning expected results. See API documentation
+    // before using this option.
+
+    // You can also limit the search results by providing which Picks marked with
+    // Categories you want to be returned.
     private List<String> categoryList = new ArrayList<String>();
+    // Optional: Return only Picks that have been marked with these Categories.
+    // NOTE: Remember to set the 'INCLUDE_CATEGORY_INFO' in the ResultOptionList if
+    // you want to see category information as well. You can also include the
+    // Category Options below. The available options are located in the
+    // CategoryOption.java enum.
 
-    // Optional to only return Pick IDs that are in this list: IMPORTANT: Pick
-    // IDs in this list must already be in the collection or they will be
-    // ignored.
+    // Category options:
+    // CategoryOption.ANY: this is the default. Picks will be returned with or
+    // without any categories.
+    // CategoryOption.NONE: only Picks with no categories will be returned.
+    // NOT: only Picks that do not that this category will be returned.
+    // (Using categories might cost more to use because of the additional server
+    // processing.)
+
+    // You can also limit the result to only return Pick IDs that are in this
+    // pickIDList:
+    // IMPORTANT: Pick IDs in this list must already be in the collection or they
+    // will be ignored.
     private List<String> pickIDList = new ArrayList<String>();
 
-    // **** Only ONE Pick *********
-
-    // Set this Pick ID string ONLY if you are searching for ONE Pick with this
-    // Pick ID.
-    // NOTE: This will return the Pick for ONE MEMBER only.
-    // NOTE: Setting this will change/ignore the the other query parameters to
-    // the following:
-    // this.addThisManyNewValues = 0;
-    // this.excludeStopUsing = false;
-    // this.ramp = RampMode.NONE;
-    // this.searchMode = SearchMode.NORMAL;
-    // this.categoryMode = CategoryMode.ANY;
-    // this.getMorePicksIfShort = false;
-    // If a Pick is not stored yet, an empty Pick List will be returned with a
-    // the Pick's member ID set to 0.
+    // **** Return Only ONE Pick *********
+    // Optional: Set this Pick ID string ONLY if you are searching for ONE Pick with
+    // this Pick ID. If a Pick is not stored yet, an empty Pick List will be
+    // returned with a the Pick's member ID set to 0.
     private String pickID = "";
-
-    // See what is happening with your Pick Query. Returns a detailed message about
-    // what settings were used to return the Picks List.
-    private boolean debugQuery = false;
 
     public PickQuery() {
     }
@@ -156,8 +164,11 @@ public class PickQuery {
     }
 
     public void setMemberIDList(List<Long> memberIDList) {
-	memberIDList.removeAll(Collections.singleton(null));
-	this.memberIDList = memberIDList;
+	this.memberIDList.clear();
+	if (memberIDList != null) {
+	    memberIDList.removeAll(Collections.singleton(null));
+	    this.memberIDList = memberIDList;
+	}
     }
 
     public boolean addToMemberIDList(long memberID) {
@@ -174,15 +185,6 @@ public class PickQuery {
     public void setPickID(String pickID) {
 	if (pickID != null && !pickID.isEmpty()) {
 	    this.pickID = pickID;
-	    // NOTE: these setting are not needed, but show what the query will
-	    // look like for the server.
-	    // setHowMany(1);
-	    // setExcludeRecentPicks(false);
-	    // setGetMorePicksIfShort(false);
-	    // setSearchMode(SearchMode.NORMAL);
-	    // makeExactQuery();
-	    // NOTE: you can still choose to add Category info if you want
-	    setIncludeCategories(true);
 	}
     }
 
@@ -195,30 +197,27 @@ public class PickQuery {
 	    this.newMixInPercentage = newMixInPercentage;
     }
 
-    public List<String> getSearchModeList() {
-	return searchModeList;
+    public List<SearchOption> getSearchOptionList() {
+	return searchOptionList;
     }
 
-    public void addToSearchModeList(String searchMode) {
-	if (searchMode != null && !searchMode.isEmpty()) {
-	    String value = searchMode.trim().toUpperCase();
-	    if (!value.isEmpty() && !this.searchModeList.contains(value))
-		this.searchModeList.add(value);
+    public void setOneSearchOptionList(SearchOption searchOption) {
+	if (searchOption != null) {
+	    this.searchOptionList.clear();
+	    addToSearchOptionList(searchOption);
 	}
     }
 
-    public void setOneSearchModeList(SearchMode searchMode) {
-	if (searchMode != null) {
-	    this.searchModeList.clear();
-	    addToSearchModeList(searchMode.toString());
+    public void setSearchOptionList(List<SearchOption> searchOptionList) {
+	if (searchOptionList != null) {
+	    for (SearchOption searchOption : searchOptionList)
+		addToSearchOptionList(searchOption);
 	}
     }
 
-    public void setSearchModeList(List<SearchMode> searchModeList) {
-	if (searchModeList != null) {
-	    for (SearchMode sm : searchModeList)
-		addToSearchModeList(sm.toString());
-	}
+    public void addToSearchOptionList(SearchOption searchOption) {
+	if (searchOption != null && !getSearchOptionList().contains(searchOption))
+	    this.searchOptionList.add(searchOption);
     }
 
     public List<String> getCategoryList() {
@@ -230,16 +229,38 @@ public class PickQuery {
     }
 
     public void addToCategoryList(String category) {
-	if (category != null && !this.categoryList.contains(category))
+	if (category != null && !getCategoryList().contains(category))
 	    this.categoryList.add(category);
     }
 
-    public String getRamp() {
-	return ramp;
+    public List<ResultOption> getResultOptionList() {
+	return resultOptionList;
     }
 
-    public void setRamp(RampMode ramp) {
-	this.ramp = ramp.toString();
+    public void setResultOptionList(List<ResultOption> resultOptionList) {
+	if (resultOptionList != null) {
+	    for (ResultOption resultOption : resultOptionList)
+		addToResultOptionList(resultOption);
+	}
+    }
+
+    public void addToResultOptionList(ResultOption resultOption) {
+	if (resultOption != null && !getResultOptionList().contains(resultOption))
+	    this.resultOptionList.add(resultOption);
+    }
+
+    public List<AdvancedOption> getAdvancedOptionList() {
+	return advancedOptionList;
+    }
+
+    public void setAdvancedOptionList(List<AdvancedOption> advancedOptionList) {
+	this.advancedOptionList = advancedOptionList;
+    }
+
+    public void addToAdvancedOptionList(AdvancedOption advancedOption) {
+	if (advancedOption != null && !getAdvancedOptionList().contains(advancedOption)) {
+	    this.advancedOptionList.add(advancedOption);
+	}
     }
 
     public int getExcludeRecentPicksHours() {
@@ -248,38 +269,6 @@ public class PickQuery {
 
     public void setExcludeRecentPicksHours(int excludeRecentPicksHours) {
 	this.excludeRecentPicksHours = excludeRecentPicksHours;
-    }
-
-    public boolean isIncludeStopUsing() {
-	return this.includeStopUsing;
-    }
-
-    public void setIncludeStopUsing(boolean isStopUsing) {
-	this.includeStopUsing = isStopUsing;
-    }
-
-    public boolean isGetMorePicksIfShort() {
-	return this.getMorePicksIfShort;
-    }
-
-    public void setGetMorePicksIfShort(boolean isFillEmptySearchResults) {
-	this.getMorePicksIfShort = isFillEmptySearchResults;
-    }
-
-    public boolean isUseTimeOfDay() {
-	return useTimeOfDay;
-    }
-
-    public void setUseTimeOfDay(boolean useTimeOfDay) {
-	this.useTimeOfDay = useTimeOfDay;
-    }
-
-    public boolean isIncludeCategories() {
-	return includeCategories;
-    }
-
-    public void setIncludeCategories(boolean includeCategories) {
-	this.includeCategories = includeCategories;
     }
 
     public long getMemberCollectionID() {
@@ -303,16 +292,8 @@ public class PickQuery {
 	this.pickIDList = pickIDList;
     }
 
-    public boolean isDebugQuery() {
-	return debugQuery;
-    }
-
-    public void setDebugQuery(boolean debugQuery) {
-	this.debugQuery = debugQuery;
-    }
-
     public void makeExactQuery() {
-	setGetMorePicksIfShort(false);
+	getSearchOptionList().remove(SearchOption.GET_MORE_IF_SHORT);
 	// Ignore 100 settings
 	if (getNewMixInPercentage() != 100)
 	    setNewMixInPercentage(0);
@@ -322,12 +303,10 @@ public class PickQuery {
     public String toString() {
 	return "getMemberIDList.size=" + getMemberIDList().toString() + ", getMemberCollectionID="
 		+ getMemberCollectionID() + ", getHowMany=" + getHowMany() + ", getNewMixInPercentage="
-		+ getNewMixInPercentage() + ", isGetMorePicksIfShort=" + (isGetMorePicksIfShort() ? "1" : "0")
-		+ ", getSearchModeList=" + getSearchModeList() + ", getRamp=" + getRamp()
-		+ ", isExcludeRecentPicksHours=" + getExcludeRecentPicksHours() + ", isIncludeStopUsing="
-		+ (isIncludeStopUsing() ? "1" : "0") + ", isIncludeCategories=" + (isIncludeCategories() ? "1" : "0")
-		+ ", getCategories.size=" + getCategoryList().toString() + ", getPickID=" + getPickID()
+		+ getNewMixInPercentage() + ", isExcludeRecentPicksHours=" + getExcludeRecentPicksHours()
+		+ ", getSearchOptionList=" + getSearchOptionList().toString() + ", getResultOptionList="
+		+ getResultOptionList().toString() + ", getAdvancedOptionList=" + getAdvancedOptionList().toString()
+		+ ", getCategoriesList=" + getCategoryList().toString() + ", getPickID=" + getPickID()
 		+ ", getPickIDList=" + getPickIDList().toString();
     }
-
 }

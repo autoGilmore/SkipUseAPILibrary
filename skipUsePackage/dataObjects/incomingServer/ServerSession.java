@@ -8,24 +8,30 @@ package com.autogilmore.throwback.skipUsePackage.dataObjects.incomingServer;
 */
 public class ServerSession {
 
-	private String proxyID = "";
+    private String proxyID = "";
 
-	private String skipUseToken = "";
+    private String skipUseToken = "";
 
-	public String getProxyID() {
-		return proxyID;
+    public String getProxyID() {
+	return proxyID;
+    }
+
+    public void setProxyID(String proxyID) {
+	if (proxyID == null) {
+	    proxyID = "";
 	}
+	this.proxyID = proxyID;
+    }
 
-	public void setProxyID(String proxyID) {
-		this.proxyID = proxyID;
-	}
+    public String getSkipUseToken() {
+	return skipUseToken;
+    }
 
-	public String getSkipUseToken() {
-		return skipUseToken;
+    public void setSkipUseToken(String skipUseToken) {
+	if (skipUseToken == null) {
+	    skipUseToken = "";
 	}
-
-	public void setSkipUseToken(String skipUseToken) {
-		this.skipUseToken = skipUseToken;
-	}
+	this.skipUseToken = skipUseToken;
+    }
 
 }
