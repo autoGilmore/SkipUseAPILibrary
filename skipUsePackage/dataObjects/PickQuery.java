@@ -58,6 +58,7 @@ public class PickQuery {
     // You can provide 2 ways to search for Pick:
     // SearchOption.NORMAL: The default. A mix with more of the previously Used and
     // less Skipped Picks.
+    // SearchOption.RANDOM: Returns Picks randomly by their weighted auto-percentage rating.
     // SearchOption.BALANCED: Returns Picks that have been Used too few times then
     // what is expected based the auto-rating values.
     // SearchOption.RACING: Think of the Tortoise and the Hare story where Picks
@@ -128,7 +129,7 @@ public class PickQuery {
     // CategoryOption.ANY: this is the default. Picks will be returned with or
     // without any categories.
     // CategoryOption.NONE: only Picks with no categories will be returned.
-    // NOT: only Picks that do not that this category will be returned.
+    // CategoryOption.NOT: only Picks that do not that this category will be returned.
     // (Using categories might cost more to use because of the additional server
     // processing.)
 

@@ -5,7 +5,7 @@ package com.autogilmore.throwback.skipUsePackage.enums;
 */
 public enum SearchOption {
     // searching modes
-    NORMAL, BALANCED, RACING, FAVORITE, WORST, STOP_USING_ONLY,
+    NORMAL, RANDOM, BALANCED, RACING, FAVORITE, WORST, STOP_USING_ONLY,
     // modifier for search modes
     GET_MORE_IF_SHORT, USE_TIME_OF_DAY, INCLUDE_STOP_USING, ENHANCE;
 }

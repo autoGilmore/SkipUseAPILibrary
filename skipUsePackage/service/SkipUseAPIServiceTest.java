@@ -60,7 +60,7 @@ public class SkipUseAPIServiceTest {
     @After
     public void after() {
 	try {
-	    SkipUseManager manager = SkipUseManager.getInstance();
+	    SkipUseManager manager = SkipUseManager.INSTANCE;
 	    long testMemberID = manager.getMemberIDByName(TEST_MEMBER_BOB);
 	    if (testMemberID != 0)
 		service.deleteMemberByID(testMemberID);
@@ -320,7 +320,7 @@ public class SkipUseAPIServiceTest {
 	assertTrue(service.getAPIErrorMessage(), service.getAPIErrorMessage().isEmpty());
 
 	long memberID = createdCollection.getOwnerID();
-	
+
 	// create a pick (if needed) by using the Pass
 	MemberListPickIDList memberPickIDList = new MemberListPickIDList(createdCollection.getPickIDCollection());
 	memberPickIDList.addMemberID(memberID);
@@ -332,7 +332,7 @@ public class SkipUseAPIServiceTest {
 	pickQuery.setMemberCollectionID(memberID);
 	// test - various search mode options
 	pickQuery.addToSearchOptionList(SearchOption.BALANCED);
-	pickQuery.addToSearchOptionList(SearchOption.RACING);
+	pickQuery.addToSearchOptionList(SearchOption.RANDOM);
 	pickQuery.addToSearchOptionList(SearchOption.ENHANCE);
 	pickQuery.addToResultOptionList(ResultOption.MERGE);
 
@@ -345,8 +345,8 @@ public class SkipUseAPIServiceTest {
 	String debugMessage = service.getAPIMessage();
 	assertTrue("There should be a debug message", !debugMessage.isEmpty());
 	assertTrue("Should see a Member ID reference", debugMessage.contains(memberID + ""));
+	assertTrue("Should see a RANDOM search mode reference", debugMessage.contains(SearchOption.RANDOM.name()));
 	assertTrue("Should see a BALANCED search mode reference", debugMessage.contains(SearchOption.BALANCED.name()));
-	assertTrue("Should see a RACING search mode reference", debugMessage.contains(SearchOption.RACING.name()));
 	assertTrue("Should see an ENHANCE advance mode reference", debugMessage.contains(SearchOption.ENHANCE.name()));
 	assertTrue("Should see a MERGE combine mode reference", debugMessage.contains(ResultOption.MERGE.name()));
     }

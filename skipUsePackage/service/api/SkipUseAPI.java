@@ -1,6 +1,9 @@
 package com.autogilmore.throwback.skipUsePackage.service.api;
 
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.sql.Timestamp;
 
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -34,6 +37,9 @@ public class SkipUseAPI {
 
     // Store response from server for future calls to the API.
     public ServerResponse serverResponseData = new ServerResponse();
+
+    // Used for validating a Proxy.
+    private Timestamp lastCheckedProxyTimestamp = new Timestamp(System.currentTimeMillis());
 
     public final ObjectMapper mapper = new ObjectMapper();
     {
@@ -82,12 +88,21 @@ public class SkipUseAPI {
     }
 
     // Check to see if the currently stored proxyID is still valid.
-    // A proxyID will time-out and no longer be valid. If it is not valid, API
-    // calls will have SkipUse errors. Using the 'clearFollowUp' method (which
-    // is just a simple non-data changing call) we can see if the server still
-    // recognizes our proxy ID.
+    // A proxyID will time-out and then be considered no longer be valid. Call the
+    // 'clearFollowUp' method we can see if the server still recognizes our proxy
+    // ID.
     //
+
     public boolean isProxyValid() {
+	if (serverResponseData.getProxyID().isEmpty())
+	    return false;
+
+	Timestamp nowTimestamp = new Timestamp(System.currentTimeMillis());
+	if ((nowTimestamp.getTime() - lastCheckedProxyTimestamp.getTime()) / 1000 < 30)
+	    return true;
+
+	lastCheckedProxyTimestamp = nowTimestamp;
+
 	try {
 	    clearFollowUp();
 	    return true;
@@ -120,8 +135,12 @@ public class SkipUseAPI {
 	    } catch (Exception e) {
 		// something went wrong, check connection
 		checkServerConnection();
-		// and re-throw error
-		throw e;
+		// and re-throw error with stack trace
+		StringWriter sw = new StringWriter();
+		PrintWriter pw = new PrintWriter(sw);
+		e.printStackTrace(pw);
+		throw new SkipUseException("There was a problem calling the API: " + postFixUrl + " . To get a: "
+			+ expectedObject + " StackTrace" + sw.toString());
 	    }
 	}
 	System.out.println("No API connection.");
@@ -175,8 +194,12 @@ public class SkipUseAPI {
 	    } catch (Exception e) {
 		// something went wrong, check connection
 		checkServerConnection();
-		// and re-throw error
-		throw e;
+		// and re-throw error with stack trace
+		StringWriter sw = new StringWriter();
+		PrintWriter pw = new PrintWriter(sw);
+		e.printStackTrace(pw);
+		throw new SkipUseException("There was a problem calling the API: " + postFixUrl + " . To get a: "
+			+ expectedObject + " StackTrace" + sw.toString());
 	    }
 	}
 	System.out.println("No API connection.");
@@ -233,8 +256,12 @@ public class SkipUseAPI {
 	    } catch (Exception e) {
 		// something went wrong, check connection
 		checkServerConnection();
-		// and re-throw error
-		throw e;
+		// and re-throw error with stack trace
+		StringWriter sw = new StringWriter();
+		PrintWriter pw = new PrintWriter(sw);
+		e.printStackTrace(pw);
+		throw new SkipUseException("There was a problem calling the API: " + postFixUrl + " . To get a: "
+			+ expectedObject + " StackTrace: " + sw.toString());
 	    }
 	}
 	System.out.println("No API connection.");
@@ -284,8 +311,12 @@ public class SkipUseAPI {
 	    } catch (Exception e) {
 		// something went wrong, check connection
 		checkServerConnection();
-		// and re-throw error
-		throw e;
+		// and re-throw error with stack trace
+		StringWriter sw = new StringWriter();
+		PrintWriter pw = new PrintWriter(sw);
+		e.printStackTrace(pw);
+		throw new SkipUseException("There was a problem calling the API: " + postFixUrl + " . To get a: "
+			+ expectedObject + " StackTrace: " + sw.toString());
 	    }
 	}
 	System.out.println("No API connection.");
@@ -340,8 +371,12 @@ public class SkipUseAPI {
 	    } catch (Exception e) {
 		// something went wrong, check connection
 		checkServerConnection();
-		// and re-throw error
-		throw e;
+		// and re-throw error with stack trace
+		StringWriter sw = new StringWriter();
+		PrintWriter pw = new PrintWriter(sw);
+		e.printStackTrace(pw);
+		throw new SkipUseException("There was a problem calling the API: " + postFixUrl + " . To get a: "
+			+ expectedObject + " StackTrace: " + sw.toString());
 	    }
 	}
 	System.out.println("No API connection.");
@@ -388,7 +423,7 @@ public class SkipUseAPI {
     //
     private Object convertJSONToServerObject(String json, String serverObjectName) throws SkipUseException {
 	if (serverObjectName == null || json == null)
-	    throw new SkipUseException("Invalid parameters for convertJSONToServerObject operation");
+	    throw new SkipUseException("Wrong parameters for convertJSONToServerObject operation");
 
 	try {
 	    if (serverObjectName.equals(ServerPickIDCollection.NAME) && json.contains(ServerPickIDCollection.NAME)) {
@@ -478,13 +513,9 @@ public class SkipUseAPI {
 
 	    // the sever's additional message from response
 	    serverResponseData.setMessage(skipUseResponse.getMessage());
-	    System.out.println(serverResponseData.getMessage());
 
 	    // error message
 	    serverResponseData.setErrorMessage(skipUseResponse.getErrorMessage());
-	    if (!serverResponseData.getErrorMessage().isEmpty()) {
-		System.err.println(skipUseResponse.getErrorMessage());
-	    }
 
 	    // the user's remaining data nibbles
 	    serverResponseData.setRemainingNibbles(skipUseResponse.getRemainingNibbles());
@@ -493,18 +524,12 @@ public class SkipUseAPI {
 	    serverResponseData.setStatus(skipUseResponse.getStatus());
 
 	    // process the SkipUseToken
-	    if (skipUseResponse.getSkipUseToken() != null) {
-		if (!skipUseResponse.getSkipUseToken().isEmpty()) {
-		    serverResponseData.setSkipUseToken(skipUseResponse.getSkipUseToken());
-		    tokenHelper.processToken(skipUseResponse.getSkipUseToken());
-		    if (skipUseResponse.isFollowUpRequired()) {
-			clearFollowUp();
-		    }
-		} else {
-		    serverResponseData.setSkipUseToken("");
+	    if (skipUseResponse.getSkipUseToken() != null && !skipUseResponse.getSkipUseToken().isEmpty()) {
+		serverResponseData.setSkipUseToken(skipUseResponse.getSkipUseToken());
+		tokenHelper.processToken(skipUseResponse.getSkipUseToken());
+		if (skipUseResponse.isFollowUpRequired()) {
+		    clearFollowUp();
 		}
-	    } else {
-		throw new SkipUseException("The SkipUseToken was null. This should not happen.");
 	    }
 
 	    // throw error if error message is found

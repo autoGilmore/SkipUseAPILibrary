@@ -42,7 +42,7 @@ public class SkipUseAPIService extends SkipUseAPI {
 	super(skipUseApiUrl);
     }
 
-    // Calling this will initiates a proxy and or log in to the service.
+    // Calling this will initiate a proxy and log in to the service.
     //
     public void login(String email, String password) throws SkipUseException {
 	// start communication with the API server.
@@ -76,13 +76,15 @@ public class SkipUseAPIService extends SkipUseAPI {
     // is present.
     //
     public boolean isLoggedIn() {
+	if (serverResponseData.getOwnerID() == 0)
+	    return false;
+	
 	if (isServerAPIUp() == false)
 	    return false;
-	if (serverResponseData.getOwnerID() == 0) {
+
+	if (isProxyValid() == false)
 	    return false;
-	} else if (serverResponseData.getProxyID().isEmpty()) {
-	    return false;
-	}
+
 	return true;
     }
 

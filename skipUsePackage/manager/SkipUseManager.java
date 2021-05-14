@@ -30,7 +30,9 @@ import com.autogilmore.throwback.skipUsePackage.service.SkipUseProperties;
  * This manager uses and abstracts the SkipUseAPIService.
  * Use THIS manager and NOT the SkipUseAPIService as it will keep the service SkipUseToken in sync with the server.
 */
-public class SkipUseManager {
+public enum SkipUseManager {
+    INSTANCE;
+
     // Set the SkipUseAPI URL here. See the www.SkipUse.com API documentation
     // for more information.
     private static final String SKIP_USE_API_URL = SkipUseProperties.SKIP_USE_API_URL;
@@ -38,8 +40,7 @@ public class SkipUseManager {
     // Using the API service.
     private final SkipUseAPIService service = new SkipUseAPIService(SKIP_USE_API_URL);
 
-    // Automatic log-in option.
-    private final boolean IS_AUTOMATIC_LOGIN = true;
+    // Automatic log-in.
     private String autoLoginEmail = "";
     private String autoLoginPassword = "";
 
@@ -57,23 +58,6 @@ public class SkipUseManager {
 
     // Manager helper variables
     private PickIDCountAdvanceList pickIDCountUpdates = new PickIDCountAdvanceList();
-
-    // Manager singleton instance.
-    private static SkipUseManager instance;
-
-    /** A private Constructor prevents any other class from instantiating. */
-    private SkipUseManager() {
-    }
-
-    /** The static initializer that constructs the instance of the class. */
-    static {
-	instance = new SkipUseManager();
-    }
-
-    /** Get the Static 'instance' method */
-    public static SkipUseManager getInstance() {
-	return instance;
-    }
 
     // Return 'true' if the API server is found. Else, throws an error.
     //
@@ -93,10 +77,10 @@ public class SkipUseManager {
 	    // ignore any errors
 	}
 	service.login(email, password);
-	if (IS_AUTOMATIC_LOGIN) {
-	    this.autoLoginEmail = email;
-	    this.autoLoginPassword = password;
-	}
+
+	// set the email and password used for auto-login.
+	this.autoLoginEmail = email;
+	this.autoLoginPassword = password;
     }
 
     // Return 'true' if user is logged in or 'false' if not.
@@ -132,6 +116,12 @@ public class SkipUseManager {
 	    myMemberID = service.getMyMemberID();
 	}
 	return myMemberID;
+    }
+
+    // The map of member names and their MemberID.
+    //
+    public Map<String, Long> getMemberIDMap() throws SkipUseException {
+	return getServerMemberMap().getMemberIDMap();
     }
 
     // Get a member's ID by their name.
@@ -187,9 +177,10 @@ public class SkipUseManager {
     // Set the 'isSplitByCommaPlusSpace' to 'true' if the list should comma +
     // space delimited and split into separate values.
     //
-    public MemberPickIDCollection addPickIDCollection(List<String> collectionList, boolean isSplitByCommaPlusSpace)
-	    throws SkipUseException {
+    public MemberPickIDCollection addPickIDCollection(long memberIDCollection, List<String> collectionList,
+	    boolean isSplitByCommaPlusSpace) throws SkipUseException {
 	MemberPickIDCollection memberPickIDCollection = new MemberPickIDCollection();
+	memberPickIDCollection.setMemberCollectionID(memberIDCollection);
 	memberPickIDCollection.setSplitCSV(isSplitByCommaPlusSpace);
 	memberPickIDCollection.setPickIDList(collectionList);
 	return addPickIDCollection(memberPickIDCollection);
@@ -202,11 +193,11 @@ public class SkipUseManager {
 	service.undoLastServerPickIDCollectionChange(memberCollectionID);
     }
 
-    // Get the OWNER Pick ID collection.
+    // Get the Pick ID collection by member ID.
     //
-    public MemberPickIDCollection getPickIDCollection() throws SkipUseException {
+    public MemberPickIDCollection getPickIDCollection(long memberCollectionID) throws SkipUseException {
 	automaticLogin();
-	ServerPickIDCollection serverPickIDCollection = service.getServerPickIDCollection(0);
+	ServerPickIDCollection serverPickIDCollection = service.getServerPickIDCollection(memberCollectionID);
 	return serverPickIDCollection.getPickIDCollection();
     }
 
@@ -308,9 +299,10 @@ public class SkipUseManager {
     // pickID and category name. Set 'isMarkWithCategory' to 'true' to mark the
     // Pick with the category.
     //
-    public void markPickWithCategoryTrueFalse(Pick pick, String categoryName, boolean isMarkWithCategory)
-	    throws SkipUseException {
+    public void markPickWithCategoryTrueFalse(long memberIDCollection, Pick pick, String categoryName,
+	    boolean isMarkWithCategory) throws SkipUseException {
 	MemberPickIDCollection memberPickIDCollection = new MemberPickIDCollection();
+	memberPickIDCollection.setMemberCollectionID(memberIDCollection);
 	memberPickIDCollection.addPickID(pick.getPickID());
 	markPickIDListWithCategoryTrueFalse(pick.getMemberID(), memberPickIDCollection, categoryName,
 		isMarkWithCategory);
@@ -318,9 +310,10 @@ public class SkipUseManager {
 
     // Mark or un-mark a Pick by ID for member.
     //
-    public void markPickIDWithCategoryTrueFalse(long memberID, String pickID, String categoryName,
-	    boolean isMarkWithCategory) throws SkipUseException {
+    public void markPickIDWithCategoryTrueFalse(long memberIDCollection, long memberID, String pickID,
+	    String categoryName, boolean isMarkWithCategory) throws SkipUseException {
 	MemberPickIDCollection memberPickIDCollection = new MemberPickIDCollection();
+	memberPickIDCollection.setMemberCollectionID(memberIDCollection);
 	memberPickIDCollection.addPickID(pickID);
 	markPickIDListWithCategoryTrueFalse(memberID, memberPickIDCollection, categoryName, isMarkWithCategory);
     }
@@ -375,7 +368,7 @@ public class SkipUseManager {
 		// NOTE: some fields may not be changeable, check the API doc.
 		service.updatePick(pick);
 	    } else {
-		throw new SkipUseException("The Pick member ID was invalid. It was: pick.getMemberID()");
+		throw new SkipUseException("The Pick member ID was incorrect. It was: pick.getMemberID()");
 	    }
 	} else {
 	    throw new SkipUseException("The Pick was null. You might need to add it first.");
@@ -384,8 +377,10 @@ public class SkipUseManager {
 
     // Skip, Use or Pass a Pick ID for a member.
     //
-    public void skipUsePass(SkipUsePass skipUsePass, long memberID, String pickID) throws SkipUseException {
+    public void skipUsePass(SkipUsePass skipUsePass, long memberIDCollection, long memberID, String pickID)
+	    throws SkipUseException {
 	MemberPickIDCollection memberPickIDCollection = new MemberPickIDCollection();
+	memberPickIDCollection.setMemberCollectionID(memberIDCollection);
 	memberPickIDCollection.addPickID(pickID);
 	List<Long> memberIDList = new ArrayList<Long>();
 	memberIDList.add(memberID);
@@ -428,6 +423,12 @@ public class SkipUseManager {
 	}
     }
 
+    // Clear the bulk Pick ID count updates.
+    //
+    public void clearPickIDCountAdvance() {
+	pickIDCountUpdates.getPickIDCountAdvanceList().clear();
+    }
+
     // The owner's profile.
     //
     public Profile getProfile() throws SkipUseException {
@@ -446,11 +447,10 @@ public class SkipUseManager {
     //
     private void automaticLogin() throws SkipUseException {
 	if (isLoggedIn() == false) {
-	    if (IS_AUTOMATIC_LOGIN) {
-		login(autoLoginEmail, autoLoginPassword);
-	    } else {
-		throw new SkipUseException("You need to login to the SkipUse microservice.");
-	    }
+	    if (autoLoginEmail.isEmpty() || autoLoginPassword.isEmpty())
+		throw new SkipUseException(
+			"You need set-up your login credentials first before automatic login can work.");
+	    login(autoLoginEmail, autoLoginPassword);
 	}
 	if (isLoggedIn() == false)
 	    throw new SkipUseException("Failed to log-in. Check your settings.");

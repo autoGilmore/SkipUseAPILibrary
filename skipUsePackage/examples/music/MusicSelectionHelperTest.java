@@ -9,6 +9,7 @@ import java.util.List;
 
 import org.junit.Test;
 
+import com.autogilmore.throwback.skipUsePackage.dataObjects.Pick;
 import com.autogilmore.throwback.skipUsePackage.exception.SkipUseException;
 import com.autogilmore.throwback.skipUsePackage.manager.SkipUseManager;
 
@@ -21,7 +22,7 @@ public class MusicSelectionHelperTest {
     @Test
     public void test_initialize() throws SkipUseException {
 	// logout to have initialize log back in
-	SkipUseManager manager = SkipUseManager.getInstance();
+	SkipUseManager manager = SkipUseManager.INSTANCE;
 	manager.logout();
 	assertFalse("We should be logged out for start of test", manager.isLoggedIn());
 
@@ -67,7 +68,7 @@ public class MusicSelectionHelperTest {
     @Test
     public void test_getNextSongID() throws SkipUseException {
 	// Set up
-	SkipUseManager manager = SkipUseManager.getInstance();
+	SkipUseManager manager = SkipUseManager.INSTANCE;
 	boolean isCommaSpaceDelimted = true;
 	List<String> songIDList = new ArrayList<>();
 	songIDList.add("song1, song2, song3, song4");
@@ -81,9 +82,10 @@ public class MusicSelectionHelperTest {
 	musicSelectionHelper.addListeningMemberID(testMemberID);
 
 	// Test
-	String _songID = musicSelectionHelper._getNextSongID();
+	Pick _pick = musicSelectionHelper._getNextPick();
 
 	// Verify
+	String _songID = _pick != null ? _pick.getPickID() : null;
 	assertNotNull(_songID);
 	assertTrue("song ID should be one of song list", foundSongList.contains(_songID));
     }

@@ -2,6 +2,7 @@ package com.autogilmore.throwback.skipUsePackage.dataObjects;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 public class PickIDCountAdvance {
@@ -71,4 +72,29 @@ public class PickIDCountAdvance {
     public void setMemberCollectionID(long memberCollectionID) {
 	this.memberCollectionID = memberCollectionID;
     }
+
+    @Override
+    public boolean equals(Object o) {
+	if (o == this)
+	    return true;
+	if (!(o instanceof PickIDCountAdvance)) {
+	    return false;
+	}
+	PickIDCountAdvance advance = (PickIDCountAdvance) o;
+	return memberCollectionID == advance.getMemberCollectionID()
+		&& Objects.equals(memberIDSet, advance.getMemberIDSet())
+		&& Objects.equals(pickIDSet, advance.getPickIDSet());
+    }
+
+    @Override
+    public int hashCode() {
+	return Objects.hash(memberCollectionID, memberIDSet, pickIDSet);
+    }
+
+    @Override
+    public String toString() {
+	return "memberCollectionID: " + this.memberCollectionID + " memberIDSet:" + this.memberIDSet + " pickIDSet: "
+		+ this.pickIDSet + " skipCount: " + this.skipCount + " useCount: " + this.useCount;
+    }
+
 }

@@ -3,6 +3,7 @@ package com.autogilmore.throwback.skipUsePackage.dataObjects;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -36,9 +37,12 @@ public class Pick {
     private List<String> categoryList = new ArrayList<String>();
 
     // Timestamp when Pick was last updated. Rounding by minutes.
-    // NOTE: if this value is null, the Pick is new and has not yet been stored
+    // NOTE: if this value is null, the Pick is new and has not yet been stored.
     @JsonProperty("lastUpdated")
     private Timestamp _lastUpdated;
+
+    // The SearchOption (provided in a PickQuery) used for selecting this Pick. 
+    private String searchOrigin = "";
 
     public Pick() {
     }
@@ -119,7 +123,32 @@ public class Pick {
 	    this._lastUpdated = lastUpdated;
     }
 
+    public String getSearchOrigin() {
+	return searchOrigin;
+    }
+
+    public void setSearchOrigin(String searchOrigin) {
+	if (searchOrigin != null)
+	    this.searchOrigin = searchOrigin;
+    }
+
     public boolean isNewPick() {
 	return _lastUpdated == null;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+	if (o == this)
+	    return true;
+	if (!(o instanceof Pick)) {
+	    return false;
+	}
+	Pick pick = (Pick) o;
+	return pickID == pick.pickID && Objects.equals(memberID, pick.memberID);
+    }
+
+    @Override
+    public int hashCode() {
+	return Objects.hash(pickID, memberID);
     }
 }

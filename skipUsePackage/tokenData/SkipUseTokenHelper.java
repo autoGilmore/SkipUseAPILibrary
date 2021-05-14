@@ -20,7 +20,7 @@ public class SkipUseTokenHelper {
 
 	private final String TKN_TYP_CD_STANDARD = "STANDARD";
 	private final String TKN_TYP_CD_BUILD = "BUILD";
-	private final String TKN_TYP_CD_INVALID = "INVALID";
+	private final String TKN_TYP_CD_INCORRECT = "INCORRECT";
 
 	public SkipUseTokenHelper() {
 	}
@@ -46,7 +46,7 @@ public class SkipUseTokenHelper {
 					skipUseToken.setPendUSeed(revertPendUSeed);
 				}
 			} else {
-				throw new SkipUseException("Incomming server token was invalid");
+				throw new SkipUseException("Incomming server token was incorrect");
 			}
 		} else {
 			throw new SkipUseException("Incomming server token was empty");
@@ -155,9 +155,9 @@ public class SkipUseTokenHelper {
 		} else if (tokenLength == BUILD_CONNECTION_LENGTH) {
 			token.setTokenType(TKN_TYP_CD_BUILD);
 		} else {
-			token.setTokenType(TKN_TYP_CD_INVALID);
+			token.setTokenType(TKN_TYP_CD_INCORRECT);
 		}
-		if (!token.getTokenType().equals(TKN_TYP_CD_INVALID)) {
+		if (!token.getTokenType().equals(TKN_TYP_CD_INCORRECT)) {
 			int buildIndexIncr = token.getTokenType().equals(TKN_TYP_CD_BUILD) ? 1 : 0;
 			int fromIndexStart = tokenLength - IDENTIFY_CODE_LENGTH;
 			int seedIndexStandardLast = STANDARD_SEED_LENGTH + buildIndexIncr;

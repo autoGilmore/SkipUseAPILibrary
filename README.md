@@ -30,6 +30,16 @@ skipuseapi@gmail.com
 
 
 ## Changelog:
+051421:
+* Fix: Added missing MemberCollectionID for marking a Pick with a Category.
+* Removed: SkipUseManager auto-login option. Login must now be called initially. The manager will continue to re-login if needed until logout is used.
+* Added: A searchOrigin field to the Pick object which can be used to determine how a Pick was chosen from a PickQuery's SearchOptionList.
+* Added: SearchOption.RANDOM: Returning Picks randomly by their weighted auto-percentage rating.
+* Updated: SkipUseManager to be an Enum Singleton.
+* Sample Music Project: improved auto-login by reducing extra calls to check if the proxy is still valid.
+* Sample Music Project: add additional date check to ignore if a song is offered before the song exclusion period has ended.
+* Sample Music Project: Fixed a missing CollectionID for a member when marking a Pick with a category.
+
 081820:
 * Added: PickIDCountAdvance object which can be used in batch and delayed updates that change a member's Pick Skip and Use counts advancement values 
 * Added: SkipUseManager using new PickIDCountAdvanceList object for batch member Pick updates
