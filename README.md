@@ -30,11 +30,22 @@ skipuseapi@gmail.com
 
 
 ## Changelog:
+122121:
+* Naming update: MemberPickIDCollection to MemberCollection.
+* Naming update: SearchOption: NORMAL to SearchOption: QUEUE. (Still the default search method)
+* Added: SearchOption: PICK_INFO. (replacement for 'PickID' in the PickQuery)
+* Added: pickIDList in PickQuery. Which can override the MemberCollection  Pick IDs that are used for searches. This allows for Pick ID changes on-the-fly or limiting searches to a select set of Picks without having to update the MemberCollection first before using a PickQuery.
+* Removed: Ramp, Search and Play mode enums. (now handled by the ResultOptions)
+* Added: a demo test to show the updated PickQuery 'NOT' CategoryOption. For including categories before the modifier key word but excluding ones after.
+* Added: a demo test to show the new searching with multiple members and their categories.
+* Sample Music Project: added ability for multiple listening members to select their own and other member categories.
+
 051421:
+* Naming update: Search Mode changed to SearchOption.
 * Fix: Added missing MemberCollectionID for marking a Pick with a Category.
 * Removed: SkipUseManager auto-login option. Login must now be called initially. The manager will continue to re-login if needed until logout is used.
 * Added: A searchOrigin field to the Pick object which can be used to determine how a Pick was chosen from a PickQuery's SearchOptionList.
-* Added: SearchOption.RANDOM: Returning Picks randomly by their weighted auto-percentage rating.
+* Added: SearchOption: RANDOM: Returning Picks randomly by their weighted auto-percentage rating.
 * Updated: SkipUseManager to be an Enum Singleton.
 * Sample Music Project: improved auto-login by reducing extra calls to check if the proxy is still valid.
 * Sample Music Project: add additional date check to ignore if a song is offered before the song exclusion period has ended.

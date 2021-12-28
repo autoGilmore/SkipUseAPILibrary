@@ -3,23 +3,23 @@ package com.autogilmore.throwback.skipUsePackage.dataObjects;
 /*
  * This is a member's list of categories for a collection of Pick IDs.
 */
-public class CategoryMemberPickIDCollection {
+public class CategoryMemberCollection {
 
 	// For this member's categories...
 	private MemberCategoryList memberCategoryList = new MemberCategoryList();
 
 	// Use these Pick IDs from this member's Pick ID collection...
-	private MemberPickIDCollection memberPickIDCollection = new MemberPickIDCollection();
+	private MemberCollection memberCollection = new MemberCollection();
 
-	public CategoryMemberPickIDCollection() {
+	public CategoryMemberCollection() {
 	}
 
-	public MemberPickIDCollection getMemberPickIDCollection() {
-		return memberPickIDCollection;
+	public MemberCollection getMemberCollection() {
+		return memberCollection;
 	}
 
-	public void setMemberPickIDCollection(MemberPickIDCollection memberPickIDCollection) {
-		this.memberPickIDCollection = memberPickIDCollection;
+	public void setMemberCollection(MemberCollection memberCollection) {
+		this.memberCollection = memberCollection;
 	}
 
 	public MemberCategoryList getMemberCategoryList() {

@@ -56,9 +56,10 @@ public class PickQuery {
     // The available search options are located in the SearchOption.java enum.
 
     // You can provide 2 ways to search for Pick:
-    // SearchOption.NORMAL: The default. A mix with more of the previously Used and
+    // SearchOption.QUEUE: The default. A mix with more of the previously Used and
     // less Skipped Picks.
-    // SearchOption.RANDOM: Returns Picks randomly by their weighted auto-percentage rating.
+    // SearchOption.RANDOM: Returns Picks randomly by their weighted auto-percentage
+    // rating.
     // SearchOption.BALANCED: Returns Picks that have been Used too few times then
     // what is expected based the auto-rating values.
     // SearchOption.RACING: Think of the Tortoise and the Hare story where Picks
@@ -68,12 +69,15 @@ public class PickQuery {
     // SearchOption.FAVORITE: Descending Picks by highest auto-rating percentage.
     // SearchOption.WORST: Ascending Picks by lowest auto-rating percentage.
     // SearchOption.STOP_USING_ONLY: Picks that have been flagged stopUsing.
+    // SearchOption.PICK_INFO: is used to return only Picks with
+    // the IDs provided in the pickIDList from members in the memberIDList. (NOTE:
+    // the pickIDList overrides the Collection values for Pick IDs to use)
 
     // There are additional modifier key-words you can provide as well.
     // SearchOption.USE_TIME_OF_DAY: Not all searching modes use this option. This
     // option works well for finding Favorite Picks at the current time of day,
     // where the Picks might not be favorites at a different time of day.
-    // NOTE: NORMAL and BALANCED search options do not use this option.
+    // NOTE: QUEUE and BALANCED search options do not use this option.
     // SearchOption.GET_MORE_IF_SHORT: Return Picks even if your other query options
     // can't find the Picks you want. (keep this option in mind if is not returning
     // what you expect.
@@ -112,7 +116,7 @@ public class PickQuery {
     // AdvancedOption.DEBUG_QUERY: See what is happening with your Pick Query.
     // Returns a detailed message about what settings were used to return the Pick
     // List.
-    // AdvancedOption.RESET: re-orders Picks to work with SearchOption.NORMAL search
+    // AdvancedOption.RESET: re-orders Picks to work with SearchOption.QUEUE search
     // option if it is no longer returning expected results. See API documentation
     // before using this option.
 
@@ -129,21 +133,22 @@ public class PickQuery {
     // CategoryOption.ANY: this is the default. Picks will be returned with or
     // without any categories.
     // CategoryOption.NONE: only Picks with no categories will be returned.
-    // CategoryOption.NOT: only Picks that do not that this category will be returned.
+    // CategoryOption.NOT: only Picks that do not that this category will be
+    // returned.
     // (Using categories might cost more to use because of the additional server
     // processing.)
 
     // You can also limit the result to only return Pick IDs that are in this
     // pickIDList:
-    // IMPORTANT: Pick IDs in this list must already be in the collection or they
-    // will be ignored.
-    private List<String> pickIDList = new ArrayList<String>();
+    // NOTE: Pick IDs in this list do not have to be in the Collection.
 
-    // **** Return Only ONE Pick *********
-    // Optional: Set this Pick ID string ONLY if you are searching for ONE Pick with
-    // this Pick ID. If a Pick is not stored yet, an empty Pick List will be
-    // returned with a the Pick's member ID set to 0.
-    private String pickID = "";
+    // **** Override Collection Picks *********
+    // Optional: Set this pickIDList with Pick IDs to use in place of Picks in a
+    // current member Collection.
+    // NOTE: use SearchOption.PICK_INFO to get back any stored information for
+    // member Picks.
+
+    private List<String> pickIDList = new ArrayList<String>();
 
     public PickQuery() {
     }
@@ -177,16 +182,6 @@ public class PickQuery {
 	    return this.memberIDList.add(memberID);
 	}
 	return false;
-    }
-
-    public String getPickID() {
-	return this.pickID;
-    }
-
-    public void setPickID(String pickID) {
-	if (pickID != null && !pickID.isEmpty()) {
-	    this.pickID = pickID;
-	}
     }
 
     public int getNewMixInPercentage() {
@@ -307,7 +302,7 @@ public class PickQuery {
 		+ getNewMixInPercentage() + ", isExcludeRecentPicksHours=" + getExcludeRecentPicksHours()
 		+ ", getSearchOptionList=" + getSearchOptionList().toString() + ", getResultOptionList="
 		+ getResultOptionList().toString() + ", getAdvancedOptionList=" + getAdvancedOptionList().toString()
-		+ ", getCategoriesList=" + getCategoryList().toString() + ", getPickID=" + getPickID()
-		+ ", getPickIDList=" + getPickIDList().toString();
+		+ ", getCategoriesList=" + getCategoryList().toString() + ", getPickIDList="
+		+ getPickIDList().toString();
     }
 }

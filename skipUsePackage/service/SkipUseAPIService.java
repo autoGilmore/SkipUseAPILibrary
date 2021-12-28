@@ -3,11 +3,11 @@ package com.autogilmore.throwback.skipUsePackage.service;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.autogilmore.throwback.skipUsePackage.dataObjects.CategoryMemberPickIDCollection;
+import com.autogilmore.throwback.skipUsePackage.dataObjects.CategoryMemberCollection;
 import com.autogilmore.throwback.skipUsePackage.dataObjects.MemberCategoryList;
+import com.autogilmore.throwback.skipUsePackage.dataObjects.MemberCollection;
 import com.autogilmore.throwback.skipUsePackage.dataObjects.MemberListPickIDList;
 import com.autogilmore.throwback.skipUsePackage.dataObjects.MemberNameList;
-import com.autogilmore.throwback.skipUsePackage.dataObjects.MemberPickIDCollection;
 import com.autogilmore.throwback.skipUsePackage.dataObjects.PatchName;
 import com.autogilmore.throwback.skipUsePackage.dataObjects.Pick;
 import com.autogilmore.throwback.skipUsePackage.dataObjects.PickIDCountAdvanceList;
@@ -15,8 +15,8 @@ import com.autogilmore.throwback.skipUsePackage.dataObjects.PickList;
 import com.autogilmore.throwback.skipUsePackage.dataObjects.PickQuery;
 import com.autogilmore.throwback.skipUsePackage.dataObjects.Profile;
 import com.autogilmore.throwback.skipUsePackage.dataObjects.incomingServer.ServerMemberCategoryList;
+import com.autogilmore.throwback.skipUsePackage.dataObjects.incomingServer.ServerMemberCollection;
 import com.autogilmore.throwback.skipUsePackage.dataObjects.incomingServer.ServerMemberMap;
-import com.autogilmore.throwback.skipUsePackage.dataObjects.incomingServer.ServerPickIDCollection;
 import com.autogilmore.throwback.skipUsePackage.dataObjects.incomingServer.ServerPickList;
 import com.autogilmore.throwback.skipUsePackage.dataObjects.incomingServer.ServerProfile;
 import com.autogilmore.throwback.skipUsePackage.dataObjects.incomingServer.ServerResponse;
@@ -134,31 +134,31 @@ public class SkipUseAPIService extends SkipUseAPI {
     }
 
     // Set the collection of Pick IDs to be used by all members.
-    // NOTE: 0 for memberPickIDCollection parameter defaults to the owner's
+    // NOTE: 0 for memberMemberCollection parameter defaults to the owner's
     // Pick ID collection.
     //
-    public ServerPickIDCollection setPickIDCollection(MemberPickIDCollection memberPickIDCollection)
+    public ServerMemberCollection setMemberCollection(MemberCollection memberMemberCollection)
 	    throws SkipUseException {
-	return (ServerPickIDCollection) postAndProcess("/collection", memberPickIDCollection,
-		ServerPickIDCollection.NAME);
+	return (ServerMemberCollection) postAndProcess("/collection", memberMemberCollection,
+		ServerMemberCollection.NAME);
     }
 
     // Get a Pick ID Collection.
-    // NOTE: 0 for memberPickIDCollection parameter defaults to the owner's
+    // NOTE: 0 for memberMemberCollection parameter defaults to the owner's
     // Pick ID collection.
     //
-    public ServerPickIDCollection getServerPickIDCollection(long memberCollectionID) throws SkipUseException {
-	return (ServerPickIDCollection) getAndProcess("/collection/" + memberCollectionID, ServerPickIDCollection.NAME);
+    public ServerMemberCollection getServerMemberCollection(long memberCollectionID) throws SkipUseException {
+	return (ServerMemberCollection) getAndProcess("/collection/" + memberCollectionID, ServerMemberCollection.NAME);
     }
 
     // Undo the last Pick ID Collection change.
-    // NOTE: 0 for memberPickIDCollection parameter defaults to the owner's
+    // NOTE: 0 for memberMemberCollection parameter defaults to the owner's
     // Pick ID collection.
     //
-    public ServerPickIDCollection undoLastServerPickIDCollectionChange(long memberCollectionID)
+    public ServerMemberCollection undoLastServerMemberCollectionChange(long memberCollectionID)
 	    throws SkipUseException {
-	return (ServerPickIDCollection) postAndProcess("/collection/" + memberCollectionID + " /undo", null,
-		ServerPickIDCollection.NAME);
+	return (ServerMemberCollection) postAndProcess("/collection/" + memberCollectionID + " /undo", null,
+		ServerMemberCollection.NAME);
     }
 
     // Set the query for getting Picks from the Pick ID collection (called a
@@ -234,9 +234,9 @@ public class SkipUseAPIService extends SkipUseAPI {
 	    long fromMemberIDCollection) throws SkipUseException {
 	List<Long> memberIDList = new ArrayList<Long>();
 	memberIDList.add(memberID);
-	MemberPickIDCollection memberPickIDCollection = new MemberPickIDCollection(fromMemberIDCollection);
-	memberPickIDCollection.setPickIDList(pickIDList);
-	MemberListPickIDList memberPickIDList = new MemberListPickIDList(memberPickIDCollection, memberIDList);
+	MemberCollection memberMemberCollection = new MemberCollection(fromMemberIDCollection);
+	memberMemberCollection.setPickIDList(pickIDList);
+	MemberListPickIDList memberPickIDList = new MemberListPickIDList(memberMemberCollection, memberIDList);
 	return (ServerPickList) postAndProcess("/pick", memberPickIDList, ServerPickList.NAME);
     }
 
@@ -263,9 +263,9 @@ public class SkipUseAPIService extends SkipUseAPI {
 	    throws SkipUseException {
 	List<Long> memberIDList = new ArrayList<>();
 	memberIDList.add(memberID);
-	MemberPickIDCollection memberPickIDCollection = new MemberPickIDCollection(fromMemberIDCollection);
-	memberPickIDCollection.addPickID(pickID);
-	MemberListPickIDList memberPickIDList = new MemberListPickIDList(memberPickIDCollection, memberIDList);
+	MemberCollection memberMemberCollection = new MemberCollection(fromMemberIDCollection);
+	memberMemberCollection.addPickID(pickID);
+	MemberListPickIDList memberPickIDList = new MemberListPickIDList(memberMemberCollection, memberIDList);
 	skipUsePassMemberPickIDList(skipUsePass, memberPickIDList);
     }
 
@@ -291,9 +291,9 @@ public class SkipUseAPIService extends SkipUseAPI {
 	    memberIDList.add(pick.getMemberID());
 	    pickIDList.add(pick.getPickID());
 	}
-	MemberPickIDCollection memberPickIDCollection = new MemberPickIDCollection(fromMemberIDCollection);
-	memberPickIDCollection.setPickIDList(pickIDList);
-	MemberListPickIDList memberPickIDList = new MemberListPickIDList(memberPickIDCollection, memberIDList);
+	MemberCollection memberMemberCollection = new MemberCollection(fromMemberIDCollection);
+	memberMemberCollection.setPickIDList(pickIDList);
+	MemberListPickIDList memberPickIDList = new MemberListPickIDList(memberMemberCollection, memberIDList);
 	skipUsePassMemberPickIDList(skipUsePass, memberPickIDList);
     }
 
@@ -381,23 +381,23 @@ public class SkipUseAPIService extends SkipUseAPI {
 
     // Mark Pick IDs with categories by a member.
     //
-    public void markCategoryPickIDCollection(CategoryMemberPickIDCollection categoryPickIDCollection)
+    public void markCategoryMemberCollection(CategoryMemberCollection categoryMemberCollection)
 	    throws SkipUseException {
-	postAndProcess("/mark", categoryPickIDCollection, ServerResponse.NAME);
+	postAndProcess("/mark", categoryMemberCollection, ServerResponse.NAME);
     }
 
     // Un-mark Pick IDs with categories by a member.
     //
-    public void unmarkCategoryPickIDCollection(CategoryMemberPickIDCollection categoryPickIDCollection)
+    public void unmarkCategoryMemberCollection(CategoryMemberCollection categoryMemberCollection)
 	    throws SkipUseException {
-	postAndProcess("/unmark", categoryPickIDCollection, ServerResponse.NAME);
+	postAndProcess("/unmark", categoryMemberCollection, ServerResponse.NAME);
     }
 
     // Request a test error message from the server.
     //
     public void errorTest() {
 	try {
-	    postAndProcess("/errortest", null, ServerPickIDCollection.NAME);
+	    postAndProcess("/errortest", null, ServerMemberCollection.NAME);
 	} catch (SkipUseException e) {
 	    // ignore
 	    e.printStackTrace();

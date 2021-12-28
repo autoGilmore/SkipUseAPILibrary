@@ -14,10 +14,10 @@ import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
-import com.autogilmore.throwback.skipUsePackage.dataObjects.incomingServer.ServerCategoryPickIDCollectionList;
+import com.autogilmore.throwback.skipUsePackage.dataObjects.incomingServer.ServerCategoryMemberCollectionList;
 import com.autogilmore.throwback.skipUsePackage.dataObjects.incomingServer.ServerMemberCategoryList;
 import com.autogilmore.throwback.skipUsePackage.dataObjects.incomingServer.ServerMemberMap;
-import com.autogilmore.throwback.skipUsePackage.dataObjects.incomingServer.ServerPickIDCollection;
+import com.autogilmore.throwback.skipUsePackage.dataObjects.incomingServer.ServerMemberCollection;
 import com.autogilmore.throwback.skipUsePackage.dataObjects.incomingServer.ServerPickList;
 import com.autogilmore.throwback.skipUsePackage.dataObjects.incomingServer.ServerProfile;
 import com.autogilmore.throwback.skipUsePackage.dataObjects.incomingServer.ServerResponse;
@@ -426,11 +426,11 @@ public class SkipUseAPI {
 	    throw new SkipUseException("Wrong parameters for convertJSONToServerObject operation");
 
 	try {
-	    if (serverObjectName.equals(ServerPickIDCollection.NAME) && json.contains(ServerPickIDCollection.NAME)) {
-		return mapper.readValue(json.toString(), ServerPickIDCollection.class);
-	    } else if (serverObjectName.equals(ServerCategoryPickIDCollectionList.NAME)
-		    && json.contains(ServerCategoryPickIDCollectionList.NAME)) {
-		return mapper.readValue(json.toString(), ServerCategoryPickIDCollectionList.class);
+	    if (serverObjectName.equals(ServerMemberCollection.NAME) && json.contains(ServerMemberCollection.NAME)) {
+		return mapper.readValue(json.toString(), ServerMemberCollection.class);
+	    } else if (serverObjectName.equals(ServerCategoryMemberCollectionList.NAME)
+		    && json.contains(ServerCategoryMemberCollectionList.NAME)) {
+		return mapper.readValue(json.toString(), ServerCategoryMemberCollectionList.class);
 	    } else if (serverObjectName.equals(ServerPickList.NAME) && json.contains(ServerPickList.NAME)) {
 		return mapper.readValue(json.toString(), ServerPickList.class);
 	    } else if (serverObjectName.equals(ServerMemberCategoryList.NAME)
@@ -513,6 +513,9 @@ public class SkipUseAPI {
 
 	    // the sever's additional message from response
 	    serverResponseData.setMessage(skipUseResponse.getMessage());
+	    if (!serverResponseData.getMessage().isEmpty()) {
+		System.out.println(serverResponseData.getMessage());
+	    }
 
 	    // error message
 	    serverResponseData.setErrorMessage(skipUseResponse.getErrorMessage());

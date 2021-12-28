@@ -8,11 +8,11 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 /*
  * This is a Collection of PickID for a member.
 */
-public class MemberPickIDCollection extends PickIDList {
+public class MemberCollection extends PickIDList {
 
     // The member's ID for their collection.
     // NOTE: 0 will use the Owner's Pick ID collection.
-    private long memberCollectionID = 0;
+    private long memberID = 0;
 
     // The name for the collection.
     private String collectionName = SkipUseProperties.PICK_ID_COLLECTION_NAME;
@@ -21,19 +21,19 @@ public class MemberPickIDCollection extends PickIDList {
     @JsonProperty("lastUpdated")
     private Timestamp _lastUpdated;
 
-    public MemberPickIDCollection() {
+    public MemberCollection() {
     }
 
-    public MemberPickIDCollection(long fromMemberIDCollection) {
-	setMemberCollectionID(fromMemberIDCollection);
+    public MemberCollection(long fromMemberIDCollection) {
+	setMemberID(fromMemberIDCollection);
     }
 
-    public long getMemberCollectionID() {
-	return this.memberCollectionID;
+    public long getMemberID() {
+	return this.memberID;
     }
 
-    public void setMemberCollectionID(long fromMemberIDCollection) {
-	this.memberCollectionID = fromMemberIDCollection;
+    public void setMemberID(long fromMemberIDCollection) {
+	this.memberID = fromMemberIDCollection;
     }
 
     public String getCollectionName() {

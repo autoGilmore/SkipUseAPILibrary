@@ -7,25 +7,25 @@ import java.util.List;
 /* 
  * This is a list of member IDs that reference a member's collection of Pick IDs.
 */
-public class MemberListPickIDList extends MemberPickIDCollection {
+public class MemberListPickIDList extends MemberCollection {
 
     // From Pick IDs from a member's collection of Pick IDs...
 
     // Use these member IDs...
     private List<Long> memberIDList = new ArrayList<Long>();
 
-    public MemberListPickIDList(MemberPickIDCollection memberPickIDCollection) {
-	setCollectionName(memberPickIDCollection.getCollectionName());
-	setMemberCollectionID(memberPickIDCollection.getMemberCollectionID());
-	setPickIDList(memberPickIDCollection.getPickIDList());
-	setSplitCSV(memberPickIDCollection.isSplitCSV());
+    public MemberListPickIDList(MemberCollection memberMemberCollection) {
+	setCollectionName(memberMemberCollection.getCollectionName());
+	setMemberID(memberMemberCollection.getMemberID());
+	setPickIDList(memberMemberCollection.getPickIDList());
+	setSplitCSV(memberMemberCollection.isSplitCSV());
     }
 
-    public MemberListPickIDList(MemberPickIDCollection memberPickIDCollection, List<Long> memberIDList) {
-	setCollectionName(memberPickIDCollection.getCollectionName());
-	setMemberCollectionID(memberPickIDCollection.getMemberCollectionID());
-	setPickIDList(memberPickIDCollection.getPickIDList());
-	setSplitCSV(memberPickIDCollection.isSplitCSV());
+    public MemberListPickIDList(MemberCollection memberMemberCollection, List<Long> memberIDList) {
+	setCollectionName(memberMemberCollection.getCollectionName());
+	setMemberID(memberMemberCollection.getMemberID());
+	setPickIDList(memberMemberCollection.getPickIDList());
+	setSplitCSV(memberMemberCollection.isSplitCSV());
 	setMemberIDList(memberIDList);
     }
 

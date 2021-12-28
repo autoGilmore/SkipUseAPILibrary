@@ -13,19 +13,19 @@ import org.junit.After;
 import org.junit.Test;
 import org.springframework.http.HttpStatus;
 
-import com.autogilmore.throwback.skipUsePackage.dataObjects.CategoryMemberPickIDCollection;
+import com.autogilmore.throwback.skipUsePackage.dataObjects.CategoryMemberCollection;
 import com.autogilmore.throwback.skipUsePackage.dataObjects.MemberCategoryList;
+import com.autogilmore.throwback.skipUsePackage.dataObjects.MemberCollection;
 import com.autogilmore.throwback.skipUsePackage.dataObjects.MemberListPickIDList;
 import com.autogilmore.throwback.skipUsePackage.dataObjects.MemberNameList;
-import com.autogilmore.throwback.skipUsePackage.dataObjects.MemberPickIDCollection;
 import com.autogilmore.throwback.skipUsePackage.dataObjects.Pick;
 import com.autogilmore.throwback.skipUsePackage.dataObjects.PickIDCountAdvance;
 import com.autogilmore.throwback.skipUsePackage.dataObjects.PickIDCountAdvanceList;
 import com.autogilmore.throwback.skipUsePackage.dataObjects.PickQuery;
 import com.autogilmore.throwback.skipUsePackage.dataObjects.Profile;
 import com.autogilmore.throwback.skipUsePackage.dataObjects.incomingServer.ServerMemberCategoryList;
+import com.autogilmore.throwback.skipUsePackage.dataObjects.incomingServer.ServerMemberCollection;
 import com.autogilmore.throwback.skipUsePackage.dataObjects.incomingServer.ServerMemberMap;
-import com.autogilmore.throwback.skipUsePackage.dataObjects.incomingServer.ServerPickIDCollection;
 import com.autogilmore.throwback.skipUsePackage.dataObjects.incomingServer.ServerPickList;
 import com.autogilmore.throwback.skipUsePackage.dataObjects.incomingServer.ServerResponse;
 import com.autogilmore.throwback.skipUsePackage.enums.AdvancedOption;
@@ -176,7 +176,7 @@ public class SkipUseAPIServiceTest {
     }
 
     @Test
-    public void test_setPickIDCollection() throws SkipUseException {
+    public void test_setMemberCollection() throws SkipUseException {
 	// Set up
 	service.login(TEST_EMAIL, TEST_PASSWORD);
 	assertTrue(service.isLoggedIn());
@@ -190,26 +190,26 @@ public class SkipUseAPIServiceTest {
 	collectionPickIDList.add("C");
 	assertTrue(collectionPickIDList.size() == 4);
 
-	MemberPickIDCollection memberPickIDCollection = new MemberPickIDCollection();
-	memberPickIDCollection.setCollectionName(collectionName);
-	memberPickIDCollection.setPickIDList(collectionPickIDList);
-	memberPickIDCollection.setSplitCSV(false);
+	MemberCollection memberMemberCollection = new MemberCollection();
+	memberMemberCollection.setCollectionName(collectionName);
+	memberMemberCollection.setPickIDList(collectionPickIDList);
+	memberMemberCollection.setSplitCSV(false);
 
 	// Test
-	service.setPickIDCollection(memberPickIDCollection);
+	service.setMemberCollection(memberMemberCollection);
 	assertTrue(service.getAPIErrorMessage(), service.getAPIErrorMessage().isEmpty());
 
 	// Verify
-	ServerPickIDCollection foundServerCollection = service.getServerPickIDCollection(0);
+	ServerMemberCollection foundServerCollection = service.getServerMemberCollection(0);
 	assertNotNull(foundServerCollection);
-	List<String> foundCollectionList = foundServerCollection.getPickIDCollection().getPickIDList();
+	List<String> foundCollectionList = foundServerCollection.getMemberCollection().getPickIDList();
 	assertNotNull(foundCollectionList);
 	// should not include duplicate
 	assertTrue("was: " + foundCollectionList.size(), foundCollectionList.size() == 3);
     }
 
     @Test
-    public void test_setPickIDCollection_splitCommaPlusSpace() throws SkipUseException {
+    public void test_setMemberCollection_splitCommaPlusSpace() throws SkipUseException {
 	// Set up
 	service.login(TEST_EMAIL, TEST_PASSWORD);
 	assertTrue(service.isLoggedIn());
@@ -219,20 +219,20 @@ public class SkipUseAPIServiceTest {
 	collectionList.add("A, B, C");
 	collectionList.add("D,E,F");
 
-	MemberPickIDCollection memberPickIDCollection = new MemberPickIDCollection();
-	memberPickIDCollection.setCollectionName(collectionName);
-	memberPickIDCollection.setPickIDList(collectionList);
+	MemberCollection memberMemberCollection = new MemberCollection();
+	memberMemberCollection.setCollectionName(collectionName);
+	memberMemberCollection.setPickIDList(collectionList);
 	// split
-	memberPickIDCollection.setSplitCSV(true);
+	memberMemberCollection.setSplitCSV(true);
 
 	// Test
-	service.setPickIDCollection(memberPickIDCollection);
+	service.setMemberCollection(memberMemberCollection);
 
 	// Verify
 	assertTrue(service.getAPIErrorMessage(), service.getAPIErrorMessage().isEmpty());
-	ServerPickIDCollection foundServerCollection = service.getServerPickIDCollection(0);
+	ServerMemberCollection foundServerCollection = service.getServerMemberCollection(0);
 	assertNotNull(foundServerCollection);
-	List<String> foundCollectionList = foundServerCollection.getPickIDCollection().getPickIDList();
+	List<String> foundCollectionList = foundServerCollection.getMemberCollection().getPickIDList();
 	assertNotNull(foundCollectionList);
 	assertTrue(foundCollectionList.size() == 4);
 	assertTrue(foundCollectionList.contains("A"));
@@ -242,7 +242,7 @@ public class SkipUseAPIServiceTest {
     }
 
     @Test
-    public void test_getServerPickIDCollection() throws SkipUseException {
+    public void test_getServerMemberCollection() throws SkipUseException {
 	// Set up
 	service.login(TEST_EMAIL, TEST_PASSWORD);
 	assertTrue(service.isLoggedIn());
@@ -253,20 +253,20 @@ public class SkipUseAPIServiceTest {
 	collectionList.add("B");
 	collectionList.add("C");
 
-	MemberPickIDCollection pickCollection = new MemberPickIDCollection();
+	MemberCollection pickCollection = new MemberCollection();
 	pickCollection.setCollectionName(collectionName);
 	pickCollection.setPickIDList(collectionList);
 	pickCollection.setSplitCSV(false);
-	service.setPickIDCollection(pickCollection);
+	service.setMemberCollection(pickCollection);
 	assertTrue(service.getAPIErrorMessage(), service.getAPIErrorMessage().isEmpty());
 
 	// Test
-	ServerPickIDCollection foundServerCollection = service.getServerPickIDCollection(0);
+	ServerMemberCollection foundServerCollection = service.getServerMemberCollection(0);
 	assertTrue(service.getAPIErrorMessage(), service.getAPIErrorMessage().isEmpty());
 
 	// Verify
 	assertNotNull(foundServerCollection);
-	List<String> foundCollectionList = foundServerCollection.getPickIDCollection().getPickIDList();
+	List<String> foundCollectionList = foundServerCollection.getMemberCollection().getPickIDList();
 	assertNotNull(foundCollectionList);
 	assertTrue(foundCollectionList.size() == 3);
     }
@@ -281,11 +281,11 @@ public class SkipUseAPIServiceTest {
 	List<String> collectionList = new ArrayList<>();
 	collectionList.add("A, B, C");
 
-	MemberPickIDCollection pickCollection = new MemberPickIDCollection();
+	MemberCollection pickCollection = new MemberCollection();
 	pickCollection.setCollectionName(collectionName);
 	pickCollection.setPickIDList(collectionList);
 	pickCollection.setSplitCSV(true);
-	service.setPickIDCollection(pickCollection);
+	service.setMemberCollection(pickCollection);
 	assertTrue(service.getAPIErrorMessage(), service.getAPIErrorMessage().isEmpty());
 
 	PickQuery pickQuery = new PickQuery();
@@ -312,17 +312,17 @@ public class SkipUseAPIServiceTest {
 	List<String> collectionList = new ArrayList<>();
 	collectionList.add("A, B, C");
 
-	MemberPickIDCollection pickCollection = new MemberPickIDCollection();
+	MemberCollection pickCollection = new MemberCollection();
 	pickCollection.setCollectionName(collectionName);
 	pickCollection.setPickIDList(collectionList);
 	pickCollection.setSplitCSV(true);
-	ServerPickIDCollection createdCollection = service.setPickIDCollection(pickCollection);
+	ServerMemberCollection createdCollection = service.setMemberCollection(pickCollection);
 	assertTrue(service.getAPIErrorMessage(), service.getAPIErrorMessage().isEmpty());
 
 	long memberID = createdCollection.getOwnerID();
 
 	// create a pick (if needed) by using the Pass
-	MemberListPickIDList memberPickIDList = new MemberListPickIDList(createdCollection.getPickIDCollection());
+	MemberListPickIDList memberPickIDList = new MemberListPickIDList(createdCollection.getMemberCollection());
 	memberPickIDList.addMemberID(memberID);
 	service.skipUsePassMemberPickIDList(SkipUsePass.PASS, memberPickIDList);
 	assertTrue(service.getAPIErrorMessage(), service.getAPIErrorMessage().isEmpty());
@@ -333,7 +333,6 @@ public class SkipUseAPIServiceTest {
 	// test - various search mode options
 	pickQuery.addToSearchOptionList(SearchOption.BALANCED);
 	pickQuery.addToSearchOptionList(SearchOption.RANDOM);
-	pickQuery.addToSearchOptionList(SearchOption.ENHANCE);
 	pickQuery.addToResultOptionList(ResultOption.MERGE);
 
 	// Test
@@ -347,7 +346,6 @@ public class SkipUseAPIServiceTest {
 	assertTrue("Should see a Member ID reference", debugMessage.contains(memberID + ""));
 	assertTrue("Should see a RANDOM search mode reference", debugMessage.contains(SearchOption.RANDOM.name()));
 	assertTrue("Should see a BALANCED search mode reference", debugMessage.contains(SearchOption.BALANCED.name()));
-	assertTrue("Should see an ENHANCE advance mode reference", debugMessage.contains(SearchOption.ENHANCE.name()));
 	assertTrue("Should see a MERGE combine mode reference", debugMessage.contains(ResultOption.MERGE.name()));
     }
 
@@ -362,10 +360,10 @@ public class SkipUseAPIServiceTest {
 	// test Pick ID
 	String pickID = "209456830495603849003948560934";
 	// set collection
-	MemberPickIDCollection memberPickIDCollection = new MemberPickIDCollection(bobMemberID);
-	memberPickIDCollection.setCollectionName("test collection");
-	memberPickIDCollection.addPickID(pickID);
-	service.setPickIDCollection(memberPickIDCollection);
+	MemberCollection memberMemberCollection = new MemberCollection(bobMemberID);
+	memberMemberCollection.setCollectionName("test collection");
+	memberMemberCollection.addPickID(pickID);
+	service.setMemberCollection(memberMemberCollection);
 	assertTrue(service.getAPIErrorMessage(), service.getAPIErrorMessage().isEmpty());
 	// store the pick
 	service.skipUsePassPickID(SkipUsePass.PASS, bobMemberID, pickID, bobMemberID);
@@ -418,11 +416,11 @@ public class SkipUseAPIServiceTest {
 	String pickID = "<a href=\"http://www.skipuse.com\" target=\"_blank\" title=\"SkipUse Home Page\">SkipUse</a>";
 
 	// set collection
-	MemberPickIDCollection memberPickIDCollection = new MemberPickIDCollection();
-	memberPickIDCollection.setMemberCollectionID(bobMemberID);
-	memberPickIDCollection.setCollectionName("test collection");
-	memberPickIDCollection.addPickID(pickID);
-	service.setPickIDCollection(memberPickIDCollection);
+	MemberCollection memberMemberCollection = new MemberCollection();
+	memberMemberCollection.setMemberID(bobMemberID);
+	memberMemberCollection.setCollectionName("test collection");
+	memberMemberCollection.addPickID(pickID);
+	service.setMemberCollection(memberMemberCollection);
 
 	// Test: pick not stored yet
 	Pick _foundPick = service._getPickByMemberIDAndPickIDAndCollectionID(bobMemberID, pickID, bobMemberID);
@@ -462,14 +460,14 @@ public class SkipUseAPIServiceTest {
 	collectionList.add("C" + date.toString());
 	collectionList.add("D" + date.toString());
 
-	MemberPickIDCollection pickCollection = new MemberPickIDCollection();
+	MemberCollection pickCollection = new MemberCollection();
 	pickCollection.setCollectionName(collectionName);
-	pickCollection.setMemberCollectionID(memberID);
+	pickCollection.setMemberID(memberID);
 	pickCollection.setPickIDList(collectionList);
 	pickCollection.setSplitCSV(true);
-	service.setPickIDCollection(pickCollection);
+	service.setMemberCollection(pickCollection);
 	assertTrue(service.getAPIErrorMessage(), service.getAPIErrorMessage().isEmpty());
-	List<String> foundCollectionList = service.getServerPickIDCollection(memberID).getPickIDCollection()
+	List<String> foundCollectionList = service.getServerMemberCollection(memberID).getMemberCollection()
 		.getPickIDList();
 	assertTrue("was: " + foundCollectionList.size(), foundCollectionList.size() == 4);
 
@@ -514,14 +512,14 @@ public class SkipUseAPIServiceTest {
 	long bobMemberID = addTestMember(TEST_MEMBER_BOB);
 
 	// set collection
-	MemberPickIDCollection memberPickIDCollection = new MemberPickIDCollection();
-	memberPickIDCollection.setCollectionName("test collection");
-	memberPickIDCollection.addPickID(testPickID);
-	service.setPickIDCollection(memberPickIDCollection);
+	MemberCollection memberMemberCollection = new MemberCollection();
+	memberMemberCollection.setCollectionName("test collection");
+	memberMemberCollection.addPickID(testPickID);
+	service.setMemberCollection(memberMemberCollection);
 	assertTrue(service.getAPIErrorMessage(), service.getAPIErrorMessage().isEmpty());
 
 	// create a pick (if needed) by using the Pass
-	MemberListPickIDList memberPickIDList = new MemberListPickIDList(memberPickIDCollection);
+	MemberListPickIDList memberPickIDList = new MemberListPickIDList(memberMemberCollection);
 	memberPickIDList.addMemberID(bobMemberID);
 	service.skipUsePassMemberPickIDList(SkipUsePass.PASS, memberPickIDList);
 	assertTrue(service.getAPIErrorMessage(), service.getAPIErrorMessage().isEmpty());
@@ -616,14 +614,14 @@ public class SkipUseAPIServiceTest {
 	collectionList.add("B");
 	collectionList.add("C");
 
-	MemberPickIDCollection pickIDCollection = new MemberPickIDCollection();
-	pickIDCollection.setMemberCollectionID(bobMemberID);
-	pickIDCollection.setCollectionName(collectionName);
-	pickIDCollection.setPickIDList(collectionList);
-	pickIDCollection.setSplitCSV(true);
-	service.setPickIDCollection(pickIDCollection);
+	MemberCollection memberCollection = new MemberCollection();
+	memberCollection.setMemberID(bobMemberID);
+	memberCollection.setCollectionName(collectionName);
+	memberCollection.setPickIDList(collectionList);
+	memberCollection.setSplitCSV(true);
+	service.setMemberCollection(memberCollection);
 	assertTrue(service.getAPIErrorMessage(), service.getAPIErrorMessage().isEmpty());
-	List<String> foundCollectionList = service.getServerPickIDCollection(0).getPickIDCollection().getPickIDList();
+	List<String> foundCollectionList = service.getServerMemberCollection(0).getMemberCollection().getPickIDList();
 	assertTrue("was: " + foundCollectionList.size(), foundCollectionList.size() > 0);
 
 	PickQuery pickQuery = new PickQuery();
@@ -1040,7 +1038,7 @@ public class SkipUseAPIServiceTest {
     }
 
     @Test
-    public void test_markCategoryPickIDCollection() throws SkipUseException {
+    public void test_markCategoryMemberCollection() throws SkipUseException {
 	// Set up
 	service.login(TEST_EMAIL, TEST_PASSWORD);
 	assertTrue(service.isLoggedIn());
@@ -1065,24 +1063,24 @@ public class SkipUseAPIServiceTest {
 	String collectionName = "My collection";
 	List<String> collectionPickIDList = new ArrayList<>();
 	collectionPickIDList.add("A, B, C");
-	MemberPickIDCollection memberPickIDCollection = new MemberPickIDCollection();
-	memberPickIDCollection.setCollectionName(collectionName);
-	memberPickIDCollection.setPickIDList(collectionPickIDList);
-	memberPickIDCollection.setSplitCSV(true);
-	ServerPickIDCollection createdCollection = service.setPickIDCollection(memberPickIDCollection);
+	MemberCollection memberMemberCollection = new MemberCollection();
+	memberMemberCollection.setCollectionName(collectionName);
+	memberMemberCollection.setPickIDList(collectionPickIDList);
+	memberMemberCollection.setSplitCSV(true);
+	ServerMemberCollection createdCollection = service.setMemberCollection(memberMemberCollection);
 	assertTrue(service.getAPIErrorMessage(), service.getAPIErrorMessage().isEmpty());
 
 	// Mark the pick with the category
-	CategoryMemberPickIDCollection categoryPickIDCollection = new CategoryMemberPickIDCollection();
+	CategoryMemberCollection categoryMemberCollection = new CategoryMemberCollection();
 	MemberCategoryList memberCategoryList = new MemberCategoryList(memberID, categoryList);
-	categoryPickIDCollection.setMemberCategoryList(memberCategoryList);
-	MemberPickIDCollection choosePickIDCollection = new MemberPickIDCollection();
-	choosePickIDCollection.setCollectionName(createdCollection.getPickIDCollection().getCollectionName());
-	choosePickIDCollection.addPickID("B");
-	categoryPickIDCollection.setMemberPickIDCollection(choosePickIDCollection);
+	categoryMemberCollection.setMemberCategoryList(memberCategoryList);
+	MemberCollection chooseMemberCollection = new MemberCollection();
+	chooseMemberCollection.setCollectionName(createdCollection.getMemberCollection().getCollectionName());
+	chooseMemberCollection.addPickID("B");
+	categoryMemberCollection.setMemberCollection(chooseMemberCollection);
 
 	// Test
-	service.markCategoryPickIDCollection(categoryPickIDCollection);
+	service.markCategoryMemberCollection(categoryMemberCollection);
 	assertTrue(service.getAPIErrorMessage(), service.getAPIErrorMessage().isEmpty());
 
 	// Verify
@@ -1097,7 +1095,7 @@ public class SkipUseAPIServiceTest {
 	// do not add new Picks
 	pickQuery.setNewMixInPercentage(0);
 	// from the member's collection
-	pickQuery.setMemberCollectionID(createdCollection.getPickIDCollection().getMemberCollectionID());
+	pickQuery.setMemberCollectionID(createdCollection.getMemberCollection().getMemberID());
 	// include the category info for the Picks
 	pickQuery.addToResultOptionList(ResultOption.INCLUDE_CATEGORY_INFO);
 
@@ -1111,7 +1109,7 @@ public class SkipUseAPIServiceTest {
     }
 
     @Test
-    public void test_unmarkCategoryPickIDCollection() throws SkipUseException {
+    public void test_unmarkCategoryMemberCollection() throws SkipUseException {
 	// Set up
 	service.login(TEST_EMAIL, TEST_PASSWORD);
 	assertTrue(service.isLoggedIn());
@@ -1136,22 +1134,22 @@ public class SkipUseAPIServiceTest {
 	String collectionName = "My collection";
 	List<String> collectionPickIDList = new ArrayList<>();
 	collectionPickIDList.add("A, B, C");
-	MemberPickIDCollection memberPickIDCollection = new MemberPickIDCollection();
-	memberPickIDCollection.setCollectionName(collectionName);
-	memberPickIDCollection.setPickIDList(collectionPickIDList);
-	memberPickIDCollection.setSplitCSV(true);
-	ServerPickIDCollection createdCollection = service.setPickIDCollection(memberPickIDCollection);
+	MemberCollection memberMemberCollection = new MemberCollection();
+	memberMemberCollection.setCollectionName(collectionName);
+	memberMemberCollection.setPickIDList(collectionPickIDList);
+	memberMemberCollection.setSplitCSV(true);
+	ServerMemberCollection createdCollection = service.setMemberCollection(memberMemberCollection);
 	assertTrue(service.getAPIErrorMessage(), service.getAPIErrorMessage().isEmpty());
 
 	// Mark the pick with the category
-	CategoryMemberPickIDCollection categoryPickIDCollection = new CategoryMemberPickIDCollection();
+	CategoryMemberCollection categoryMemberCollection = new CategoryMemberCollection();
 	MemberCategoryList memberCategoryList = new MemberCategoryList(memberID, categoryList);
-	categoryPickIDCollection.setMemberCategoryList(memberCategoryList);
-	MemberPickIDCollection choosePickIDCollection = new MemberPickIDCollection();
-	choosePickIDCollection.setCollectionName(createdCollection.getPickIDCollection().getCollectionName());
-	choosePickIDCollection.addPickID("B");
-	categoryPickIDCollection.setMemberPickIDCollection(choosePickIDCollection);
-	service.markCategoryPickIDCollection(categoryPickIDCollection);
+	categoryMemberCollection.setMemberCategoryList(memberCategoryList);
+	MemberCollection chooseMemberCollection = new MemberCollection();
+	chooseMemberCollection.setCollectionName(createdCollection.getMemberCollection().getCollectionName());
+	chooseMemberCollection.addPickID("B");
+	categoryMemberCollection.setMemberCollection(chooseMemberCollection);
+	service.markCategoryMemberCollection(categoryMemberCollection);
 	assertTrue(service.getAPIErrorMessage(), service.getAPIErrorMessage().isEmpty());
 
 	PickQuery pickQuery = new PickQuery();
@@ -1164,7 +1162,7 @@ public class SkipUseAPIServiceTest {
 	// do not add new Picks
 	pickQuery.setNewMixInPercentage(0);
 	// from the member's collection
-	pickQuery.setMemberCollectionID(createdCollection.getPickIDCollection().getMemberCollectionID());
+	pickQuery.setMemberCollectionID(createdCollection.getMemberCollection().getMemberID());
 	// include the category info for the Picks
 	pickQuery.addToResultOptionList(ResultOption.INCLUDE_CATEGORY_INFO);
 
@@ -1177,7 +1175,7 @@ public class SkipUseAPIServiceTest {
 	assertTrue(serverPickList.getPickList().get(0).getCategoryList().get(0).equals(testCategoryName));
 
 	// Test
-	service.unmarkCategoryPickIDCollection(categoryPickIDCollection);
+	service.unmarkCategoryMemberCollection(categoryMemberCollection);
 	assertTrue(service.getAPIErrorMessage(), service.getAPIErrorMessage().isEmpty());
 
 	// Verify
@@ -1214,9 +1212,9 @@ public class SkipUseAPIServiceTest {
 	assertFalse(serverResponse.getSkipUseToken().isEmpty());
 
 	// Verify can still use the service
-	ServerPickIDCollection foundServerCollection = service.getServerPickIDCollection(0);
+	ServerMemberCollection foundServerCollection = service.getServerMemberCollection(0);
 	assertNotNull(foundServerCollection);
-	List<String> foundCollectionList = foundServerCollection.getPickIDCollection().getPickIDList();
+	List<String> foundCollectionList = foundServerCollection.getMemberCollection().getPickIDList();
 	assertNotNull(foundCollectionList);
     }
 
