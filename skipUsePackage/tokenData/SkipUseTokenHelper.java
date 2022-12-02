@@ -39,17 +39,19 @@ public class SkipUseTokenHelper {
 				skipUseToken.setToId(_theirToken.getToId());
 				skipUseToken.setFromId(_theirToken.getFromId());
 				skipUseToken.setSeed(_theirToken.getSeed());
-				if (skipUseToken != null && isApproved(skipUseToken)) {
-					approve(skipUseToken);
-					skipUseToken = buildReply(skipUseToken, _theirToken);
-				} else {
-					skipUseToken.setPendUSeed(revertPendUSeed);
+				if (skipUseToken != null) {
+					if (isApproved(skipUseToken)) {
+						approve(skipUseToken);
+						buildReply(skipUseToken, _theirToken);
+					} else {
+						skipUseToken.setPendUSeed(revertPendUSeed);
+					}
 				}
 			} else {
-				throw new SkipUseException("Incomming server token was incorrect");
+				throw new SkipUseException("Incoming server token was incorrect");
 			}
 		} else {
-			throw new SkipUseException("Incomming server token was empty");
+			throw new SkipUseException("Incoming server token was empty");
 		}
 	}
 
@@ -65,7 +67,7 @@ public class SkipUseTokenHelper {
 		return skipUseToken;
 	}
 
-	private SkipUseToken buildReply(SkipUseToken clientCommToken, SkipUseToken theirToken) {
+	private void buildReply(SkipUseToken clientCommToken, SkipUseToken theirToken) {
 		if (clientCommToken.getPendMSeed().length() < 10) {
 			clientCommToken.setTokenType(TKN_TYP_CD_BUILD);
 			clientCommToken.setSeed(getNewSeedKey(true));
@@ -76,7 +78,7 @@ public class SkipUseTokenHelper {
 
 		// set toId:
 		if (clientCommToken.getUSeed().length() == 0)
-			clientCommToken.setUSeed(theirToken.getSeed().toString());
+			clientCommToken.setUSeed(theirToken.getSeed());
 		clientCommToken
 				.setToId(getSeedCode(clientCommToken.getUSeed(), clientCommToken.getCycleCnt()));
 		clientCommToken.setPendUSeed(
@@ -91,7 +93,6 @@ public class SkipUseTokenHelper {
 				clientCommToken.getCycleCnt() == 0 ? 3 : clientCommToken.getCycleCnt() - 1);
 		clientCommToken.setLastSentToken(clientCommToken.toString());
 
-		return clientCommToken;
 	}
 
 	private void approve(SkipUseToken token) {
@@ -113,9 +114,7 @@ public class SkipUseTokenHelper {
 		if (isToMe) {
 			String fromThemExpectedCode = getSeedCode(clientCommToken.getPendUSeed(),
 					clientCommToken.getCycleCnt());
-			if (fromThemExpectedCode.equals(clientCommToken.getFromId())) {
-				return true;
-			}
+			return fromThemExpectedCode.equals(clientCommToken.getFromId());
 		}
 		return false;
 	}
@@ -161,10 +160,8 @@ public class SkipUseTokenHelper {
 			int buildIndexIncr = token.getTokenType().equals(TKN_TYP_CD_BUILD) ? 1 : 0;
 			int fromIndexStart = tokenLength - IDENTIFY_CODE_LENGTH;
 			int seedIndexStandardLast = STANDARD_SEED_LENGTH + buildIndexIncr;
-			int toIndexStart = seedIndexStandardLast;
-			int toIndexEnd = fromIndexStart;
 			token.setFromId(tokenStr.substring(fromIndexStart));
-			token.setToId(tokenStr.substring(toIndexStart, toIndexEnd));
+			token.setToId(tokenStr.substring(seedIndexStandardLast, fromIndexStart));
 			token.setSeed(tokenStr.substring(0, seedIndexStandardLast));
 		} else {
 			return null;
@@ -178,7 +175,7 @@ public class SkipUseTokenHelper {
 			if (seed.length() >= startIndex + codeSize) {
 				return seed.substring(startIndex, startIndex + codeSize);
 			} else {
-				return seed.substring(seed.length() - codeSize, seed.length());
+				return seed.substring(seed.length() - codeSize);
 			}
 		}
 		return "";

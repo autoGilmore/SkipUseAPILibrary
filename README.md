@@ -1,5 +1,5 @@
 # SkipUseAPI Library
-This SkipUseAPI Library provides sample Java code for accessing the SkipUseAPI microservice. About and API documentation will be available at https://www.skipuse.com/rest-api-documentation/. NOTE: Accounts are currently limited to Beta users. Non-API users; look for a WordPress plugin to use with your site content in the future.
+This SkipUseAPI Library provides sample Java code for accessing the SkipUseAPI microservice. About page and the API documentation will be available at https://www.skipuse.com/rest-api-documentation/. NOTE: Accounts are currently limited to Beta users. Non-API users; look for a WordPress plugin to use with your site content in the future.
 
 ## Configuration:
 This demo code uses the SkipUseAPI and was pulled out of another Spring Boot project that is still in development. Although the code will not run on its own, you can place this folder structure within your Java project (changing the package imports) and use the SkipUseManager class to test your SkipUse access. Be sure to note the import dependencies in the service class that use Spring for http calls and Jackson for serialization. There are JUnit tests for the SkipUseManager and SkipUseAPIService classes that provide insights into using some of the most common API functionality.
@@ -30,6 +30,14 @@ skipuseapi@gmail.com
 
 
 ## Changelog:
+120222:
+* Added: SearchOption modifiers: PERCENT_GREATER_THAN, PERCENT_LESS_THAN.
+* Updated: SearchOption Lists to String type to handle post-fix percentages.
+* Removed: RAMP_SEARCH SearchOption.
+* Fix: Manager changed to only get one Pick instead of the whole collection to update a single Pick StopUsing flag.
+* Clean-up: API token helper, manager, service and tests.
+* Sample Music Project: Add StopUsing flag helper.
+
 122121:
 * Naming update: MemberPickIDCollection to MemberCollection.
 * Naming update: SearchOption: NORMAL to SearchOption: QUEUE. (Still the default search method)
@@ -136,7 +144,7 @@ skipuseapi@gmail.com
 * Added SkipUseParameters file for API constants.
 * Ramp mode added 'newest' and 'oldest' for PickQuery usage.
 * Moved the server API calls from the SkipUseAPIService to a new SkipUseAPI file.
-* FIXED: a problem when getting one pick for a member and it was a new pick. A new Pick is returned with member ID of -1. Now adding the member ID when getting a new Pick and then updating it using the Manager.
+* FIXED: a problem when getting one pick for a member and it was a new pick. A new Pick is returned with a member ID of -1. Now adding the member ID when getting a new Pick and then updating it using the Manager.
 
 060618: 
 * Copy updates to the README.md, Manager, Service and test classes. 
